@@ -28,24 +28,11 @@ class RenderBuffer {
 
     void Line(glm::vec3 start, glm::vec3 end) {
         // if there is an ongoing line, end it first
-        if (line_counter != 0) {
-            LineEnd();
-        }
-
-        size_t base_index = line_buffer->vbo.Size();
-
-        auto direction = end - start;
-        line_buffer->vbo.Append({start, direction, color, size});
-        line_buffer->vbo.Append({start, -direction, color, size});
-        line_buffer->vbo.Append({end, direction, color, size});
-        line_buffer->vbo.Append({end, -direction, color, size});
-
-        line_buffer->ebo.Append(base_index + 1);
-        line_buffer->ebo.Append(base_index + 0);
-        line_buffer->ebo.Append(base_index + 2);
-        line_buffer->ebo.Append(base_index + 1);
-        line_buffer->ebo.Append(base_index + 2);
-        line_buffer->ebo.Append(base_index + 3);
+        // otherwise, this is noop
+        LineEnd();
+        LineTo(start);
+        LineTo(end);
+        LineEnd();
     }
 
     void Point(glm::vec3 position) {
