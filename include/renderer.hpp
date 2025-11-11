@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+#include "anchor.hpp"
 #include "line.hpp"
 #include "point.hpp"
 
@@ -20,8 +21,9 @@
 class RenderBuffer {
    public:
     RenderBuffer(GladGLContext &gl, std::shared_ptr<LineBuffer> line_buffer,
-                 std::shared_ptr<PointBuffer> point_buffer)
-        : gl{gl}, line_buffer{line_buffer}, point_buffer{point_buffer} {
+                 std::shared_ptr<PointBuffer> point_buffer,
+                 std::shared_ptr<AnchorBuffer> anchor_buffer)
+        : gl{gl}, line_buffer{line_buffer}, point_buffer{point_buffer}, anchor_buffer{anchor_buffer} {
         // create identity instance
         RenderInstance(glm::mat4{1.0f});
     }
@@ -122,6 +124,23 @@ class RenderBuffer {
         line_prev = glm::vec3{0.0f};
     }
 
+    void AnchoredSquare(glm::vec3 anchor) {
+        size_t index = anchor_buffer->vbo.Size();
+        auto s = size * 0.5f;
+        // four vertices
+        anchor_buffer->vbo.Append({anchor, {-s, -s, 0}, color});
+        anchor_buffer->vbo.Append({anchor, {s, -s, 0}, color});
+        anchor_buffer->vbo.Append({anchor, {s, s, 0}, color});
+        anchor_buffer->vbo.Append({anchor, {-s, s, 0}, color});
+        // two triangles
+        anchor_buffer->ebo.Append(index + 0);
+        anchor_buffer->ebo.Append(index + 1);
+        anchor_buffer->ebo.Append(index + 2);
+        anchor_buffer->ebo.Append(index + 2);
+        anchor_buffer->ebo.Append(index + 3);
+        anchor_buffer->ebo.Append(index + 0);
+    }
+
     // attributes for subsequent drawing
     void Color(const glm::vec4 &c) { color = c; }
     void Size(float s) { size = s; }
@@ -130,37 +149,44 @@ class RenderBuffer {
     void RenderInstance(const glm::mat4 &transform) {
         point_buffer->vbo_inst.Append({transform});
         line_buffer->vbo_inst.Append({transform});
+        anchor_buffer->vbo_inst.Append({transform});
     }
 
     // save and restore buffers
     void Save() {
         line_buffer->Save();
         point_buffer->Save();
+        anchor_buffer->Save();
     }
 
     void Restore() {
         line_buffer->Restore();
         point_buffer->Restore();
+        anchor_buffer->Restore();
     }
 
     void Clear() {
         line_buffer->Clear();
         point_buffer->Clear();
+        anchor_buffer->Clear();
     }
 
     void SaveInstances() {
         line_buffer->SaveInstances();
         point_buffer->SaveInstances();
+        anchor_buffer->SaveInstances();
     }
 
     void RestoreInstances() {
         line_buffer->RestoreInstances();
         point_buffer->RestoreInstances();
+        anchor_buffer->RestoreInstances();
     }
 
     void ClearInstances() {
         line_buffer->ClearInstances();
         point_buffer->ClearInstances();
+        anchor_buffer->ClearInstances();
     }
 
    private:
@@ -169,6 +195,7 @@ class RenderBuffer {
     // buffers to render
     std::shared_ptr<LineBuffer> line_buffer;
     std::shared_ptr<PointBuffer> point_buffer;
+    std::shared_ptr<AnchorBuffer> anchor_buffer;
 
     // attributes for rendering
     glm::vec4 color;
@@ -184,22 +211,19 @@ class RenderBuffer {
 
 class Renderer {
    public:
-    Renderer(GladGLContext &gl) : gl{gl}, program_line{gl}, program_point{gl} {}
-
-    std::shared_ptr<LineBuffer> CreateLineBuffer() {
-        auto line_buf = std::make_shared<LineBuffer>(gl);
-        line_buffer.push_back(line_buf);
-        return line_buf;
-    }
-
-    std::shared_ptr<PointBuffer> CreatePointBuffer() {
-        auto point_buf = std::make_shared<PointBuffer>(gl);
-        point_buffer.push_back(point_buf);
-        return point_buf;
-    }
+    Renderer(GladGLContext &gl)
+        : gl{gl}, program_line{gl}, program_point{gl}, program_anchor{gl} {}
 
     RenderBuffer CreateRenderBuffer() {
-        return RenderBuffer{gl, CreateLineBuffer(), CreatePointBuffer()};
+        auto line_buf = std::make_shared<LineBuffer>(gl);
+        line_buffer.push_back(line_buf);
+
+        auto point_buf = std::make_shared<PointBuffer>(gl);
+        point_buffer.push_back(point_buf);
+
+        auto anchor_buf = std::make_shared<AnchorBuffer>(gl);
+        anchor_buffer.push_back(anchor_buf);
+        return RenderBuffer{gl, line_buf, point_buf, anchor_buf};
     }
 
     void Render() {
@@ -214,16 +238,24 @@ class Renderer {
         for (auto &point_buf : point_buffer) {
             point_buf->Render();
         }
+
+        // Render all anchor buffers
+        program_anchor.Use();
+        for (auto &anchor_buf : anchor_buffer) {
+            anchor_buf->Render();
+        }
     }
 
     void SetMVP(const glm::mat4 &mvp) {
         program_line.SetMVP(mvp);
         program_point.SetMVP(mvp);
+        program_anchor.SetMVP(mvp);
     }
 
     void SetScreenSize(const glm::vec2 &screen_size) {
         program_line.SetScreenSize(screen_size);
         program_point.SetScreenSize(screen_size);
+        program_anchor.SetScreenSize(screen_size);
     }
 
    private:
@@ -234,4 +266,7 @@ class Renderer {
 
     PointProgram program_point;
     std::vector<std::shared_ptr<PointBuffer>> point_buffer;
+
+    AnchorProgram program_anchor;
+    std::vector<std::shared_ptr<AnchorBuffer>> anchor_buffer;
 };
