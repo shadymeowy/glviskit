@@ -68,13 +68,14 @@ int main() {
 
     Renderer renderer{gl};
     auto render_buffer = renderer.CreateRenderBuffer();
-    render_buffer.ClearInstances();
+
+    render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         int s = (i % 2 == 0) ? 1 : -1;
-        render_buffer.RenderInstance(
+        render_buffer->RenderInstance(
             glm::rotate(glm::mat4(1.0f), 0.5f * s, glm::vec3(1, 0, 0)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(3.0f * (i - 0.5), 0, 0)));
-        render_buffer.RenderInstance(
+        render_buffer->RenderInstance(
             glm::rotate(glm::mat4(1.0f), -0.5f * s, glm::vec3(1, 0, 0)) *
             glm::translate(glm::mat4(1.0f),
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
@@ -82,12 +83,12 @@ int main() {
 
     auto render_buffer_sine = renderer.CreateRenderBuffer();
 
-    render_buffer.Color({1.0f, 1.0f, 1.0f, 1.0f});
-    render_buffer.Size(3.0f);
+    render_buffer->Color({1.0f, 1.0f, 1.0f, 1.0f});
+    render_buffer->Size(3.0f);
     for (int i = 0; i < 10; i++) {
-        render_buffer.Point({randFloat() * 2.0f - 1.0f,
-                             randFloat() * 2.0f - 1.0f,
-                             randFloat() * 2.0f - 1.0f});
+        render_buffer->Point({randFloat() * 2.0f - 1.0f,
+                              randFloat() * 2.0f - 1.0f,
+                              randFloat() * 2.0f - 1.0f});
     }
 
     double prev_time = glfwGetTime();
@@ -122,37 +123,37 @@ int main() {
         gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
 
         for (int i = 0; i < 10; i++) {
-            render_buffer.Size(randFloat() * 1.0f + 1.0f);
-            render_buffer.Color(
+            render_buffer->Size(randFloat() * 1.0f + 1.0f);
+            render_buffer->Color(
                 {randFloat(), randFloat(), randFloat(), randFloat()});
-            render_buffer.Point({randFloat() * 2.0f - 1.0f,
-                                 randFloat() * 2.0f - 1.0f,
-                                 randFloat() * 2.0f - 1.0f});
+            render_buffer->Point({randFloat() * 2.0f - 1.0f,
+                                  randFloat() * 2.0f - 1.0f,
+                                  randFloat() * 2.0f - 1.0f});
         }
 
         if (frame_index % 10 == 0) {
-            render_buffer.Color(
+            render_buffer->Color(
                 {randFloat(), randFloat(), randFloat(), randFloat()});
-            render_buffer.Size(randFloat() * 4.0f);
-            render_buffer.Line(
+            render_buffer->Size(randFloat() * 4.0f);
+            render_buffer->Line(
                 {randFloat() * 2.0f - 1.0f, randFloat() * 2.0f - 1.0f,
                  randFloat() * 2.0f - 1.0f},
                 {randFloat() * 2.0f - 1.0f, randFloat() * 2.0f - 1.0f,
                  randFloat() * 2.0f - 1.0f});
         }
 
-        render_buffer_sine.Restore();
-        render_buffer_sine.Color({1.0f, 0.0f, 0.0f, 1.0f});
-        render_buffer_sine.Size(4.0f);
+        render_buffer_sine->Restore();
+        render_buffer_sine->Color({1.0f, 0.0f, 0.0f, 1.0f});
+        render_buffer_sine->Size(4.0f);
         for (float x = -1.0f; x <= 1.0f; x += 0.001f) {
             float y = sinf(50.0f * x + 10 * static_cast<float>(curr_time));
             float z = cosf(50.0f * x + 10 * static_cast<float>(curr_time));
 
-            render_buffer_sine.Color(
+            render_buffer_sine->Color(
                 {x * 0.5f + 0.5f, y * 0.5f + 0.5f, 0.5f, 1.0f});
-            render_buffer_sine.LineTo({20.0f * x, 1.5 * y, 1.5 * z});
+            render_buffer_sine->LineTo({20.0f * x, 1.5 * y, 1.5 * z});
         }
-        render_buffer_sine.LineEnd();
+        render_buffer_sine->LineEnd();
 
         renderer.SetMVP(mvp);
         renderer.SetScreenSize(glm::vec2(width, height));

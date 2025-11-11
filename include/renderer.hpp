@@ -7,26 +7,30 @@
 #include <vector>
 
 #include "anchor.hpp"
+#include "buffer_stack.hpp"
+#include "instance.hpp"
 #include "line.hpp"
 #include "point.hpp"
 
-// Renderer class manages multiple LineBuffer and PointBuffer instances
+// Renderer class manages multiple primitive buffer instances
 // and handles their rendering in efficient order.
 // Different than Buffer classes, it also holds programs themselves.
-
-// RenderBuffer class holds references to LineBuffer and PointBuffer
-// instances to be rendered together.
-// It is purely for convenience and does not perform rendering itself.
+// Also it keeps an instance buffer shared among all primitive buffers.
 
 class RenderBuffer {
    public:
-    RenderBuffer(GladGLContext &gl, std::shared_ptr<LineBuffer> line_buffer,
-                 std::shared_ptr<PointBuffer> point_buffer,
-                 std::shared_ptr<AnchorBuffer> anchor_buffer)
-        : gl{gl}, line_buffer{line_buffer}, point_buffer{point_buffer}, anchor_buffer{anchor_buffer} {
+    RenderBuffer(GladGLContext &gl)
+        : gl{gl},
+          vbo_inst{gl},
+          line_buffer{gl, vbo_inst},
+          point_buffer{gl, vbo_inst},
+          anchor_buffer{gl, vbo_inst} {
         // create identity instance
         RenderInstance(glm::mat4{1.0f});
     }
+
+    RenderBuffer(const RenderBuffer &) = delete;
+    RenderBuffer &operator=(const RenderBuffer &) = delete;
 
     void Line(glm::vec3 start, glm::vec3 end) {
         // if there is an ongoing line, end it first
@@ -38,14 +42,14 @@ class RenderBuffer {
     }
 
     void Point(glm::vec3 position) {
-        size_t index = point_buffer->vbo.Size();
-        point_buffer->vbo.Append({position, color, size});
-        point_buffer->ebo.Append(index);
+        size_t index = point_buffer.vbo.Size();
+        point_buffer.vbo.Append({position, color, size});
+        point_buffer.ebo.Append(index);
     }
 
     // Efficient way to draw connected lines
     void LineTo(glm::vec3 position) {
-        size_t base_index = line_buffer->vbo.Size();
+        size_t base_index = line_buffer.vbo.Size();
 
         if (line_counter == 0) {
             // for first point just store and return
@@ -57,9 +61,9 @@ class RenderBuffer {
         } else if (line_counter == 1) {
             // for second point append initial vertices with direction
             auto direction = position - line_prev;
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, direction, color_prev, size_prev});
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, -direction, color_prev, size_prev});
 
             // nothing add to ebo yet
@@ -78,18 +82,18 @@ class RenderBuffer {
             auto bisector = glm::normalize(dir1 + dir2);
 
             // append two vertices at the previous point with bisector direction
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, bisector, color_prev, size_prev});
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, -bisector, color_prev, size_prev});
 
             // add two triangles to connect previous segment
-            line_buffer->ebo.Append(base_index - 2);
-            line_buffer->ebo.Append(base_index + 0);
-            line_buffer->ebo.Append(base_index - 1);
-            line_buffer->ebo.Append(base_index - 1);
-            line_buffer->ebo.Append(base_index + 0);
-            line_buffer->ebo.Append(base_index + 1);
+            line_buffer.ebo.Append(base_index - 2);
+            line_buffer.ebo.Append(base_index + 0);
+            line_buffer.ebo.Append(base_index - 1);
+            line_buffer.ebo.Append(base_index - 1);
+            line_buffer.ebo.Append(base_index + 0);
+            line_buffer.ebo.Append(base_index + 1);
 
             // update previous points
             line_prev_prev = line_prev;
@@ -103,19 +107,19 @@ class RenderBuffer {
     void LineEnd() {
         if (line_counter >= 2) {
             // if we have at least two points, finish the last segment
-            size_t base_index = line_buffer->vbo.Size();
+            size_t base_index = line_buffer.vbo.Size();
             auto direction = line_prev - line_prev_prev;
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, direction, color_prev, size_prev});
-            line_buffer->vbo.Append(
+            line_buffer.vbo.Append(
                 {line_prev, -direction, color_prev, size_prev});
 
-            line_buffer->ebo.Append(base_index - 2);
-            line_buffer->ebo.Append(base_index + 0);
-            line_buffer->ebo.Append(base_index - 1);
-            line_buffer->ebo.Append(base_index - 1);
-            line_buffer->ebo.Append(base_index + 0);
-            line_buffer->ebo.Append(base_index + 1);
+            line_buffer.ebo.Append(base_index - 2);
+            line_buffer.ebo.Append(base_index + 0);
+            line_buffer.ebo.Append(base_index - 1);
+            line_buffer.ebo.Append(base_index - 1);
+            line_buffer.ebo.Append(base_index + 0);
+            line_buffer.ebo.Append(base_index + 1);
         }
 
         // reset line drawing state
@@ -125,20 +129,20 @@ class RenderBuffer {
     }
 
     void AnchoredSquare(glm::vec3 anchor) {
-        size_t index = anchor_buffer->vbo.Size();
+        size_t index = anchor_buffer.vbo.Size();
         auto s = size * 0.5f;
         // four vertices
-        anchor_buffer->vbo.Append({anchor, {-s, -s, 0}, color});
-        anchor_buffer->vbo.Append({anchor, {s, -s, 0}, color});
-        anchor_buffer->vbo.Append({anchor, {s, s, 0}, color});
-        anchor_buffer->vbo.Append({anchor, {-s, s, 0}, color});
+        anchor_buffer.vbo.Append({anchor, {-s, -s, 0}, color});
+        anchor_buffer.vbo.Append({anchor, {s, -s, 0}, color});
+        anchor_buffer.vbo.Append({anchor, {s, s, 0}, color});
+        anchor_buffer.vbo.Append({anchor, {-s, s, 0}, color});
         // two triangles
-        anchor_buffer->ebo.Append(index + 0);
-        anchor_buffer->ebo.Append(index + 1);
-        anchor_buffer->ebo.Append(index + 2);
-        anchor_buffer->ebo.Append(index + 2);
-        anchor_buffer->ebo.Append(index + 3);
-        anchor_buffer->ebo.Append(index + 0);
+        anchor_buffer.ebo.Append(index + 0);
+        anchor_buffer.ebo.Append(index + 1);
+        anchor_buffer.ebo.Append(index + 2);
+        anchor_buffer.ebo.Append(index + 2);
+        anchor_buffer.ebo.Append(index + 3);
+        anchor_buffer.ebo.Append(index + 0);
     }
 
     // attributes for subsequent drawing
@@ -147,102 +151,95 @@ class RenderBuffer {
 
     // instancing
     void RenderInstance(const glm::mat4 &transform) {
-        point_buffer->vbo_inst.Append({transform});
-        line_buffer->vbo_inst.Append({transform});
-        anchor_buffer->vbo_inst.Append({transform});
+        vbo_inst.Append({transform});
     }
 
     // save and restore buffers
     void Save() {
-        line_buffer->Save();
-        point_buffer->Save();
-        anchor_buffer->Save();
+        line_buffer.Save();
+        point_buffer.Save();
+        anchor_buffer.Save();
     }
 
     void Restore() {
-        line_buffer->Restore();
-        point_buffer->Restore();
-        anchor_buffer->Restore();
+        line_buffer.Restore();
+        point_buffer.Restore();
+        anchor_buffer.Restore();
     }
 
     void Clear() {
-        line_buffer->Clear();
-        point_buffer->Clear();
-        anchor_buffer->Clear();
+        line_buffer.Clear();
+        point_buffer.Clear();
+        anchor_buffer.Clear();
     }
 
-    void SaveInstances() {
-        line_buffer->SaveInstances();
-        point_buffer->SaveInstances();
-        anchor_buffer->SaveInstances();
-    }
+    void SaveInstances() { vbo_inst.Save(); }
 
-    void RestoreInstances() {
-        line_buffer->RestoreInstances();
-        point_buffer->RestoreInstances();
-        anchor_buffer->RestoreInstances();
-    }
+    void RestoreInstances() { vbo_inst.Restore(); }
 
-    void ClearInstances() {
-        line_buffer->ClearInstances();
-        point_buffer->ClearInstances();
-        anchor_buffer->ClearInstances();
-    }
+    void ClearInstances() { vbo_inst.Clear(); }
 
    private:
     GladGLContext &gl;
 
+    // instance transform buffer
+    InstanceBuffer vbo_inst;
+
     // buffers to render
-    std::shared_ptr<LineBuffer> line_buffer;
-    std::shared_ptr<PointBuffer> point_buffer;
-    std::shared_ptr<AnchorBuffer> anchor_buffer;
+    LineBuffer line_buffer;
+    PointBuffer point_buffer;
+    AnchorBuffer anchor_buffer;
 
     // attributes for rendering
-    glm::vec4 color;
-    float size;
+    glm::vec4 color{1.0f};
+    float size = 1.0f;
 
     // line drawing state
-    size_t line_counter;
-    glm::vec3 line_prev_prev;
-    glm::vec3 line_prev;
-    glm::vec4 color_prev;
-    float size_prev;
+    size_t line_counter = 0;
+    glm::vec3 line_prev_prev{0.0f};
+    glm::vec3 line_prev{0.0f};
+    glm::vec4 color_prev{1.0f};
+    float size_prev = 1.0f;
+
+    friend class Renderer;
 };
 
 class Renderer {
    public:
     Renderer(GladGLContext &gl)
-        : gl{gl}, program_line{gl}, program_point{gl}, program_anchor{gl} {}
+        : gl{gl},
+          program_line{gl},
+          program_point{gl},
+          program_anchor{gl},
+          buffers{} {}
 
-    RenderBuffer CreateRenderBuffer() {
-        auto line_buf = std::make_shared<LineBuffer>(gl);
-        line_buffer.push_back(line_buf);
+    void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
+        buffers.push_back(render_buffer);
+    }
 
-        auto point_buf = std::make_shared<PointBuffer>(gl);
-        point_buffer.push_back(point_buf);
-
-        auto anchor_buf = std::make_shared<AnchorBuffer>(gl);
-        anchor_buffer.push_back(anchor_buf);
-        return RenderBuffer{gl, line_buf, point_buf, anchor_buf};
+    std::shared_ptr<RenderBuffer> CreateRenderBuffer() {
+        auto render_buffer = std::make_shared<RenderBuffer>(gl);
+        AddRenderBuffer(render_buffer);
+        return render_buffer;
     }
 
     void Render() {
         // Render all line buffers
         program_line.Use();
-        for (auto &line_buf : line_buffer) {
-            line_buf->Render();
+        for (auto &line_buf : buffers) {
+            line_buf->line_buffer.Render();
         }
 
         // Render all point buffers
         program_point.Use();
-        for (auto &point_buf : point_buffer) {
-            point_buf->Render();
+        for (auto &point_buf : buffers) {
+            point_buf->point_buffer.Render();
         }
 
         // Render all anchor buffers
         program_anchor.Use();
-        for (auto &anchor_buf : anchor_buffer) {
-            anchor_buf->Render();
+        for (auto &anchor_buf : buffers) {
+            anchor_buf->anchor_buffer.Render();
         }
     }
 
@@ -262,11 +259,8 @@ class Renderer {
     GladGLContext &gl;
 
     LineProgram program_line;
-    std::vector<std::shared_ptr<LineBuffer>> line_buffer;
-
     PointProgram program_point;
-    std::vector<std::shared_ptr<PointBuffer>> point_buffer;
-
     AnchorProgram program_anchor;
-    std::vector<std::shared_ptr<AnchorBuffer>> anchor_buffer;
+
+    std::vector<std::shared_ptr<RenderBuffer>> buffers;
 };

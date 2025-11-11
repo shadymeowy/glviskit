@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "buffer_stack.hpp"
+#include "instance.hpp"
 #include "program.hpp"
 #include "vao.hpp"
 
@@ -63,12 +64,8 @@ class PointBuffer {
         float size;
     };
 
-    struct Instance {
-        glm::mat4 transform;
-    };
-
-    PointBuffer(GladGLContext &gl)
-        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{gl} {
+    PointBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{vbo_inst} {
         ConfigureVAO();
     }
 
@@ -121,10 +118,6 @@ class PointBuffer {
         ebo.Clear();
     }
 
-    void SaveInstances() { vbo_inst.Save(); }
-    void RestoreInstances() { vbo_inst.Restore(); }
-    void ClearInstances() { vbo_inst.Clear(); }
-
     // In this case, we don't really need an EBO
     // but can be useful for other primitives.
     VAO vao;
@@ -132,7 +125,9 @@ class PointBuffer {
     BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
     // we are using instancing for MVP matrices
     // so multiple copies can be rendered with different transforms
-    BufferStack<Instance, GL_ARRAY_BUFFER> vbo_inst;
+    // note that this is a reference since we are generally
+    // sharing it with other primitive buffer classes
+    InstanceBuffer &vbo_inst;
 
    private:
     GladGLContext &gl;

@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include "buffer_stack.hpp"
+#include "instance.hpp"
 #include "program.hpp"
 #include "vao.hpp"
 
@@ -63,12 +64,8 @@ class LineBuffer {
         float size;
     };
 
-    struct Instance {
-        glm::mat4 transform;
-    };
-
-    LineBuffer(GladGLContext &gl)
-        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{gl} {
+    LineBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{vbo_inst} {
         ConfigureVAO();
     }
 
@@ -113,14 +110,10 @@ class LineBuffer {
         ebo.Clear();
     }
 
-    void SaveInstances() { vbo_inst.Save(); }
-    void RestoreInstances() { vbo_inst.Restore(); }
-    void ClearInstances() { vbo_inst.Clear(); }
-
     VAO vao;
     BufferStack<Element, GL_ARRAY_BUFFER> vbo;
     BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
-    BufferStack<Instance, GL_ARRAY_BUFFER> vbo_inst;
+    InstanceBuffer &vbo_inst;
 
    private:
     GladGLContext &gl;
