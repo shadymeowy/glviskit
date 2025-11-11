@@ -1,13 +1,14 @@
-#include "glm/ext/matrix_transform.hpp"
+#include <cmath>
+
 #include "glm/fwd.hpp"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
+#include "camera.hpp"
 #include "renderer.hpp"
 
 float angle = 0.0f;
@@ -94,6 +95,15 @@ int main() {
     double prev_time = glfwGetTime();
     int fps_counter = 0;
     int frame_index = 0;
+
+    Camera camera;
+    camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+    camera.SetViewportSize(width, height);
+    camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    camera.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
+    camera.SetPreserveAspectRatio(true);
+    camera.SetDistance(15.0f);
+
     while (!glfwWindowShouldClose(window)) {
         double curr_time = glfwGetTime();
 
@@ -105,19 +115,14 @@ int main() {
         }
 
         frame_index++;
-        angle += 0.001f;
-
-        auto model = glm::mat4(1.0f);
-        auto view = glm::lookAt(
-            glm::vec3(15.0f * sin(angle), 5.0f, 15.0f * cos(angle)),
-            glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        angle += 0.005f;
+        camera.SetRotation({-0.5f, angle, 0.0f});
 
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-        auto projection = glm::perspective(
-            glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+        camera.SetViewportSize(width, height);
 
-        auto mvp = projection * view * model;
+        auto mvp = camera.GetTransformMatrix();
 
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
