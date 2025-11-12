@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <glm/glm.hpp>
+#include <map>
 
 #include "buffer_stack.hpp"
 #include "instance.hpp"
@@ -65,34 +66,35 @@ class LineBuffer {
     };
 
     LineBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
-        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{vbo_inst} {
-        ConfigureVAO();
-    }
+        : gl{gl},
+          vbo{gl},
+          ebo{gl},
+          vaos{},
+          vbo_inst{vbo_inst},
+          vao_configured{} {}
 
-    void Render() {
-        Sync();
-
-        if (ebo.Size() == 0) {
+    void Render(GLuint ctx_id) {
+        if (ebo.Size() == 0 || vbo_inst.Size() == 0) {
             return;
         }
 
+        EnsureVAO(ctx_id);
+
+        bool reallocated = Sync();
+        if (reallocated) {
+            InvalidateVAOs();
+        }
+
+        if (!vao_configured.at(ctx_id)) {
+            ConfigureVAO(ctx_id);
+            vao_configured.at(ctx_id) = true;
+        }
+
+        auto &vao = vaos.at(ctx_id);
         vao.Bind();
         gl.DrawElementsInstanced(GL_TRIANGLES, ebo.Size(), GL_UNSIGNED_INT,
                                  nullptr, vbo_inst.Size());
         vao.Unbind();
-    }
-
-    bool Sync() {
-        bool re_vbo = vbo.Sync();
-        bool re_ebo = ebo.Sync();
-        bool re_vbo_inst = vbo_inst.Sync();
-        bool reallocated = re_vbo || re_ebo || re_vbo_inst;
-
-        if (reallocated) {
-            ConfigureVAO();
-        }
-
-        return reallocated;
     }
 
     void Save() {
@@ -110,15 +112,17 @@ class LineBuffer {
         ebo.Clear();
     }
 
-    VAO vao;
+    std::map<GLuint, VAO> vaos;
     BufferStack<Element, GL_ARRAY_BUFFER> vbo;
     BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
     InstanceBuffer &vbo_inst;
 
    private:
     GladGLContext &gl;
+    std::map<GLuint, bool> vao_configured;
 
-    void ConfigureVAO() {
+    void ConfigureVAO(GLuint ctx_id) {
+        VAO &vao = vaos.at(ctx_id);
         vao.Bind();
         ebo.Bind();
 
@@ -149,5 +153,28 @@ class LineBuffer {
         vbo_inst.Unbind();
 
         vao.Unbind();
+    }
+
+    bool Sync() {
+        bool re_vbo = vbo.Sync();
+        bool re_ebo = ebo.Sync();
+        bool re_vbo_inst = vbo_inst.Sync();
+        bool reallocated = re_vbo || re_ebo || re_vbo_inst;
+        return reallocated;
+    }
+
+    void EnsureVAO(GLuint ctx_id) {
+        // create VAO for the context if it does not exist
+        if (vaos.find(ctx_id) == vaos.end()) {
+            vaos.emplace(ctx_id, VAO{gl});
+            vao_configured.emplace(ctx_id, false);
+        }
+    }
+
+    void InvalidateVAOs() {
+        // mark all VAOs as needing reconfiguration
+        for (auto &entry : vao_configured) {
+            entry.second = false;
+        }
     }
 };

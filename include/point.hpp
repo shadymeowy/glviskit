@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <glm/glm.hpp>
+#include <map>
 
 #include "buffer_stack.hpp"
 #include "instance.hpp"
@@ -65,42 +66,38 @@ class PointBuffer {
     };
 
     PointBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
-        : gl{gl}, vbo{gl}, ebo{gl}, vao{gl}, vbo_inst{vbo_inst} {
-        ConfigureVAO();
-    }
+        : gl{gl}, vbo{gl}, ebo{gl}, vaos{}, vbo_inst{vbo_inst} {}
 
-    void Render() {
-        // ensure VBO is synced before rendering
-        // it is noop if already synced
-        Sync();
-
+    void Render(GLuint ctx_id) {
         // if there is nothing to draw, return
-        if (ebo.Size() == 0) {
+        if (ebo.Size() == 0 || vbo_inst.Size() == 0) {
             return;
+        }
+
+        // ensure VAO is created and configured
+        EnsureVAO(ctx_id);
+
+        // check if buffers were reallocated
+        bool reallocated = Sync();
+        if (reallocated) {
+            // Invalidate all VAOs if buffers were reallocated
+            InvalidateVAOs();
+        }
+
+        // configure VAO if not yet configured
+        if (!vao_configured.at(ctx_id)) {
+            ConfigureVAO(ctx_id);
+            vao_configured.at(ctx_id) = true;
         }
 
         // bind VAO using RAII binder,
         // which will unbind it at the end of the scope
+        auto &vao = vaos.at(ctx_id);
         vao.Bind();
         // draw call
         gl.DrawElementsInstanced(GL_POINTS, ebo.Size(), GL_UNSIGNED_INT,
                                  nullptr, vbo_inst.Size());
         vao.Unbind();
-    }
-
-    bool Sync() {
-        // sync all buffers
-        bool re_vbo = vbo.Sync();
-        bool re_ebo = ebo.Sync();
-        bool re_vbo_inst = vbo_inst.Sync();
-        bool reallocated = re_vbo || re_ebo || re_vbo_inst;
-
-        // reconfigure VAO if VBO was reallocated
-        if (reallocated) {
-            ConfigureVAO();
-        }
-
-        return reallocated;
     }
 
     void Save() {
@@ -120,7 +117,7 @@ class PointBuffer {
 
     // In this case, we don't really need an EBO
     // but can be useful for other primitives.
-    VAO vao;
+    std::map<GLuint, VAO> vaos;
     BufferStack<Element, GL_ARRAY_BUFFER> vbo;
     BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
     // we are using instancing for MVP matrices
@@ -131,8 +128,10 @@ class PointBuffer {
 
    private:
     GladGLContext &gl;
+    std::map<GLuint, bool> vao_configured;
 
-    void ConfigureVAO() {
+    void ConfigureVAO(GLuint ctx_id) {
+        VAO &vao = vaos.at(ctx_id);
         vao.Bind();
         ebo.Bind();
 
@@ -163,5 +162,29 @@ class PointBuffer {
         vbo_inst.Unbind();
 
         vao.Unbind();
+    }
+
+    bool Sync() {
+        // sync all buffers
+        bool re_vbo = vbo.Sync();
+        bool re_ebo = ebo.Sync();
+        bool re_vbo_inst = vbo_inst.Sync();
+        bool reallocated = re_vbo || re_ebo || re_vbo_inst;
+        return reallocated;
+    }
+
+    void EnsureVAO(GLuint ctx_id) {
+        // create VAO for the context if it does not exist
+        if (vaos.find(ctx_id) == vaos.end()) {
+            vaos.emplace(ctx_id, VAO{gl});
+            vao_configured.emplace(ctx_id, false);
+        }
+    }
+
+    void InvalidateVAOs() {
+        // mark all VAOs as needing reconfiguration
+        for (auto &entry : vao_configured) {
+            entry.second = false;
+        }
     }
 };

@@ -11,15 +11,6 @@
 #include "camera.hpp"
 #include "renderer.hpp"
 
-float angle = 0.0f;
-
-void resizeCallback(GLFWwindow *window, int width, int height) {
-    glfwGetFramebufferSize(window, &width, &height);
-
-    GladGLContext &gl = *(GladGLContext *)glfwGetWindowUserPointer(window);
-    gl.Viewport(0, 0, width, height);
-}
-
 float randFloat() { return static_cast<float>(rand()) / RAND_MAX; }
 
 int main() {
@@ -33,32 +24,49 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
 
-    GLFWwindow *window =
-        glfwCreateWindow(800, 600, "Hello, Modern OpenGL!", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(800, 600, "First Window", NULL, NULL);
     if (window == NULL) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(window);
-
-    GladGLContext gl;
-    if (!gladLoadGLContext(&gl, (GLADloadfunc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD Context" << std::endl;
+    GLFWwindow *window2 =
+        glfwCreateWindow(400, 300, "Second Window", NULL, window);
+    if (window2 == NULL) {
+        std::cerr << "Failed to create second GLFW window" << std::endl;
         glfwDestroyWindow(window);
         glfwTerminate();
         return -1;
     }
 
+    GladGLContext gl;
+    glfwMakeContextCurrent(window);
+    if (!gladLoadGLContext(&gl, (GLADloadfunc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD Context" << std::endl;
+        glfwDestroyWindow(window);
+        glfwDestroyWindow(window2);
+        glfwTerminate();
+        return -1;
+    }
     std::cout << "OpenGL Version: " << gl.GetString(GL_VERSION) << std::endl;
-    glfwSetWindowUserPointer(window, &gl);
-    glfwSetFramebufferSizeCallback(window, resizeCallback);
 
+    glfwMakeContextCurrent(window);
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     gl.Viewport(0, 0, width, height);
+    gl.Enable(GL_DEPTH_TEST);
+    gl.Enable(GL_BLEND);
+    gl.Disable(GL_CULL_FACE);
+    gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    gl.BlendEquation(GL_FUNC_ADD);
+    gl.Enable(GL_PROGRAM_POINT_SIZE);
+    gl.Enable(GL_MULTISAMPLE);
 
+    glfwMakeContextCurrent(window2);
+    int width2, height2;
+    glfwGetFramebufferSize(window2, &width2, &height2);
+    gl.Viewport(0, 0, width2, height2);
     gl.Enable(GL_DEPTH_TEST);
     gl.Enable(GL_BLEND);
     gl.Disable(GL_CULL_FACE);
@@ -68,8 +76,19 @@ int main() {
     gl.Enable(GL_MULTISAMPLE);
 
     Renderer renderer{gl};
-    auto render_buffer = renderer.CreateRenderBuffer();
+    Renderer renderer2{gl};
 
+    auto render2_buffer_axes2 = renderer2.CreateRenderBuffer();
+    render2_buffer_axes2->Size(5.0f);
+    render2_buffer_axes2->Color({1.0f, 0.0f, 0.0f, 1.0f});
+    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+    render2_buffer_axes2->Color({0.0f, 1.0f, 0.0f, 1.0f});
+    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    render2_buffer_axes2->Color({0.0f, 0.0f, 1.0f, 1.0f});
+    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
+
+    auto render_buffer = renderer.CreateRenderBuffer();
+    renderer2.AddRenderBuffer(render_buffer);
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         int s = (i % 2 == 0) ? 1 : -1;
@@ -82,8 +101,10 @@ int main() {
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
     auto render_buffer_sine = renderer.CreateRenderBuffer();
+    renderer2.AddRenderBuffer(render_buffer_sine);
 
     auto render_buffer_axes = renderer.CreateRenderBuffer();
+    renderer2.AddRenderBuffer(render_buffer_axes);
     render_buffer_axes->Size(5.0f);
     render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
     render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
@@ -112,6 +133,15 @@ int main() {
     camera.SetPreserveAspectRatio(true);
     camera.SetDistance(15.0f);
 
+    auto &camera2 = renderer2.GetCamera();
+    camera2.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+    camera2.SetViewportSize(width2, height2);
+    camera2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    camera2.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
+    camera2.SetPreserveAspectRatio(true);
+    camera2.SetDistance(15.0f);
+
+    float angle = 0.0f;
     while (!glfwWindowShouldClose(window)) {
         double curr_time = glfwGetTime();
 
@@ -125,15 +155,7 @@ int main() {
         frame_index++;
         angle += 0.005f;
         camera.SetRotation({-0.5f, angle, 0.0f});
-
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        camera.SetViewportSize(width, height);
-
-        auto mvp = camera.GetTransformMatrix();
-
-        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
+        camera2.SetRotation({-0.5f, -angle, 0.0f});
 
         for (int i = 0; i < 10; i++) {
             render_buffer->Size(randFloat() * 1.0f + 1.0f);
@@ -168,8 +190,25 @@ int main() {
         }
         render_buffer_sine->LineEnd();
 
+        glfwMakeContextCurrent(window);
+        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        gl.Viewport(0, 0, width, height);
         renderer.SetScreenSize(glm::vec2(width, height));
-        renderer.Render();
+        renderer.Render(0);
+        glfwSwapBuffers(window);
+
+        glfwMakeContextCurrent(window2);
+        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
+        int width2, height2;
+        glfwGetFramebufferSize(window2, &width2, &height2);
+        gl.Viewport(0, 0, width2, height2);
+        renderer2.SetScreenSize(glm::vec2(width2, height2));
+        renderer2.Render(1);
+        glfwSwapBuffers(window2);
 
         // check for errors
         GLenum err;
@@ -178,11 +217,11 @@ int main() {
             return -1;
         }
 
-        glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
     glfwDestroyWindow(window);
+    // glfwDestroyWindow(window2);
     glfwTerminate();
     return 0;
 }

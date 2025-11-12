@@ -32,23 +32,23 @@ class Renderer {
         return render_buffer;
     }
 
-    void Render() {
+    void Render(GLuint ctx_id) {
         // Render all line buffers
         program_line.Use();
         for (auto &line_buf : buffers) {
-            line_buf->line_buffer.Render();
+            line_buf->line_buffer.Render(ctx_id);
         }
 
         // Render all point buffers
         program_point.Use();
         for (auto &point_buf : buffers) {
-            point_buf->point_buffer.Render();
+            point_buf->point_buffer.Render(ctx_id);
         }
 
         // Render all anchor buffers
         program_anchor.Use();
         for (auto &anchor_buf : buffers) {
-            anchor_buf->anchor_buffer.Render();
+            anchor_buf->anchor_buffer.Render(ctx_id);
         }
     }
 
