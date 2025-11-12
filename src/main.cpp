@@ -76,19 +76,8 @@ int main() {
     gl.Enable(GL_MULTISAMPLE);
 
     Renderer renderer{gl};
-    Renderer renderer2{gl};
-
-    auto render2_buffer_axes2 = renderer2.CreateRenderBuffer();
-    render2_buffer_axes2->Size(5.0f);
-    render2_buffer_axes2->Color({1.0f, 0.0f, 0.0f, 1.0f});
-    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
-    render2_buffer_axes2->Color({0.0f, 1.0f, 0.0f, 1.0f});
-    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
-    render2_buffer_axes2->Color({0.0f, 0.0f, 1.0f, 1.0f});
-    render2_buffer_axes2->Line({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
 
     auto render_buffer = renderer.CreateRenderBuffer();
-    renderer2.AddRenderBuffer(render_buffer);
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         int s = (i % 2 == 0) ? 1 : -1;
@@ -101,10 +90,8 @@ int main() {
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
     auto render_buffer_sine = renderer.CreateRenderBuffer();
-    renderer2.AddRenderBuffer(render_buffer_sine);
 
     auto render_buffer_axes = renderer.CreateRenderBuffer();
-    renderer2.AddRenderBuffer(render_buffer_axes);
     render_buffer_axes->Size(5.0f);
     render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
     render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
@@ -125,7 +112,7 @@ int main() {
     int fps_counter = 0;
     int frame_index = 0;
 
-    auto &camera = renderer.GetCamera();
+    Camera camera{};
     camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
     camera.SetViewportSize(width, height);
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -133,7 +120,7 @@ int main() {
     camera.SetPreserveAspectRatio(true);
     camera.SetDistance(15.0f);
 
-    auto &camera2 = renderer2.GetCamera();
+    Camera camera2{};
     camera2.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
     camera2.SetViewportSize(width2, height2);
     camera2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -196,8 +183,9 @@ int main() {
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         gl.Viewport(0, 0, width, height);
+        camera.SetViewportSize(width, height);
         renderer.SetScreenSize(glm::vec2(width, height));
-        renderer.Render(0);
+        renderer.Render(0, camera);
         glfwSwapBuffers(window);
 
         glfwMakeContextCurrent(window2);
@@ -206,8 +194,9 @@ int main() {
         int width2, height2;
         glfwGetFramebufferSize(window2, &width2, &height2);
         gl.Viewport(0, 0, width2, height2);
-        renderer2.SetScreenSize(glm::vec2(width2, height2));
-        renderer2.Render(1);
+        camera2.SetViewportSize(width2, height2);
+        renderer.SetScreenSize(glm::vec2(width2, height2));
+        renderer.Render(1, camera2);
         glfwSwapBuffers(window2);
 
         // check for errors

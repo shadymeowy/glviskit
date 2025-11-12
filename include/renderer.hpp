@@ -19,8 +19,7 @@ class Renderer {
           program_line{gl},
           program_point{gl},
           program_anchor{gl},
-          buffers{},
-          camera{} {}
+          buffers{} {}
 
     void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
         buffers.push_back(render_buffer);
@@ -32,7 +31,9 @@ class Renderer {
         return render_buffer;
     }
 
-    void Render(GLuint ctx_id) {
+    void Render(GLuint ctx_id, const Camera &camera) {
+        SetMVP(camera.GetTransformMatrix());
+
         // Render all line buffers
         program_line.Use();
         for (auto &line_buf : buffers) {
@@ -56,11 +57,7 @@ class Renderer {
         program_line.SetScreenSize(screen_size);
         program_point.SetScreenSize(screen_size);
         program_anchor.SetScreenSize(screen_size);
-        camera.SetViewportSize(screen_size.x, screen_size.y);
-        SetMVP(camera.GetTransformMatrix());
     }
-
-    Camera &GetCamera() { return camera; }
 
    private:
     void SetMVP(const glm::mat4 &mvp) {
@@ -76,6 +73,4 @@ class Renderer {
     AnchorProgram program_anchor;
 
     std::vector<std::shared_ptr<RenderBuffer>> buffers;
-
-    Camera camera;
 };
