@@ -81,10 +81,10 @@ int main() {
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         int s = (i % 2 == 0) ? 1 : -1;
-        render_buffer->RenderInstance(
+        render_buffer->AddInstance(
             glm::rotate(glm::mat4(1.0f), 0.5f * s, glm::vec3(1, 0, 0)) *
             glm::translate(glm::mat4(1.0f), glm::vec3(3.0f * (i - 0.5), 0, 0)));
-        render_buffer->RenderInstance(
+        render_buffer->AddInstance(
             glm::rotate(glm::mat4(1.0f), -0.5f * s, glm::vec3(1, 0, 0)) *
             glm::translate(glm::mat4(1.0f),
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));

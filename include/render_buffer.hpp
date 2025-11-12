@@ -19,7 +19,7 @@ class RenderBuffer {
           point_buffer{gl, vbo_inst},
           anchor_buffer{gl, vbo_inst} {
         // create identity instance
-        RenderInstance(glm::mat4{1.0f});
+        AddInstance(glm::mat4{1.0f});
     }
 
     RenderBuffer(const RenderBuffer &) = delete;
@@ -143,7 +143,7 @@ class RenderBuffer {
     void Size(float s) { size = s; }
 
     // instancing
-    void RenderInstance(const glm::mat4 &transform) {
+    void AddInstance(const glm::mat4 &transform) {
         vbo_inst.Append({transform});
     }
 
