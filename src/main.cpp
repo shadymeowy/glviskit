@@ -104,7 +104,7 @@ int main() {
     int fps_counter = 0;
     int frame_index = 0;
 
-    Camera camera;
+    auto &camera = renderer.GetCamera();
     camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
     camera.SetViewportSize(width, height);
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -168,7 +168,6 @@ int main() {
         }
         render_buffer_sine->LineEnd();
 
-        renderer.SetMVP(mvp);
         renderer.SetScreenSize(glm::vec2(width, height));
         renderer.Render();
 

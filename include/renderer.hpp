@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "anchor.hpp"
+#include "camera.hpp"
 #include "line.hpp"
 #include "point.hpp"
 #include "render_buffer.hpp"
@@ -18,7 +19,8 @@ class Renderer {
           program_line{gl},
           program_point{gl},
           program_anchor{gl},
-          buffers{} {}
+          buffers{},
+          camera{} {}
 
     void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
         buffers.push_back(render_buffer);
@@ -50,19 +52,23 @@ class Renderer {
         }
     }
 
+    void SetScreenSize(const glm::vec2 &screen_size) {
+        program_line.SetScreenSize(screen_size);
+        program_point.SetScreenSize(screen_size);
+        program_anchor.SetScreenSize(screen_size);
+        camera.SetViewportSize(screen_size.x, screen_size.y);
+        SetMVP(camera.GetTransformMatrix());
+    }
+
+    Camera &GetCamera() { return camera; }
+
+   private:
     void SetMVP(const glm::mat4 &mvp) {
         program_line.SetMVP(mvp);
         program_point.SetMVP(mvp);
         program_anchor.SetMVP(mvp);
     }
 
-    void SetScreenSize(const glm::vec2 &screen_size) {
-        program_line.SetScreenSize(screen_size);
-        program_point.SetScreenSize(screen_size);
-        program_anchor.SetScreenSize(screen_size);
-    }
-
-   private:
     GladGLContext &gl;
 
     LineProgram program_line;
@@ -70,4 +76,6 @@ class Renderer {
     AnchorProgram program_anchor;
 
     std::vector<std::shared_ptr<RenderBuffer>> buffers;
+
+    Camera camera;
 };

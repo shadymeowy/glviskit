@@ -6,8 +6,7 @@
 
 class Camera {
    public:
-    // for handling time-based updates
-    void Update(float deltaTime);
+    Camera() { SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f)); }
 
     // get the transformation matrix of the camera
     // M = M_intr * T_spherical * R_cam^-1 * T_cam^-1
@@ -99,6 +98,9 @@ class Camera {
     }
 
     bool GetPreserveAspectRatio() const { return preserve_aspect_ratio; }
+
+    // for handling time-based updates
+    void Update(float deltaTime);
 
    private:
     // intrinsic matrix
