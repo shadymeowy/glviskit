@@ -81,8 +81,16 @@ int main() {
             glm::translate(glm::mat4(1.0f),
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
-
     auto render_buffer_sine = renderer.CreateRenderBuffer();
+
+    auto render_buffer_axes = renderer.CreateRenderBuffer();
+    render_buffer_axes->Size(5.0f);
+    render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
+    render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
+    render_buffer_axes->Color({0.0f, 1.0f, 0.0f, 1.0f});
+    render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+    render_buffer_axes->Color({0.0f, 0.0f, 1.0f, 1.0f});
+    render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
 
     render_buffer->Color({1.0f, 1.0f, 1.0f, 1.0f});
     render_buffer->Size(3.0f);
