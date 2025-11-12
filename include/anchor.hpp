@@ -58,7 +58,7 @@ class AnchorBuffer {
         glm::vec4 color;
     };
 
-    AnchorBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+    explicit AnchorBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
         : gl{gl},
           vbo{gl},
           ebo{gl},

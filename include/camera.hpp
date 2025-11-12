@@ -6,7 +6,9 @@
 
 class Camera {
    public:
-    Camera() { SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f)); }
+    explicit Camera() {
+        SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+    }
 
     // get the transformation matrix of the camera
     // M = M_intr * T_spherical * R_cam^-1 * T_cam^-1

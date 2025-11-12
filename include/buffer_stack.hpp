@@ -12,7 +12,7 @@
 template <typename T, GLenum TYPE = GL_ARRAY_BUFFER>
 class BufferStack {
    public:
-    BufferStack(GladGLContext &gl, size_t capacity = 4)
+    explicit BufferStack(GladGLContext &gl, size_t capacity = 4)
         : gl{gl}, buffer{gl, capacity}, size{0}, restore_point{0} {}
 
     void Append(const T &element) { elements.push_back(element); }

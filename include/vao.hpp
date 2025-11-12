@@ -4,7 +4,9 @@
 
 class VAO {
    public:
-    VAO(GladGLContext &gl) : gl{gl}, vao{0} { gl.GenVertexArrays(1, &vao); }
+    explicit VAO(GladGLContext &gl) : gl{gl}, vao{0} {
+        gl.GenVertexArrays(1, &vao);
+    }
 
     // destructor
     ~VAO() { gl.DeleteVertexArrays(1, &vao); }

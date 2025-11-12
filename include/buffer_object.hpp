@@ -7,7 +7,7 @@
 template <typename T, GLenum TYPE = GL_ARRAY_BUFFER, GLenum USAGE = GL_DYNAMIC_DRAW>
 class BufferObject {
    public:
-    BufferObject(GladGLContext &gl, size_t size) : gl{gl}, size_{size} {
+    explicit BufferObject(GladGLContext &gl, size_t size) : gl{gl}, size_{size} {
         gl.GenBuffers(1, &buffer);
         Bind();
         gl.BufferData(TYPE, size * sizeof(T), nullptr, USAGE);

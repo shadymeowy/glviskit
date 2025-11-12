@@ -9,7 +9,7 @@
 template <const char *shader_vertex, const char *shader_fragment>
 class Program {
    public:
-    Program(GladGLContext &gl)
+    explicit Program(GladGLContext &gl)
         : gl{gl}, program{0}, loc_mvp{0}, loc_screen_size{0} {
         GLuint s_vertex = gl.CreateShader(GL_VERTEX_SHADER);
         const char *src_vertex = shader_vertex;

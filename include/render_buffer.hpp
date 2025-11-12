@@ -12,7 +12,7 @@
 
 class RenderBuffer {
    public:
-    RenderBuffer(GladGLContext &gl)
+    explicit RenderBuffer(GladGLContext &gl)
         : gl{gl},
           vbo_inst{gl},
           line_buffer{gl, vbo_inst},

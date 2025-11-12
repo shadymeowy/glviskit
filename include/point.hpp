@@ -65,7 +65,7 @@ class PointBuffer {
         float size;
     };
 
-    PointBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+    explicit PointBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
         : gl{gl}, vbo{gl}, ebo{gl}, vaos{}, vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {

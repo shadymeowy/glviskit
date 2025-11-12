@@ -14,7 +14,7 @@
 
 class Renderer {
    public:
-    Renderer(GladGLContext &gl)
+    explicit Renderer(GladGLContext &gl)
         : gl{gl},
           program_line{gl},
           program_point{gl},

@@ -65,7 +65,7 @@ class LineBuffer {
         float size;
     };
 
-    LineBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+    explicit LineBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
         : gl{gl},
           vbo{gl},
           ebo{gl},
