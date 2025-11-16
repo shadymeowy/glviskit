@@ -1,6 +1,5 @@
 #include <cmath>
 
-#include "glm/fwd.hpp"
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
@@ -52,6 +51,7 @@ int main() {
     std::cout << "OpenGL Version: " << gl.GetString(GL_VERSION) << std::endl;
 
     glfwMakeContextCurrent(window);
+    gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
     gl.Viewport(0, 0, width, height);
@@ -64,6 +64,7 @@ int main() {
     gl.Enable(GL_MULTISAMPLE);
 
     glfwMakeContextCurrent(window2);
+    gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
     int width2, height2;
     glfwGetFramebufferSize(window2, &width2, &height2);
     gl.Viewport(0, 0, width2, height2);
@@ -179,7 +180,6 @@ int main() {
 
         glfwMakeContextCurrent(window);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         gl.Viewport(0, 0, width, height);
@@ -190,7 +190,6 @@ int main() {
 
         glfwMakeContextCurrent(window2);
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
         int width2, height2;
         glfwGetFramebufferSize(window2, &width2, &height2);
         gl.Viewport(0, 0, width2, height2);
