@@ -14,7 +14,6 @@ find_package(glm REQUIRED)
 
 add_executable(${PROJECT_NAME}
     "src/main.cpp"
-    "src/gl.c"
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
