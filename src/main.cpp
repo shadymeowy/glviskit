@@ -7,78 +7,20 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-#include "camera.hpp"
-#include "renderer.hpp"
+#include "window.hpp"
 
 float randFloat() { return static_cast<float>(rand()) / RAND_MAX; }
 
 int main() {
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
-    }
+    GLFWManager manager{};
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
+    auto window = manager.CreateWindow(800, 600, "First Window");
+    auto window2 = manager.CreateWindow(400, 300, "Second Window");
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "First Window", NULL, NULL);
-    if (window == NULL) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
+    auto render_buffer = manager.CreateRenderBuffer();
+    window.AddRenderBuffer(render_buffer);
+    window2.AddRenderBuffer(render_buffer);
 
-    GLFWwindow *window2 =
-        glfwCreateWindow(400, 300, "Second Window", NULL, window);
-    if (window2 == NULL) {
-        std::cerr << "Failed to create second GLFW window" << std::endl;
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return -1;
-    }
-
-    GladGLContext gl;
-    glfwMakeContextCurrent(window);
-    if (!gladLoadGLContext(&gl, (GLADloadfunc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD Context" << std::endl;
-        glfwDestroyWindow(window);
-        glfwDestroyWindow(window2);
-        glfwTerminate();
-        return -1;
-    }
-    std::cout << "OpenGL Version: " << gl.GetString(GL_VERSION) << std::endl;
-
-    glfwMakeContextCurrent(window);
-    gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-    gl.Viewport(0, 0, width, height);
-    gl.Enable(GL_DEPTH_TEST);
-    gl.Enable(GL_BLEND);
-    gl.Disable(GL_CULL_FACE);
-    gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    gl.BlendEquation(GL_FUNC_ADD);
-    gl.Enable(GL_PROGRAM_POINT_SIZE);
-    gl.Enable(GL_MULTISAMPLE);
-
-    glfwMakeContextCurrent(window2);
-    gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
-    int width2, height2;
-    glfwGetFramebufferSize(window2, &width2, &height2);
-    gl.Viewport(0, 0, width2, height2);
-    gl.Enable(GL_DEPTH_TEST);
-    gl.Enable(GL_BLEND);
-    gl.Disable(GL_CULL_FACE);
-    gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    gl.BlendEquation(GL_FUNC_ADD);
-    gl.Enable(GL_PROGRAM_POINT_SIZE);
-    gl.Enable(GL_MULTISAMPLE);
-
-    Renderer renderer{gl};
-
-    auto render_buffer = renderer.CreateRenderBuffer();
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         int s = (i % 2 == 0) ? 1 : -1;
@@ -90,9 +32,14 @@ int main() {
             glm::translate(glm::mat4(1.0f),
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
-    auto render_buffer_sine = renderer.CreateRenderBuffer();
+    auto render_buffer_sine = manager.CreateRenderBuffer();
+    window.AddRenderBuffer(render_buffer_sine);
+    window2.AddRenderBuffer(render_buffer_sine);
 
-    auto render_buffer_axes = renderer.CreateRenderBuffer();
+    auto render_buffer_axes = manager.CreateRenderBuffer();
+    window.AddRenderBuffer(render_buffer_axes);
+    window2.AddRenderBuffer(render_buffer_axes);
+
     render_buffer_axes->Size(5.0f);
     render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
     render_buffer_axes->Line({0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f});
@@ -109,28 +56,26 @@ int main() {
                               randFloat() * 2.0f - 1.0f});
     }
 
-    double prev_time = glfwGetTime();
-    int fps_counter = 0;
-    int frame_index = 0;
-
-    Camera camera{};
+    auto &camera = window.GetCamera();
     camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
-    camera.SetViewportSize(width, height);
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     camera.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
     camera.SetPreserveAspectRatio(true);
     camera.SetDistance(15.0f);
 
-    Camera camera2{};
+    auto &camera2 = window2.GetCamera();
     camera2.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
-    camera2.SetViewportSize(width2, height2);
     camera2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     camera2.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
     camera2.SetPreserveAspectRatio(true);
     camera2.SetDistance(15.0f);
 
     float angle = 0.0f;
-    while (!glfwWindowShouldClose(window)) {
+    int fps_counter = 0;
+    int frame_index = 0;
+
+    double prev_time = glfwGetTime();
+    while (manager.LoopEvents()) {
         double curr_time = glfwGetTime();
 
         fps_counter++;
@@ -178,38 +123,8 @@ int main() {
         }
         render_buffer_sine->LineEnd();
 
-        glfwMakeContextCurrent(window);
-        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        gl.Viewport(0, 0, width, height);
-        camera.SetViewportSize(width, height);
-        renderer.SetScreenSize(glm::vec2(width, height));
-        renderer.Render(0, camera);
-        glfwSwapBuffers(window);
-
-        glfwMakeContextCurrent(window2);
-        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        int width2, height2;
-        glfwGetFramebufferSize(window2, &width2, &height2);
-        gl.Viewport(0, 0, width2, height2);
-        camera2.SetViewportSize(width2, height2);
-        renderer.SetScreenSize(glm::vec2(width2, height2));
-        renderer.Render(1, camera2);
-        glfwSwapBuffers(window2);
-
-        // check for errors
-        GLenum err;
-        while ((err = gl.GetError()) != GL_NO_ERROR) {
-            std::cerr << "OpenGL error: " << err << std::endl;
-            return -1;
-        }
-
-        glfwPollEvents();
+        window.Render();
+        window2.Render();
     }
-
-    glfwDestroyWindow(window);
-    // glfwDestroyWindow(window2);
-    glfwTerminate();
     return 0;
 }

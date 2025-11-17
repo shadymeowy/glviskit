@@ -114,7 +114,6 @@ class Program {
         if (loc_mvp == -1) {
             return;
         }
-        Use();
         gl.UniformMatrix4fv(loc_mvp, 1, GL_FALSE, &mvp[0][0]);
     }
 
@@ -122,7 +121,6 @@ class Program {
         if (loc_screen_size == -1) {
             return;
         }
-        Use();
         gl.Uniform2fv(loc_screen_size, 1, &screen_size[0]);
     }
 

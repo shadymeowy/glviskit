@@ -21,56 +21,74 @@ class Renderer {
           program_anchor{gl},
           buffers{} {}
 
-    void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
-        buffers.push_back(render_buffer);
-    }
+    void Render(GLuint ctx_id, int width, int height) {
+        // if gl context not initialized, do it now
+        if (!initialized_) {
+            InitializeContext();
+        }
 
-    std::shared_ptr<RenderBuffer> CreateRenderBuffer() {
-        auto render_buffer = std::make_shared<RenderBuffer>(gl);
-        AddRenderBuffer(render_buffer);
-        return render_buffer;
-    }
+        // update camera viewport size
+        camera.SetViewportSize(width, height);
+        // set viewport
+        gl.Viewport(0, 0, width, height);
+        // clear buffers
+        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    void Render(GLuint ctx_id, const Camera &camera) {
-        SetMVP(camera.GetTransformMatrix());
+        // get camera transform matrix
+        auto mvp = camera.GetTransformMatrix();
 
         // Render all line buffers
         program_line.Use();
+        program_line.SetScreenSize({width, height});
+        program_line.SetMVP(mvp);
         for (auto &line_buf : buffers) {
             line_buf->line_buffer.Render(ctx_id);
         }
 
         // Render all point buffers
         program_point.Use();
+        program_point.SetScreenSize({width, height});
+        program_point.SetMVP(mvp);
         for (auto &point_buf : buffers) {
             point_buf->point_buffer.Render(ctx_id);
         }
 
         // Render all anchor buffers
         program_anchor.Use();
+        program_anchor.SetScreenSize({width, height});
+        program_anchor.SetMVP(mvp);
         for (auto &anchor_buf : buffers) {
             anchor_buf->anchor_buffer.Render(ctx_id);
         }
     }
 
-    void SetScreenSize(const glm::vec2 &screen_size) {
-        program_line.SetScreenSize(screen_size);
-        program_point.SetScreenSize(screen_size);
-        program_anchor.SetScreenSize(screen_size);
+    void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
+        buffers.push_back(render_buffer);
     }
 
+    Camera &GetCamera() { return camera; }
+
    private:
-    void SetMVP(const glm::mat4 &mvp) {
-        program_line.SetMVP(mvp);
-        program_point.SetMVP(mvp);
-        program_anchor.SetMVP(mvp);
+    void InitializeContext() {
+        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
+        gl.Enable(GL_DEPTH_TEST);
+        gl.Enable(GL_BLEND);
+        gl.Disable(GL_CULL_FACE);
+        gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        gl.BlendEquation(GL_FUNC_ADD);
+        gl.Enable(GL_PROGRAM_POINT_SIZE);
+        gl.Enable(GL_MULTISAMPLE);
+
+        initialized_ = true;
     }
 
     GladGLContext &gl;
-
+    Camera camera;
     LineProgram program_line;
     PointProgram program_point;
     AnchorProgram program_anchor;
+
+    bool initialized_{false};
 
     std::vector<std::shared_ptr<RenderBuffer>> buffers;
 };
