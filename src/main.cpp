@@ -18,8 +18,8 @@ int main() {
     auto window2 = manager.CreateWindow(400, 300, "Second Window");
 
     auto render_buffer = manager.CreateRenderBuffer();
-    window.AddRenderBuffer(render_buffer);
-    window2.AddRenderBuffer(render_buffer);
+    window->AddRenderBuffer(render_buffer);
+    window2->AddRenderBuffer(render_buffer);
 
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
@@ -33,12 +33,12 @@ int main() {
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
     auto render_buffer_sine = manager.CreateRenderBuffer();
-    window.AddRenderBuffer(render_buffer_sine);
-    window2.AddRenderBuffer(render_buffer_sine);
+    window->AddRenderBuffer(render_buffer_sine);
+    window2->AddRenderBuffer(render_buffer_sine);
 
     auto render_buffer_axes = manager.CreateRenderBuffer();
-    window.AddRenderBuffer(render_buffer_axes);
-    window2.AddRenderBuffer(render_buffer_axes);
+    window->AddRenderBuffer(render_buffer_axes);
+    window2->AddRenderBuffer(render_buffer_axes);
 
     render_buffer_axes->Size(5.0f);
     render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
@@ -56,14 +56,14 @@ int main() {
                               randFloat() * 2.0f - 1.0f});
     }
 
-    auto &camera = window.GetCamera();
+    auto &camera = window->GetCamera();
     camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
     camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     camera.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
     camera.SetPreserveAspectRatio(true);
     camera.SetDistance(15.0f);
 
-    auto &camera2 = window2.GetCamera();
+    auto &camera2 = window2->GetCamera();
     camera2.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
     camera2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     camera2.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
@@ -123,8 +123,8 @@ int main() {
         }
         render_buffer_sine->LineEnd();
 
-        window.Render();
-        window2.Render();
+        window->Render();
+        window2->Render();
     }
     return 0;
 }

@@ -43,19 +43,22 @@ class GLFWWindow {
 
 class Window {
    public:
+    Window(GLFWwindow *window, GLuint window_id, GladGLContext &gl)
+        : window_(window), gl(gl), renderer(gl), window_id_(window_id) {}
+
     void Render() {
         // make context current
         // renderer expects the context to be current
-        glfwMakeContextCurrent(window_->ptr);
+        glfwMakeContextCurrent(window_.ptr);
 
         // update screen size
         int width, height;
-        glfwGetFramebufferSize(window_->ptr, &width, &height);
+        glfwGetFramebufferSize(window_.ptr, &width, &height);
 
         // do rendering
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer.Render(window_id_, width, height);
-        glfwSwapBuffers(window_->ptr);
+        glfwSwapBuffers(window_.ptr);
 
         // check for errors
         GLenum err;
@@ -71,14 +74,12 @@ class Window {
         renderer.AddRenderBuffer(render_buffer);
     }
 
-   private:
-    Window(std::shared_ptr<GLFWWindow> window, GLuint window_id,
-           GladGLContext &gl)
-        : window_(window), gl(gl), renderer(gl), window_id_(window_id) {}
+    GLFWwindow *GetHandle() { return window_.ptr; }
 
+   private:
     GladGLContext &gl;
     // window handle
-    std::shared_ptr<GLFWWindow> window_;
+    GLFWWindow window_;
     // renderer for this window
     Renderer renderer;
     // window id for bookkeeping
@@ -102,11 +103,12 @@ class GLFWManager {
     GLFWManager(GLFWManager &&) = delete;
     GLFWManager &operator=(GLFWManager &&) = delete;
 
-    Window CreateWindow(int width, int height, const char *title) {
+    std::shared_ptr<Window> CreateWindow(int width, int height,
+                                         const char *title) {
         // check if we have existing windows to share context
         GLFWwindow *shared_handle = nullptr;
         if (!windows_.empty()) {
-            shared_handle = windows_.begin()->get()->ptr;
+            shared_handle = windows_.begin()->get()->GetHandle();
         }
 
         // set window hints for OpenGL context
@@ -117,17 +119,17 @@ class GLFWManager {
         glfwWindowHint(GLFW_SAMPLES, 4);
 
         // create window
-        GLFWWindow window_handle =
+        GLFWwindow *window_handle =
             glfwCreateWindow(width, height, title, NULL, shared_handle);
         // check for errors at creation
-        if (window_handle.ptr == NULL) {
+        if (window_handle == NULL) {
             glfwTerminate();
             throw std::runtime_error("Failed to create GLFW window");
         }
 
         // init opengl context if this is the first window
         if (!gl_initialized_) {
-            glfwMakeContextCurrent(window_handle.ptr);
+            glfwMakeContextCurrent(window_handle);
             if (!gladLoadGLContext(&gl, (GLADloadfunc)glfwGetProcAddress)) {
                 throw std::runtime_error("Failed to initialize GLAD Context");
             }
@@ -135,9 +137,10 @@ class GLFWManager {
         }
 
         // store window handle in shared ptr
-        auto window = std::make_shared<GLFWWindow>(std::move(window_handle));
+        auto window =
+            std::make_shared<Window>(window_handle, next_window_id_++, gl);
         windows_.insert(window);
-        return Window(window, next_window_id_++, gl);
+        return window;
     }
 
     std::shared_ptr<RenderBuffer> CreateRenderBuffer() {
@@ -152,6 +155,6 @@ class GLFWManager {
    private:
     GladGLContext gl;
     bool gl_initialized_{false};
-    std::set<std::shared_ptr<GLFWWindow>> windows_;
+    std::set<std::shared_ptr<Window>> windows_;
     GLuint next_window_id_{0};
 };
