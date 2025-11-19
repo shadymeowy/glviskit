@@ -70,12 +70,8 @@ class SDLGLContextPtr {
 
 class SDLWindow {
    public:
-    SDLWindow(GladGLContext &gl, GLuint wid, const char *title, int w, int h)
-        : gl{gl},
-          renderer(gl),
-          window_id_{wid},
-          window_{nullptr},
-          context_{nullptr} {
+    SDLWindow(GladGLContext &gl, const char *title, int w, int h)
+        : gl{gl}, renderer(gl), window_{nullptr}, context_{nullptr} {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
@@ -93,6 +89,7 @@ class SDLWindow {
                       << std::endl;
             exit(EXIT_FAILURE);
         }
+        window_id_ = SDL_GetWindowID(window_.ptr);
 
         context_ = SDLGLContextPtr(SDL_GL_CreateContext(window_.ptr));
 
@@ -166,11 +163,11 @@ int main() {
 
     // create a window 1
     SDL_GL_MakeCurrent(window_master, context_master);
-    SDLWindow window1(gl, 1, "Window1", 800, 600);
+    SDLWindow window1(gl, "Window1", 800, 600);
 
     // create a window 2
     SDL_GL_MakeCurrent(window_master, context_master);
-    SDLWindow window2(gl, 2, "Window2", 800, 600);
+    SDLWindow window2(gl, "Window2", 800, 600);
 
     auto render_buffer = std::make_shared<RenderBuffer>(gl);
     window1.AddRenderBuffer(render_buffer);
@@ -284,6 +281,9 @@ int main() {
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         running = false;
                     }
+                    std::cout
+                        << "Key down: " << SDL_GetKeyName(event.key.keysym.sym)
+                        << "Window ID: " << event.key.windowID << std::endl;
                     break;
                 default:
                     break;
