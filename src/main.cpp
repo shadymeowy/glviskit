@@ -106,7 +106,8 @@ class SDLWindow {
         renderer.AddRenderBuffer(render_buffer);
     }
 
-    Camera &GetCamera() { return renderer.GetCamera(); }
+    std::shared_ptr<Camera> GetCamera() { return renderer.GetCamera(); }
+    void SetCamera(std::shared_ptr<Camera> cam) { renderer.SetCamera(cam); }
 
     void MakeCurrent() { SDL_GL_MakeCurrent(window_.ptr, context_.ctx); }
 
@@ -133,6 +134,8 @@ class SDLWindow {
         }
     }
 
+    Uint32 GetWindowID() const { return window_id_; }
+
    private:
     GladGLContext &gl;
 
@@ -143,35 +146,105 @@ class SDLWindow {
     GLuint window_id_;
 };
 
-int main() {
-    GladGLContext _gl;
-    GladGLContext &gl = _gl;
+class SDLManager {
+   public:
+    SDLManager() {
+        SDL_Init(SDL_INIT_VIDEO);
 
-    // init SDL and create hidden window for context
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-    SDL_Window *window_master = SDL_CreateWindow(
-        "Hidden", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-    auto context_master = SDL_GL_CreateContext(window_master);
-    gladLoadGLContext(&gl, (GLADloadfunc)SDL_GL_GetProcAddress);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+
+        window_master_ = SDL_CreateWindow(
+            "Hidden", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
+            SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+
+        if (!window_master_.ptr) {
+            std::cerr << "Failed to create SDL master window: "
+                      << SDL_GetError() << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        context_master_ = SDL_GL_CreateContext(window_master_.ptr);
+
+        if (!context_master_.ctx) {
+            std::cerr << "Failed to create SDL master GL context: "
+                      << SDL_GetError() << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        int ret = gladLoadGLContext(&gl_, (GLADloadfunc)SDL_GL_GetProcAddress);
+        if (ret == 0) {
+            std::cerr << "Failed to initialize GLAD" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    ~SDLManager() {
+        windows_.clear();
+
+        SDL_Quit();
+    }
+
+    std::shared_ptr<SDLWindow> CreateWindow(const char *title, int w, int h) {
+        // make master context current for context sharing
+        SDL_GL_MakeCurrent(window_master_.ptr, context_master_.ctx);
+
+        auto window = std::make_shared<SDLWindow>(gl_, title, w, h);
+        windows_.insert({window->GetWindowID(), window});
+        return window;
+    }
+
+    bool Loop() {
+        for (auto &[id, window] : windows_) {
+            window->Render();
+        }
+
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_QUIT:
+                    return false;
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_ESCAPE) {
+                        return false;
+                    }
+                    std::cout
+                        << "Key down: " << SDL_GetKeyName(event.key.keysym.sym)
+                        << "Window ID: " << event.key.windowID << std::endl;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return true;
+    }
+
+    std::shared_ptr<RenderBuffer> CreateRenderBuffer() {
+        return std::make_shared<RenderBuffer>(gl_);
+    }
+
+   private:
+    GladGLContext gl_{};
+    SDLWindowPtr window_master_{nullptr};
+    SDLGLContextPtr context_master_{nullptr};
+    std::map<Uint32, std::shared_ptr<SDLWindow>> windows_;
+};
+
+int main() {
+    SDLManager sdl_manager{};
 
     // create a window 1
-    SDL_GL_MakeCurrent(window_master, context_master);
-    SDLWindow window1(gl, "Window1", 800, 600);
+    auto window1 = sdl_manager.CreateWindow("Window1", 800, 600);
 
     // create a window 2
-    SDL_GL_MakeCurrent(window_master, context_master);
-    SDLWindow window2(gl, "Window2", 800, 600);
-
-    auto render_buffer = std::make_shared<RenderBuffer>(gl);
-    window1.AddRenderBuffer(render_buffer);
-    window2.AddRenderBuffer(render_buffer);
+    auto window2 = sdl_manager.CreateWindow("Window2", 800, 600);
+    auto render_buffer = sdl_manager.CreateRenderBuffer();
+    window1->AddRenderBuffer(render_buffer);
+    window2->AddRenderBuffer(render_buffer);
 
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
@@ -184,13 +257,13 @@ int main() {
             glm::translate(glm::mat4(1.0f),
                            glm::vec3(-3.0f * (i - 0.5), 0, 0)));
     }
-    auto render_buffer_sine = std::make_shared<RenderBuffer>(gl);
-    window1.AddRenderBuffer(render_buffer_sine);
-    window2.AddRenderBuffer(render_buffer_sine);
+    auto render_buffer_sine = sdl_manager.CreateRenderBuffer();
+    window1->AddRenderBuffer(render_buffer_sine);
+    window2->AddRenderBuffer(render_buffer_sine);
 
-    auto render_buffer_axes = std::make_shared<RenderBuffer>(gl);
-    window1.AddRenderBuffer(render_buffer_axes);
-    window2.AddRenderBuffer(render_buffer_axes);
+    auto render_buffer_axes = sdl_manager.CreateRenderBuffer();
+    window1->AddRenderBuffer(render_buffer_axes);
+    window2->AddRenderBuffer(render_buffer_axes);
 
     render_buffer_axes->Size(5.0f);
     render_buffer_axes->Color({1.0f, 0.0f, 0.0f, 1.0f});
@@ -208,32 +281,31 @@ int main() {
                               randFloat() * 2.0f - 1.0f});
     }
 
-    auto &camera = window1.GetCamera();
-    camera.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
-    camera.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    camera.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
-    camera.SetPreserveAspectRatio(true);
-    camera.SetDistance(15.0f);
+    auto camera = window1->GetCamera();
+    camera->SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+    camera->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    camera->SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
+    camera->SetPreserveAspectRatio(true);
+    camera->SetDistance(15.0f);
 
-    auto &camera2 = window2.GetCamera();
-    camera2.SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
-    camera2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    camera2.SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
-    camera2.SetPreserveAspectRatio(true);
-    camera2.SetDistance(15.0f);
+    auto camera2 = window2->GetCamera();
+    camera2->SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+    camera2->SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    camera2->SetRotation(glm::vec3(0.0, 0.0f, 0.0f));
+    camera2->SetPreserveAspectRatio(true);
+    camera2->SetDistance(15.0f);
 
     float angle = 0.0f;
     int fps_counter = 0;
     int frame_index = 0;
 
-    bool running = true;
-    while (running) {
+    while (sdl_manager.Loop()) {
         float curr_time = SDL_GetTicks() / 1000.0f;
 
         frame_index++;
         angle += 0.005f;
-        camera.SetRotation({-0.5f, angle, 0.0f});
-        camera2.SetRotation({-0.5f, -angle, 0.0f});
+        camera->SetRotation({-0.5f, angle, 0.0f});
+        camera2->SetRotation({-0.5f, -angle, 0.0f});
 
         for (int i = 0; i < 10; i++) {
             render_buffer->Size(randFloat() * 1.0f + 1.0f);
@@ -267,30 +339,7 @@ int main() {
             render_buffer_sine->LineTo({20.0f * x, 1.5 * y, 1.5 * z});
         }
         render_buffer_sine->LineEnd();
-
-        window1.Render();
-        window2.Render();
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_QUIT:
-                    running = false;
-                    break;
-                case SDL_KEYDOWN:
-                    if (event.key.keysym.sym == SDLK_ESCAPE) {
-                        running = false;
-                    }
-                    std::cout
-                        << "Key down: " << SDL_GetKeyName(event.key.keysym.sym)
-                        << "Window ID: " << event.key.windowID << std::endl;
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 
-    SDL_Quit();
     return 0;
 }

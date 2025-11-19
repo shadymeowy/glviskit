@@ -19,7 +19,8 @@ class Renderer {
           program_line{gl},
           program_point{gl},
           program_anchor{gl},
-          buffers{} {}
+          buffers{},
+          camera{std::make_shared<Camera>()} {}
 
     void Render(GLuint ctx_id, int width, int height) {
         // if gl context not initialized, do it now
@@ -28,14 +29,14 @@ class Renderer {
         }
 
         // update camera viewport size
-        camera.SetViewportSize(width, height);
+        camera->SetViewportSize(width, height);
         // set viewport
         gl.Viewport(0, 0, width, height);
         // clear buffers
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // get camera transform matrix
-        auto mvp = camera.GetTransformMatrix();
+        auto mvp = camera->GetTransformMatrix();
 
         // Render all line buffers
         program_line.Use();
@@ -66,7 +67,8 @@ class Renderer {
         buffers.push_back(render_buffer);
     }
 
-    Camera &GetCamera() { return camera; }
+    std::shared_ptr<Camera> GetCamera() { return camera; }
+    void SetCamera(std::shared_ptr<Camera> cam) { camera = cam; }
 
    private:
     void InitializeContext() {
@@ -83,11 +85,12 @@ class Renderer {
     }
 
     GladGLContext &gl;
-    Camera camera;
     LineProgram program_line;
     PointProgram program_point;
     AnchorProgram program_anchor;
 
+    // make camera shareable across windows
+    std::shared_ptr<Camera> camera;
     bool initialized_{false};
 
     std::vector<std::shared_ptr<RenderBuffer>> buffers;
