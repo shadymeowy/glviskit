@@ -2,6 +2,8 @@
 
 #include <glad/gl.h>
 
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 
 #include "anchor.hpp"
@@ -145,6 +147,25 @@ class RenderBuffer {
     // instancing
     void AddInstance(const glm::mat4 &transform) {
         vbo_inst.Append({transform});
+    }
+
+    void AddInstance(const glm::vec3 &position,
+                     const glm::vec3 &rotation = glm::vec3{0.0f},
+                     const glm::vec3 &scale = glm::vec3{1.0f}) {
+        // translation
+        auto t = glm::translate(glm::mat4{1.0f}, position);
+
+        // rotation
+        auto angle = glm::length(rotation);
+        glm::mat4 r{1.0f};
+        if (angle > 1e-6f) {
+            auto axis = rotation / angle;
+            r = glm::rotate(glm::mat4{1.0f}, angle, axis);
+        }
+
+        // scale
+        auto s = glm::scale(glm::mat4{1.0f}, scale);
+        AddInstance(t * r * s);
     }
 
     // save and restore buffers
