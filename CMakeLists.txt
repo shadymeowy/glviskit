@@ -9,7 +9,7 @@ project(drawing3dtest
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-find_package(glfw3 CONFIG REQUIRED)
+find_package(sdl2 CONFIG REQUIRED)
 find_package(glm REQUIRED)
 
 add_executable(${PROJECT_NAME}
@@ -21,6 +21,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    glfw
+    SDL2::SDL2
     glm::glm
 )
