@@ -134,6 +134,11 @@ class SDLWindow {
         }
     }
 
+    void CallbackKeyDown(const SDL_KeyboardEvent &key) {
+        std::cout << "Key down in window " << window_id_ << ": "
+                  << SDL_GetKeyName(key.keysym.sym) << std::endl;
+    }
+
     Uint32 GetWindowID() const { return window_id_; }
 
    private:
@@ -212,9 +217,10 @@ class SDLManager {
                     if (event.key.keysym.sym == SDLK_ESCAPE) {
                         return false;
                     }
-                    std::cout
-                        << "Key down: " << SDL_GetKeyName(event.key.keysym.sym)
-                        << "Window ID: " << event.key.windowID << std::endl;
+                    if (windows_.find(event.key.windowID) != windows_.end()) {
+                        windows_[event.key.windowID]->CallbackKeyDown(
+                            event.key);
+                    }
                     break;
                 default:
                     break;
