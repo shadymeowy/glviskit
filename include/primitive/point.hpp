@@ -18,7 +18,7 @@ namespace glviskit::point {
 // and generic components for rendering.
 
 // First, we define the shader sources
-inline constexpr char shader_vertex_point[] = R"glsl(
+inline constexpr char shader_vertex[] = R"glsl(
     #version 330 core
     
     layout(location = 0) in vec3 a_position;
@@ -37,7 +37,7 @@ inline constexpr char shader_vertex_point[] = R"glsl(
     }
 )glsl";
 
-inline constexpr char shader_fragment_point[] = R"glsl(
+inline constexpr char shader_fragment[] = R"glsl(
     #version 330 core
     in vec4 v_color;
     out vec4 f_color;
@@ -50,7 +50,7 @@ inline constexpr char shader_fragment_point[] = R"glsl(
 // Define PointProgram which holds the shaders.
 // In theory, multiple point programs with different shaders could be defined
 // for same PointBuffer.
-using PointProgram = Program<shader_vertex_point, shader_fragment_point>;
+using Program = Program<shader_vertex, shader_fragment>;
 
 // PointBuffer is responsible for storing and rendering points
 // with position, color, and size attributes.
@@ -59,7 +59,7 @@ using PointProgram = Program<shader_vertex_point, shader_fragment_point>;
 
 // Any VBO template class can be used to store its elements.
 // We generally opt for StackVBO for dynamic data.
-class PointBuffer {
+class Buffer {
    public:
     struct Element {
         glm::vec3 position;
@@ -67,7 +67,7 @@ class PointBuffer {
         float size;
     };
 
-    explicit PointBuffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
+    explicit Buffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
         : gl{gl}, vbo{gl}, ebo{gl}, vaos{}, vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {

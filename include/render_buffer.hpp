@@ -1,16 +1,15 @@
 #pragma once
 
-#include "glad.hpp"
-
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 
-#include "anchor.hpp"
 #include "buffer_stack.hpp"
+#include "glad.hpp"
 #include "instance.hpp"
-#include "line.hpp"
-#include "point.hpp"
+#include "primitive/anchor.hpp"
+#include "primitive/line.hpp"
+#include "primitive/point.hpp"
 
 namespace glviskit {
 
@@ -202,9 +201,9 @@ class RenderBuffer {
     InstanceBuffer vbo_inst;
 
     // buffers to render
-    line::LineBuffer line_buffer;
-    point::PointBuffer point_buffer;
-    anchor::AnchorBuffer anchor_buffer;
+    line::Buffer line_buffer;
+    point::Buffer point_buffer;
+    anchor::Buffer anchor_buffer;
 
     // attributes for rendering
     glm::vec4 color{1.0f};
