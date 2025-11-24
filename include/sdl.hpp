@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include "glad.hpp"
+#include "gl/glad.hpp"
 
 #include <iostream>
 #include <map>

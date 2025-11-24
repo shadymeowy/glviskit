@@ -1,10 +1,10 @@
 #pragma once
 
-#include "glad.hpp"
+#include "gl/glad.hpp"
 
 #include <glm/glm.hpp>
 
-#include "buffer_stack.hpp"
+#include "gl/buffer_stack.hpp"
 
 namespace glviskit {
 

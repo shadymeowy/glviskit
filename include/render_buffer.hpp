@@ -4,9 +4,9 @@
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 
-#include "buffer_stack.hpp"
-#include "glad.hpp"
-#include "instance.hpp"
+#include "gl/buffer_stack.hpp"
+#include "gl/glad.hpp"
+#include "gl/instance.hpp"
 #include "primitive/anchor.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"

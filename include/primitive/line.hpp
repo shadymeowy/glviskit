@@ -1,15 +1,15 @@
 #pragma once
 
-#include "glad.hpp"
+#include "gl/glad.hpp"
 
 #include <cstddef>
 #include <glm/glm.hpp>
 #include <map>
 
-#include "buffer_stack.hpp"
-#include "instance.hpp"
-#include "program.hpp"
-#include "vao.hpp"
+#include "gl/buffer_stack.hpp"
+#include "gl/instance.hpp"
+#include "gl/program.hpp"
+#include "gl/vao.hpp"
 
 namespace glviskit::line {
 

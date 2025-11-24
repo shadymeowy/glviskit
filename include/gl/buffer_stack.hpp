@@ -1,13 +1,13 @@
 #pragma once
 
-#include "glad.hpp"
+#include "gl/glad.hpp"
 
 #include <algorithm>
 #include <cstddef>
 #include <utility>
 #include <vector>
 
-#include "buffer_object.hpp"
+#include "gl/buffer_object.hpp"
 
 namespace glviskit {
 

@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "camera.hpp"
-#include "glad.hpp"
+#include "gl/glad.hpp"
 #include "primitive/anchor.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
