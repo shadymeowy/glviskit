@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
@@ -11,6 +11,8 @@
 #include "instance.hpp"
 #include "line.hpp"
 #include "point.hpp"
+
+namespace glviskit {
 
 class RenderBuffer {
    public:
@@ -42,7 +44,7 @@ class RenderBuffer {
         point_buffer.ebo.Append(index);
     }
 
-    // Efficient way to draw connected lines
+    // Efficient way to draw connected lglviskitines
     void LineTo(glm::vec3 position) {
         size_t base_index = line_buffer.vbo.Size();
 
@@ -200,9 +202,9 @@ class RenderBuffer {
     InstanceBuffer vbo_inst;
 
     // buffers to render
-    LineBuffer line_buffer;
-    PointBuffer point_buffer;
-    AnchorBuffer anchor_buffer;
+    line::LineBuffer line_buffer;
+    point::PointBuffer point_buffer;
+    anchor::AnchorBuffer anchor_buffer;
 
     // attributes for rendering
     glm::vec4 color{1.0f};
@@ -217,3 +219,5 @@ class RenderBuffer {
 
     friend class Renderer;
 };
+
+}  // namespace glviskit

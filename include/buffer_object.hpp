@@ -1,13 +1,17 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <cstddef>
 
-template <typename T, GLenum TYPE = GL_ARRAY_BUFFER, GLenum USAGE = GL_DYNAMIC_DRAW>
+namespace glviskit {
+
+template <typename T, GLenum TYPE = GL_ARRAY_BUFFER,
+          GLenum USAGE = GL_DYNAMIC_DRAW>
 class BufferObject {
    public:
-    explicit BufferObject(GladGLContext &gl, size_t size) : gl{gl}, size_{size} {
+    explicit BufferObject(GladGLContext &gl, size_t size)
+        : gl{gl}, size_{size} {
         gl.GenBuffers(1, &buffer);
         Bind();
         gl.BufferData(TYPE, size * sizeof(T), nullptr, USAGE);
@@ -53,3 +57,5 @@ class BufferObject {
     GladGLContext &gl;
     GLuint buffer;
 };
+
+}  // namespace glviskit

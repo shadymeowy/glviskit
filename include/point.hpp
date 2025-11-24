@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <cstddef>
 #include <glm/glm.hpp>
@@ -10,6 +10,8 @@
 #include "instance.hpp"
 #include "program.hpp"
 #include "vao.hpp"
+
+namespace glviskit::point {
 
 // This file defines a PointBuffer class.
 // While quite simple, it is the reference for defining reusable
@@ -188,3 +190,5 @@ class PointBuffer {
         }
     }
 };
+
+}  // namespace glviskit::point

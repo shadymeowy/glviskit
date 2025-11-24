@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -8,6 +8,8 @@
 #include <vector>
 
 #include "buffer_object.hpp"
+
+namespace glviskit {
 
 template <typename T, GLenum TYPE = GL_ARRAY_BUFFER>
 class BufferStack {
@@ -89,3 +91,5 @@ class BufferStack {
     GladGLContext &gl;
     BufferObject<T, TYPE> buffer;
 };
+
+}  // namespace glviskit

@@ -1,10 +1,12 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <cstddef>
 #include <glm/glm.hpp>
 #include <iostream>
+
+namespace glviskit {
 
 template <const char *shader_vertex, const char *shader_fragment>
 class Program {
@@ -129,3 +131,5 @@ class Program {
     GLuint program;
     GLuint loc_mvp, loc_screen_size;
 };
+
+}  // namespace glviskit

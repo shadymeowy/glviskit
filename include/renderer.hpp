@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -11,6 +11,8 @@
 #include "line.hpp"
 #include "point.hpp"
 #include "render_buffer.hpp"
+
+namespace glviskit {
 
 class Renderer {
    public:
@@ -85,9 +87,9 @@ class Renderer {
     }
 
     GladGLContext &gl;
-    LineProgram program_line;
-    PointProgram program_point;
-    AnchorProgram program_anchor;
+    line::LineProgram program_line;
+    point::PointProgram program_point;
+    anchor::AnchorProgram program_anchor;
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;
@@ -95,3 +97,5 @@ class Renderer {
 
     std::vector<std::shared_ptr<RenderBuffer>> buffers;
 };
+
+}  // namespace glviskit

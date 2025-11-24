@@ -1,6 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <iostream>
 #include <map>
@@ -9,6 +9,8 @@
 #include "camera.hpp"
 #include "render_buffer.hpp"
 #include "renderer.hpp"
+
+namespace glviskit::sdl {
 
 class SDLWindowPtr {
    public:
@@ -68,9 +70,9 @@ class SDLGLContextPtr {
     SDL_GLContext ctx;
 };
 
-class SDLWindow {
+class Window {
    public:
-    SDLWindow(GladGLContext &gl, const char *title, int w, int h)
+    Window(GladGLContext &gl, const char *title, int w, int h)
         : gl{gl}, renderer(gl), window_{nullptr}, context_{nullptr} {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -151,9 +153,9 @@ class SDLWindow {
     GLuint window_id_;
 };
 
-class SDLManager {
+class Manager {
    public:
-    SDLManager() {
+    Manager() {
         SDL_Init(SDL_INIT_VIDEO);
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -188,17 +190,17 @@ class SDLManager {
         }
     }
 
-    ~SDLManager() {
+    ~Manager() {
         windows_.clear();
 
         SDL_Quit();
     }
 
-    std::shared_ptr<SDLWindow> CreateWindow(const char *title, int w, int h) {
+    std::shared_ptr<Window> CreateWindow(const char *title, int w, int h) {
         // make master context current for context sharing
         SDL_GL_MakeCurrent(window_master_.ptr, context_master_.ctx);
 
-        auto window = std::make_shared<SDLWindow>(gl_, title, w, h);
+        auto window = std::make_shared<Window>(gl_, title, w, h);
         windows_.insert({window->GetWindowID(), window});
         return window;
     }
@@ -237,5 +239,7 @@ class SDLManager {
     GladGLContext gl_{};
     SDLWindowPtr window_master_{nullptr};
     SDLGLContextPtr context_master_{nullptr};
-    std::map<Uint32, std::shared_ptr<SDLWindow>> windows_;
+    std::map<Uint32, std::shared_ptr<Window>> windows_;
 };
+
+}  // namespace glviskit::sdl

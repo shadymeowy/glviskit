@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <cstddef>
 #include <glm/glm.hpp>
@@ -10,6 +10,8 @@
 #include "instance.hpp"
 #include "program.hpp"
 #include "vao.hpp"
+
+namespace glviskit::line {
 
 inline constexpr char shader_vertex_line[] = R"glsl(
     #version 330 core
@@ -178,3 +180,5 @@ class LineBuffer {
         }
     }
 };
+
+}  // namespace glviskit::line

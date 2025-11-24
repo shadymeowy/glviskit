@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
 
 #include <cstddef>
 #include <glm/glm.hpp>
@@ -10,6 +10,8 @@
 #include "instance.hpp"
 #include "program.hpp"
 #include "vao.hpp"
+
+namespace glviskit::anchor {
 
 inline constexpr char shader_vertex_anchor[] = R"glsl(
     #version 330 core
@@ -168,3 +170,5 @@ class AnchorBuffer {
         }
     }
 };
+
+}  // namespace glviskit::anchor

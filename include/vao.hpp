@@ -1,6 +1,8 @@
 #pragma once
 
-#include <glad/gl.h>
+#include "glad.hpp"
+
+namespace glviskit {
 
 class VAO {
    public:
@@ -38,3 +40,5 @@ class VAO {
     GladGLContext &gl;
     GLuint vao;
 };
+
+}  // namespace glviskit

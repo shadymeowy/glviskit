@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/matrix.hpp>
 
+namespace glviskit {
+
 class Camera {
    public:
     explicit Camera() {
@@ -123,3 +125,5 @@ class Camera {
     bool preserve_aspect_ratio{true};
     float aspect_ratio{1.0f};
 };
+
+}  // namespace glviskit
