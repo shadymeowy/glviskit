@@ -1,9 +1,9 @@
-#include "sdl.hpp"
+#include "glviskit.hpp"
 
 float randFloat() { return static_cast<float>(rand()) / RAND_MAX; }
 
 int main() {
-    glviskit::sdl::Manager sdl_manager{};
+    glviskit::Manager sdl_manager{};
 
     // create a window 1
     auto window1 = sdl_manager.CreateWindow("Window1", 800, 600);
