@@ -1,12 +1,16 @@
 #pragma once
+#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
-#include "gl/glad.hpp"
+#ifdef CreateWindow
+#undef CreateWindow
+#endif
 
 #include <iostream>
 #include <map>
 #include <memory>
 
 #include "camera.hpp"
+#include "gl/glad.hpp"
 #include "render_buffer.hpp"
 #include "renderer.hpp"
 
@@ -82,10 +86,16 @@ class Window {
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
-        window_ = SDLWindowPtr(SDL_CreateWindow(
+        auto handle = SDL_CreateWindow(
             title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE));
+            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+        if (!handle) {
+            std::cerr << "Failed to create SDL window: " << SDL_GetError()
+                      << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
+        window_ = SDLWindowPtr(handle);
         if (!window_.ptr) {
             std::cerr << "Failed to create SDL window: " << SDL_GetError()
                       << std::endl;
@@ -116,7 +126,12 @@ class Window {
     void Render() {
         // make context current
         // renderer expects the context to be current
-        SDL_GL_MakeCurrent(window_.ptr, context_.ctx);
+        int ret = SDL_GL_MakeCurrent(window_.ptr, context_.ctx);
+        if (ret != 0) {
+            std::cerr << "Failed to make master context current: "
+                      << SDL_GetError() << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
         // update screen size
         int width, height;
