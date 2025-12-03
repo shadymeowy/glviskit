@@ -1,13 +1,12 @@
 #pragma once
 
-#include "gl/glad.hpp"
-
 #include <algorithm>
 #include <cstddef>
 #include <utility>
 #include <vector>
 
 #include "gl/buffer_object.hpp"
+#include "gl/glad.hpp"
 
 namespace glviskit {
 
@@ -15,11 +14,11 @@ template <typename T, GLenum TYPE = GL_ARRAY_BUFFER>
 class BufferStack {
    public:
     explicit BufferStack(GladGLContext &gl, size_t capacity = 4)
-        : gl{gl}, buffer{gl, capacity}, size{0}, restore_point{0} {}
+        : gl{gl}, buffer{gl, capacity} {}
 
     void Append(const T &element) { elements.push_back(element); }
 
-    bool Sync() {
+    auto Sync() -> bool {
         // check is there anything to sync
         if (size == elements.size()) {
             return false;
@@ -76,16 +75,16 @@ class BufferStack {
         size = 0;
     }
 
-    GLuint Get() const { return buffer.Get(); }
+    [[nodiscard]] auto Get() const -> GLuint { return buffer.Get(); }
     void Bind() { buffer.Bind(); }
     void Unbind() { buffer.Unbind(); }
 
-    size_t Capacity() const { return buffer.Size(); }
-    size_t Size() const { return elements.size(); }
+    [[nodiscard]] auto Capacity() const -> size_t { return buffer.Size(); }
+    [[nodiscard]] auto Size() const -> size_t { return elements.size(); }
 
    private:
-    size_t size;
-    size_t restore_point;
+    size_t size{};
+    size_t restore_point{};
     std::vector<T> elements;
 
     GladGLContext &gl;

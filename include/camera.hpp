@@ -9,7 +9,7 @@ namespace glviskit {
 class Camera {
    public:
     explicit Camera() {
-        SetPerspectiveFov(glm::radians(60.0f), glm::radians(60.0f));
+        SetPerspectiveFov(glm::radians(60.0F), glm::radians(60.0F));
     }
 
     // get the transformation matrix of the camera
@@ -20,16 +20,16 @@ class Camera {
     //     R_cam: rotation matrix of the camera center
     //     T_cam: translation matrix of the camera center
 
-    glm::mat4 GetTransformMatrix() const {
-        auto acc = glm::mat4(1.0f);
+    [[nodiscard]] auto GetTransformMatrix() const -> glm::mat4 {
+        auto acc = glm::mat4(1.0F);
 
         // translation inverse
-        auto trans = glm::mat4(1.0f);
+        auto trans = glm::mat4(1.0F);
         trans = glm::translate(trans, -position);
         acc = trans * acc;
 
         // rotation inverse
-        auto rot = glm::mat4(1.0f);
+        auto rot = glm::mat4(1.0F);
         // roll/pitch/yaw hence z x y
         rot = glm::rotate(rot, -rotation.z, glm::vec3(0, 0, 1));
         rot = glm::rotate(rot, -rotation.x, glm::vec3(1, 0, 0));
@@ -37,8 +37,8 @@ class Camera {
         acc = rot * acc;
 
         // translation for spherical camera
-        auto sph = glm::mat4(1.0f);
-        sph = glm::translate(sph, glm::vec3(0.0f, 0.0f, -distance));
+        auto sph = glm::mat4(1.0F);
+        sph = glm::translate(sph, glm::vec3(0.0F, 0.0F, -distance));
         acc = sph * acc;
 
         auto mi = m_intrinsic;
@@ -70,60 +70,60 @@ class Camera {
     }
 
     void SetPerspectiveFov(float hfov, float vfov) {
-        float fxn = 0.5f / tanf(hfov / 2.0f);
-        float fyn = 0.5f / tanf(vfov / 2.0f);
+        float fxn = 0.5F / tanf(glm::radians(hfov) / 2.0F);
+        float fyn = 0.5F / tanf(glm::radians(vfov) / 2.0F);
         SetPerspective(fxn, fyn);
     }
 
     void SetPerspective(float fxn, float fyn, float cx = 0.5, float cy = 0.5,
-                        float near = 0.1, float far = 100.0f) {
-        m_intrinsic = glm::mat4(0.0f);
+                        float near = 0.1, float far = 100.0F) {
+        m_intrinsic = glm::mat4(0.0F);
         m_intrinsic[0][0] = 2 * fxn;
         m_intrinsic[1][1] = 2 * fyn;
-        m_intrinsic[2][0] = 2 * cx - 1;
-        m_intrinsic[2][1] = 2 * cy - 1;
+        m_intrinsic[2][0] = (2 * cx) - 1;
+        m_intrinsic[2][1] = (2 * cy) - 1;
         m_intrinsic[2][2] = -(far + near) / (far - near);
-        m_intrinsic[3][2] = -2.0f * far * near / (far - near);
-        m_intrinsic[2][3] = -1.0f;
+        m_intrinsic[3][2] = -2.0F * far * near / (far - near);
+        m_intrinsic[2][3] = -1.0F;
         aspect_ratio = fxn / fyn;
     }
 
     // position, rotation, distance getters/setters
     void SetPosition(const glm::vec3 &position) { this->position = position; }
     void SetRotation(const glm::vec3 &rotation) { this->rotation = rotation; }
-    glm::vec3 GetPosition() const { return position; }
-    glm::vec3 GetRotation() const { return rotation; }
+    [[nodiscard]] auto GetPosition() const -> glm::vec3 { return position; }
+    [[nodiscard]] auto GetRotation() const -> glm::vec3 { return rotation; }
     void SetDistance(float distance) { this->distance = distance; }
-    float GetDistance() const { return distance; }
+    [[nodiscard]] auto GetDistance() const -> float { return distance; }
 
     // aspect ratio preservation under viewport resize
     void SetPreserveAspectRatio(bool preserve) {
         preserve_aspect_ratio = preserve;
     }
 
-    bool GetPreserveAspectRatio() const { return preserve_aspect_ratio; }
+    [[nodiscard]] auto GetPreserveAspectRatio() const -> bool { return preserve_aspect_ratio; }
 
     // for handling time-based updates
     void Update(float deltaTime);
 
    private:
     // intrinsic matrix
-    glm::mat4 m_intrinsic{1.0f};
+    glm::mat4 m_intrinsic{1.0F};
 
     // viewport size
-    float width{1.0f};
-    float height{1.0f};
+    float width{1.0F};
+    float height{1.0F};
 
     // position and rotation of camera center
-    glm::vec3 position = glm::vec3(0.0f);
-    glm::vec3 rotation = glm::vec3(0.0f);
+    glm::vec3 position = glm::vec3(0.0F);
+    glm::vec3 rotation = glm::vec3(0.0F);
 
     // spherical camera distance
-    float distance{0.0f};
+    float distance{0.0F};
 
     // aspect ratio preservation
     bool preserve_aspect_ratio{true};
-    float aspect_ratio{1.0f};
+    float aspect_ratio{1.0F};
 };
 
 }  // namespace glviskit

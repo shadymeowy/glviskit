@@ -6,21 +6,19 @@ namespace glviskit {
 
 class VAO {
    public:
-    explicit VAO(GladGLContext &gl) : gl{gl}, vao{0} {
-        gl.GenVertexArrays(1, &vao);
-    }
+    explicit VAO(GladGLContext &gl) : gl{gl} { gl.GenVertexArrays(1, &vao); }
 
     // destructor
     ~VAO() { gl.DeleteVertexArrays(1, &vao); }
 
     // this class is non-copyable
     VAO(const VAO &) = delete;
-    VAO &operator=(const VAO &) = delete;
+    auto operator=(const VAO &) -> VAO & = delete;
 
     // but movable
     VAO(VAO &&other) noexcept : gl{other.gl}, vao{other.vao} { other.vao = 0; }
 
-    VAO &operator=(VAO &&other) noexcept {
+    auto operator=(VAO &&other) noexcept -> VAO & {
         if (this != &other) {
             gl.DeleteVertexArrays(1, &vao);
 
@@ -32,13 +30,13 @@ class VAO {
         return *this;
     }
 
-    GLuint Get() const { return vao; }
-    void Bind() { gl.BindVertexArray(vao); }
-    void Unbind() { gl.BindVertexArray(0); }
+    [[nodiscard]] auto Get() const -> GLuint { return vao; }
+    void Bind() const { gl.BindVertexArray(vao); }
+    void Unbind() const { gl.BindVertexArray(0); }
 
    private:
     GladGLContext &gl;
-    GLuint vao;
+    GLuint vao{};
 };
 
 }  // namespace glviskit

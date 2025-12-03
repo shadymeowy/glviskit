@@ -1,18 +1,18 @@
 #pragma once
 
-#include "gl/glad.hpp"
-
 #include <cstddef>
 #include <glm/glm.hpp>
 #include <map>
 
 #include "gl/buffer_stack.hpp"
+#include "gl/glad.hpp"
 #include "gl/instance.hpp"
 #include "gl/program.hpp"
 #include "gl/vao.hpp"
 
 namespace glviskit::anchor {
 
+// NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_vertex[] = R"glsl(
     #version 330 core
 
@@ -40,6 +40,7 @@ inline constexpr char shader_vertex[] = R"glsl(
 
 )glsl";
 
+// NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_fragment[] = R"glsl(
     #version 330 core
     in vec4 v_color;
@@ -50,6 +51,7 @@ inline constexpr char shader_fragment[] = R"glsl(
     }
 )glsl";
 
+// NOLINTNEXTLINE(hicpp-no-array-decay)
 using Program = Program<shader_vertex, shader_fragment>;
 
 class Buffer {
@@ -64,8 +66,6 @@ class Buffer {
         : gl{gl},
           vbo{gl},
           ebo{gl},
-          vaos{},
-          vao_configured{},
           vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {
@@ -87,8 +87,9 @@ class Buffer {
 
         auto &vao = vaos.at(ctx_id);
         vao.Bind();
-        gl.DrawElementsInstanced(GL_TRIANGLES, ebo.Size(), GL_UNSIGNED_INT,
-                                 nullptr, vbo_inst.Size());
+        gl.DrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ebo.Size()),
+                                 GL_UNSIGNED_INT, nullptr,
+                                 static_cast<GLsizei>(vbo_inst.Size()));
         vao.Unbind();
     }
 
@@ -107,14 +108,16 @@ class Buffer {
         ebo.Clear();
     }
 
-    std::map<GLuint, VAO> vaos;
-    BufferStack<Element, GL_ARRAY_BUFFER> vbo;
-    BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
-    InstanceBuffer &vbo_inst;
+    auto VBO() -> auto & { return vbo; }
+    auto EBO() -> auto & { return ebo; }
 
    private:
     GladGLContext &gl;
     std::map<GLuint, bool> vao_configured;
+    std::map<GLuint, VAO> vaos;
+    BufferStack<Element, GL_ARRAY_BUFFER> vbo;
+    BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
+    InstanceBuffer &vbo_inst;
 
     void ConfigureVAO(GLuint ctx_id) {
         VAO &vao = vaos.at(ctx_id);
@@ -122,6 +125,7 @@ class Buffer {
         ebo.Bind();
 
         vbo.Bind();
+        // NOLINTBEGIN(performance-no-int-to-ptr)
         gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
                                (void *)offsetof(Element, anchor));
         gl.EnableVertexAttribArray(0);
@@ -138,16 +142,17 @@ class Buffer {
         for (int i = 0; i < 4; i++) {
             gl.VertexAttribPointer(
                 3 + i, 4, GL_FLOAT, GL_FALSE, sizeof(Instance),
-                (void *)(offsetof(Instance, transform) + vec4_size * i));
+                (void *)(offsetof(Instance, transform) + (vec4_size * i)));
             gl.EnableVertexAttribArray(3 + i);
             gl.VertexAttribDivisor(3 + i, 1);
         }
+        // NOLINTEND(performance-no-int-to-ptr)
         vbo_inst.Unbind();
 
         vao.Unbind();
     }
 
-    bool Sync() {
+    auto Sync() -> bool {
         bool re_vbo = vbo.Sync();
         bool re_ebo = ebo.Sync();
         bool re_vbo_inst = vbo_inst.Sync();
@@ -157,7 +162,7 @@ class Buffer {
 
     void EnsureVAO(GLuint ctx_id) {
         // create VAO for the context if it does not exist
-        if (vaos.find(ctx_id) == vaos.end()) {
+        if (!vaos.contains(ctx_id)) {
             vaos.emplace(ctx_id, VAO{gl});
             vao_configured.emplace(ctx_id, false);
         }

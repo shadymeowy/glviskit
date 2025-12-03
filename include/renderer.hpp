@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "camera.hpp"
@@ -20,19 +21,21 @@ class Renderer {
           program_line{gl},
           program_point{gl},
           program_anchor{gl},
-          buffers{},
           camera{std::make_shared<Camera>()} {}
 
-    void Render(GLuint ctx_id, int width, int height) {
+    void Render(GLuint ctx_id, int _width, int _height) {
         // if gl context not initialized, do it now
         if (!initialized_) {
             InitializeContext();
         }
 
+        const auto width = static_cast<float>(_width);
+        const auto height = static_cast<float>(_height);
+
         // update camera viewport size
         camera->SetViewportSize(width, height);
         // set viewport
-        gl.Viewport(0, 0, width, height);
+        gl.Viewport(0, 0, _width, _height);
         // clear buffers
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -64,16 +67,16 @@ class Renderer {
         }
     }
 
-    void AddRenderBuffer(std::shared_ptr<RenderBuffer> render_buffer) {
+    void AddRenderBuffer(const std::shared_ptr<RenderBuffer>& render_buffer) {
         buffers.push_back(render_buffer);
     }
 
-    std::shared_ptr<Camera> GetCamera() { return camera; }
-    void SetCamera(std::shared_ptr<Camera> cam) { camera = cam; }
+    auto GetCamera() -> std::shared_ptr<Camera> { return camera; }
+    void SetCamera(std::shared_ptr<Camera> cam) { camera = std::move(cam); }
 
    private:
     void InitializeContext() {
-        gl.ClearColor(0.0f, 0.f, 0.0f, 0.0f);
+        gl.ClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         gl.Enable(GL_DEPTH_TEST);
         gl.Enable(GL_BLEND);
         gl.Disable(GL_CULL_FACE);

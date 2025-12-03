@@ -27,6 +27,8 @@
  *
  */
 
+// NOLINTBEGIN
+
 #ifndef GLAD_GL_H_
 #define GLAD_GL_H_
 
@@ -2838,3 +2840,5 @@ static void gladLoaderUnloadGLContext(GladGLContext *context) {
 #ifdef __cplusplus
 }
 #endif
+
+// NOLINTEND

@@ -1,52 +1,50 @@
 #pragma once
 
-#include "gl/glad.hpp"
-
-#include <cstddef>
 #include <glm/glm.hpp>
 #include <iostream>
+
+#include "gl/glad.hpp"
 
 namespace glviskit {
 
 template <const char *shader_vertex, const char *shader_fragment>
 class Program {
    public:
-    explicit Program(GladGLContext &gl)
-        : gl{gl}, program{0}, loc_mvp{0}, loc_screen_size{0} {
+    explicit Program(GladGLContext &gl) : gl{gl} {
         GLuint s_vertex = gl.CreateShader(GL_VERTEX_SHADER);
         const char *src_vertex = shader_vertex;
-        gl.ShaderSource(s_vertex, 1, &src_vertex, NULL);
+        gl.ShaderSource(s_vertex, 1, &src_vertex, nullptr);
         gl.CompileShader(s_vertex);
 
         // check compile errors
         GLint success;
         gl.GetShaderiv(s_vertex, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            GLchar info_log[512];
-            gl.GetShaderInfoLog(s_vertex, 512, NULL, info_log);
-            std::cerr << "Error compiling vertex shader: " << info_log
-                      << std::endl;
+        if (success == 0) {
+            std::array<GLchar, 512> info_log{};
+            gl.GetShaderInfoLog(s_vertex, 512, nullptr, info_log.data());
+            std::cerr << "Error compiling vertex shader: " << info_log.data()
+                      << '\n';
             exit(EXIT_FAILURE);
         }
 
         GLuint s_frag = gl.CreateShader(GL_FRAGMENT_SHADER);
         const char *src_frag = shader_fragment;
-        gl.ShaderSource(s_frag, 1, &src_frag, NULL);
+        gl.ShaderSource(s_frag, 1, &src_frag, nullptr);
         gl.CompileShader(s_frag);
 
         // check compile errors
         gl.GetShaderiv(s_frag, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            GLchar info_log[512];
-            gl.GetShaderInfoLog(s_frag, 512, NULL, info_log);
-            std::cerr << "Error compiling fragment shader: " << info_log
-                      << std::endl;
+        if (success == 0) {
+            std::array<GLchar, 512> info_log{};
+            gl.GetShaderInfoLog(s_frag, 512, nullptr, info_log.data());
+            std::cerr << "Error compiling fragment shader: " << info_log.data()
+                      << '\n';
             exit(EXIT_FAILURE);
         }
 
         program = gl.CreateProgram();
         if (program == 0) {
-            std::cerr << "Error creating shader program" << std::endl;
+            std::cerr << "Error creating shader program" << '\n';
             exit(EXIT_FAILURE);
         }
 
@@ -59,13 +57,13 @@ class Program {
         loc_mvp = gl.GetUniformLocation(program, "mvp");
         if (loc_mvp == -1) {
             std::cerr << "Warning: mvp uniform not found in shader program"
-                      << std::endl;
+                      << '\n';
         }
         loc_screen_size = gl.GetUniformLocation(program, "screen_size");
         if (loc_screen_size == -1) {
             std::cerr
                 << "Warning: screen_size uniform not found in shader program"
-                << std::endl;
+                << '\n';
         }
     }
 
@@ -81,7 +79,7 @@ class Program {
 
     // this class is non-copyable
     Program(const Program &) = delete;
-    Program &operator=(const Program &) = delete;
+    auto operator=(const Program &) -> Program & = delete;
 
     // but movable
     Program(Program &&other) noexcept
@@ -94,7 +92,7 @@ class Program {
         other.loc_screen_size = 0;
     }
 
-    Program &operator=(Program &&other) noexcept {
+    auto operator=(Program &&other) noexcept -> Program & {
         if (this != &other) {
             if (program != 0) {
                 gl.DeleteProgram(program);
@@ -128,8 +126,8 @@ class Program {
 
    private:
     GladGLContext &gl;
-    GLuint program;
-    GLuint loc_mvp, loc_screen_size;
+    GLuint program{};
+    GLuint loc_mvp{}, loc_screen_size{};
 };
 
 }  // namespace glviskit

@@ -23,7 +23,7 @@ class BufferObject {
 
     // this class is non-copyable
     BufferObject(const BufferObject &) = delete;
-    BufferObject &operator=(const BufferObject &) = delete;
+    auto operator=(const BufferObject &) -> BufferObject & = delete;
 
     // movable
     BufferObject(BufferObject &&other) noexcept
@@ -32,7 +32,7 @@ class BufferObject {
         other.buffer = 0;
     }
 
-    BufferObject &operator=(BufferObject &&other) noexcept {
+    auto operator=(BufferObject &&other) noexcept -> BufferObject & {
         if (this != &other) {
             gl.DeleteBuffers(1, &buffer);
 
@@ -46,16 +46,16 @@ class BufferObject {
         return *this;
     }
 
-    GLuint Get() const { return buffer; }
+    [[nodiscard]] auto Get() const -> GLuint { return buffer; }
     void Bind() { gl.BindBuffer(TYPE, buffer); }
     void Unbind() { gl.BindBuffer(TYPE, 0); }
-    size_t Size() const { return size_; }
+    [[nodiscard]] auto Size() const -> size_t { return size_; }
 
    private:
     size_t size_;
 
     GladGLContext &gl;
-    GLuint buffer;
+    GLuint buffer{};
 };
 
 }  // namespace glviskit

@@ -1,12 +1,11 @@
 #pragma once
 
-#include "gl/glad.hpp"
-
 #include <cstddef>
 #include <glm/glm.hpp>
 #include <map>
 
 #include "gl/buffer_stack.hpp"
+#include "gl/glad.hpp"
 #include "gl/instance.hpp"
 #include "gl/program.hpp"
 #include "gl/vao.hpp"
@@ -18,6 +17,7 @@ namespace glviskit::point {
 // and generic components for rendering.
 
 // First, we define the shader sources
+// NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_vertex[] = R"glsl(
     #version 330 core
     
@@ -37,6 +37,7 @@ inline constexpr char shader_vertex[] = R"glsl(
     }
 )glsl";
 
+// NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_fragment[] = R"glsl(
     #version 330 core
     in vec4 v_color;
@@ -50,6 +51,7 @@ inline constexpr char shader_fragment[] = R"glsl(
 // Define PointProgram which holds the shaders.
 // In theory, multiple point programs with different shaders could be defined
 // for same PointBuffer.
+// NOLINTNEXTLINE(hicpp-no-array-decay)
 using Program = Program<shader_vertex, shader_fragment>;
 
 // PointBuffer is responsible for storing and rendering points
@@ -68,7 +70,7 @@ class Buffer {
     };
 
     explicit Buffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
-        : gl{gl}, vbo{gl}, ebo{gl}, vaos{}, vbo_inst{vbo_inst} {}
+        : gl{gl}, vbo{gl}, ebo{gl}, vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {
         // if there is nothing to draw, return
@@ -97,8 +99,9 @@ class Buffer {
         auto &vao = vaos.at(ctx_id);
         vao.Bind();
         // draw call
-        gl.DrawElementsInstanced(GL_POINTS, ebo.Size(), GL_UNSIGNED_INT,
-                                 nullptr, vbo_inst.Size());
+        gl.DrawElementsInstanced(GL_POINTS, static_cast<GLsizei>(ebo.Size()),
+                                 GL_UNSIGNED_INT, nullptr,
+                                 static_cast<GLsizei>(vbo_inst.Size()));
         vao.Unbind();
     }
 
@@ -117,6 +120,12 @@ class Buffer {
         ebo.Clear();
     }
 
+    auto VBO() -> auto & { return vbo; }
+    auto EBO() -> auto & { return ebo; }
+
+   private:
+    GladGLContext &gl;
+    std::map<GLuint, bool> vao_configured;
     // In this case, we don't really need an EBO
     // but can be useful for other primitives.
     std::map<GLuint, VAO> vaos;
@@ -128,10 +137,6 @@ class Buffer {
     // sharing it with other primitive buffer classes
     InstanceBuffer &vbo_inst;
 
-   private:
-    GladGLContext &gl;
-    std::map<GLuint, bool> vao_configured;
-
     void ConfigureVAO(GLuint ctx_id) {
         VAO &vao = vaos.at(ctx_id);
         vao.Bind();
@@ -139,6 +144,7 @@ class Buffer {
 
         // attribute pointers for position, color, size
         vbo.Bind();
+        // NOLINTBEGIN(performance-no-int-to-ptr)
         gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
                                (void *)offsetof(Element, position));
         gl.EnableVertexAttribArray(0);
@@ -156,17 +162,18 @@ class Buffer {
             gl.VertexAttribPointer(3 + i, 4, GL_FLOAT, GL_FALSE,
                                    sizeof(Instance),
                                    (void *)(offsetof(Instance, transform) +
-                                            sizeof(glm::vec4) * i));
+                                            (sizeof(glm::vec4) * i)));
             gl.EnableVertexAttribArray(3 + i);
             // set attribute divisor for instancing
             gl.VertexAttribDivisor(3 + i, 1);
         }
+        // NOLINTEND(performance-no-int-to-ptr)
         vbo_inst.Unbind();
 
         vao.Unbind();
     }
 
-    bool Sync() {
+    auto Sync() -> bool {
         // sync all buffers
         bool re_vbo = vbo.Sync();
         bool re_ebo = ebo.Sync();
@@ -177,7 +184,7 @@ class Buffer {
 
     void EnsureVAO(GLuint ctx_id) {
         // create VAO for the context if it does not exist
-        if (vaos.find(ctx_id) == vaos.end()) {
+        if (!vaos.contains(ctx_id)) {
             vaos.emplace(ctx_id, VAO{gl});
             vao_configured.emplace(ctx_id, false);
         }

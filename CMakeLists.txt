@@ -10,6 +10,11 @@ project(glviskittest
     LANGUAGES CXX C
 )
 
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
+if(CLANG_TIDY_EXE)
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+endif()
+
 include(FetchContent)
 FetchContent_Declare(SDL3
   GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -26,6 +31,7 @@ FetchContent_Declare(glm
     GIT_TAG 1.0.2
 )
 FetchContent_MakeAvailable(glm)
+set_target_properties(glm PROPERTIES CXX_CLANG_TIDY "")
 
 add_library(glviskit_core INTERFACE)
 target_include_directories(glviskit_core INTERFACE 

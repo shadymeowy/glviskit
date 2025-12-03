@@ -22,11 +22,8 @@ class RenderBuffer {
           point_buffer{gl, vbo_inst},
           anchor_buffer{gl, vbo_inst} {
         // create identity instance
-        AddInstance(glm::mat4{1.0f});
+        AddInstance(glm::mat4{1.0F});
     }
-
-    RenderBuffer(const RenderBuffer &) = delete;
-    RenderBuffer &operator=(const RenderBuffer &) = delete;
 
     void Line(glm::vec3 start, glm::vec3 end) {
         // if there is an ongoing line, end it first
@@ -38,14 +35,21 @@ class RenderBuffer {
     }
 
     void Point(glm::vec3 position) {
-        size_t index = point_buffer.vbo.Size();
-        point_buffer.vbo.Append({position, color, size});
-        point_buffer.ebo.Append(index);
+        auto &vbo = point_buffer.VBO();
+        auto &ebo = point_buffer.EBO();
+        
+        size_t index = vbo.Size();
+        vbo.Append(
+            {.position = position, .color = color, .size = size});
+        ebo.Append(index);
     }
 
     // Efficient way to draw connected lglviskitines
     void LineTo(glm::vec3 position) {
-        size_t base_index = line_buffer.vbo.Size();
+        auto &vbo = line_buffer.VBO();
+        auto &ebo = line_buffer.EBO();
+
+        size_t base_index = vbo.Size();
 
         if (line_counter == 0) {
             // for first point just store and return
@@ -54,13 +58,18 @@ class RenderBuffer {
             size_prev = size;
             line_counter++;
             return;
-        } else if (line_counter == 1) {
+        }
+        if (line_counter == 1) {
             // for second point append initial vertices with direction
             auto direction = position - line_prev;
-            line_buffer.vbo.Append(
-                {line_prev, direction, color_prev, size_prev});
-            line_buffer.vbo.Append(
-                {line_prev, -direction, color_prev, size_prev});
+            vbo.Append({.position = line_prev,
+                                    .velocity = direction,
+                                    .color = color_prev,
+                                    .size = size_prev});
+            vbo.Append({.position = line_prev,
+                                    .velocity = -direction,
+                                    .color = color_prev,
+                                    .size = size_prev});
 
             // nothing add to ebo yet
 
@@ -71,74 +80,91 @@ class RenderBuffer {
             size_prev = size;
             line_counter++;
             return;
-        } else {
-            // for subsequent points, we will calculate the bisector direction
-            auto dir1 = glm::normalize(line_prev - line_prev_prev);
-            auto dir2 = glm::normalize(position - line_prev);
-            auto bisector = glm::normalize(dir1 + dir2);
-
-            // append two vertices at the previous point with bisector direction
-            line_buffer.vbo.Append(
-                {line_prev, bisector, color_prev, size_prev});
-            line_buffer.vbo.Append(
-                {line_prev, -bisector, color_prev, size_prev});
-
-            // add two triangles to connect previous segment
-            line_buffer.ebo.Append(base_index - 2);
-            line_buffer.ebo.Append(base_index + 0);
-            line_buffer.ebo.Append(base_index - 1);
-            line_buffer.ebo.Append(base_index - 1);
-            line_buffer.ebo.Append(base_index + 0);
-            line_buffer.ebo.Append(base_index + 1);
-
-            // update previous points
-            line_prev_prev = line_prev;
-            line_prev = position;
-            color_prev = color;
-            size_prev = size;
-            line_counter++;
         }
+
+        // for subsequent points, we will calculate the bisector direction
+        auto dir1 = glm::normalize(line_prev - line_prev_prev);
+        auto dir2 = glm::normalize(position - line_prev);
+        auto bisector = glm::normalize(dir1 + dir2);
+
+        // append two vertices at the previous point with bisector direction
+        vbo.Append({.position = line_prev,
+                                .velocity = bisector,
+                                .color = color_prev,
+                                .size = size_prev});
+        vbo.Append({.position = line_prev,
+                                .velocity = -bisector,
+                                .color = color_prev,
+                                .size = size_prev});
+
+        // add two triangles to connect previous segment
+        ebo.Append(base_index - 2);
+        ebo.Append(base_index + 0);
+        ebo.Append(base_index - 1);
+        ebo.Append(base_index - 1);
+        ebo.Append(base_index + 0);
+        ebo.Append(base_index + 1);
+
+        // update previous points
+        line_prev_prev = line_prev;
+        line_prev = position;
+        color_prev = color;
+        size_prev = size;
+        line_counter++;
     }
 
     void LineEnd() {
         if (line_counter >= 2) {
-            // if we have at least two points, finish the last segment
-            size_t base_index = line_buffer.vbo.Size();
-            auto direction = line_prev - line_prev_prev;
-            line_buffer.vbo.Append(
-                {line_prev, direction, color_prev, size_prev});
-            line_buffer.vbo.Append(
-                {line_prev, -direction, color_prev, size_prev});
+            auto &vbo = line_buffer.VBO();
+            auto &ebo = line_buffer.EBO();
 
-            line_buffer.ebo.Append(base_index - 2);
-            line_buffer.ebo.Append(base_index + 0);
-            line_buffer.ebo.Append(base_index - 1);
-            line_buffer.ebo.Append(base_index - 1);
-            line_buffer.ebo.Append(base_index + 0);
-            line_buffer.ebo.Append(base_index + 1);
+            // if we have at least two points, finish the last segment
+            size_t base_index = vbo.Size();
+            auto direction = line_prev - line_prev_prev;
+            vbo.Append({.position = line_prev,
+                                    .velocity = direction,
+                                    .color = color_prev,
+                                    .size = size_prev});
+            vbo.Append({.position = line_prev,
+                                    .velocity = -direction,
+                                    .color = color_prev,
+                                    .size = size_prev});
+
+            ebo.Append(base_index - 2);
+            ebo.Append(base_index + 0);
+            ebo.Append(base_index - 1);
+            ebo.Append(base_index - 1);
+            ebo.Append(base_index + 0);
+            ebo.Append(base_index + 1);
         }
 
         // reset line drawing state
         line_counter = 0;
-        line_prev_prev = glm::vec3{0.0f};
-        line_prev = glm::vec3{0.0f};
+        line_prev_prev = glm::vec3{0.0F};
+        line_prev = glm::vec3{0.0F};
     }
 
     void AnchoredSquare(glm::vec3 anchor) {
-        size_t index = anchor_buffer.vbo.Size();
-        auto s = size * 0.5f;
+        auto &vbo = anchor_buffer.VBO();
+        auto &ebo = anchor_buffer.EBO();
+        size_t index = vbo.Size();
+        auto s = size * 0.5F;
         // four vertices
-        anchor_buffer.vbo.Append({anchor, {-s, -s, 0}, color});
-        anchor_buffer.vbo.Append({anchor, {s, -s, 0}, color});
-        anchor_buffer.vbo.Append({anchor, {s, s, 0}, color});
-        anchor_buffer.vbo.Append({anchor, {-s, s, 0}, color});
+        vbo.Append(
+            {.anchor = anchor, .position = {-s, -s, 0}, .color = color});
+        vbo.Append(
+            {.anchor = anchor, .position = {s, -s, 0}, .color = color});
+        vbo.Append(
+            {.anchor = anchor, .position = {s, s, 0}, .color = color});
+        vbo.Append(
+            {.anchor = anchor, .position = {-s, s, 0}, .color = color});
         // two triangles
-        anchor_buffer.ebo.Append(index + 0);
-        anchor_buffer.ebo.Append(index + 1);
-        anchor_buffer.ebo.Append(index + 2);
-        anchor_buffer.ebo.Append(index + 2);
-        anchor_buffer.ebo.Append(index + 3);
-        anchor_buffer.ebo.Append(index + 0);
+        ebo.Append(index + 0);
+        ebo.Append(index + 1);
+        ebo.Append(index + 2);
+        ebo.Append(index + 2);
+        ebo.Append(index + 3);
+        ebo.Append(index + 0);
     }
 
     // attributes for subsequent drawing
@@ -151,21 +177,21 @@ class RenderBuffer {
     }
 
     void AddInstance(const glm::vec3 &position,
-                     const glm::vec3 &rotation = glm::vec3{0.0f},
-                     const glm::vec3 &scale = glm::vec3{1.0f}) {
+                     const glm::vec3 &rotation = glm::vec3{0.0F},
+                     const glm::vec3 &scale = glm::vec3{1.0F}) {
         // translation
-        auto t = glm::translate(glm::mat4{1.0f}, position);
+        auto t = glm::translate(glm::mat4{1.0F}, position);
 
         // rotation
         auto angle = glm::length(rotation);
-        glm::mat4 r{1.0f};
-        if (angle > 1e-6f) {
+        glm::mat4 r{1.0F};
+        if (angle > 1e-6F) {
             auto axis = rotation / angle;
-            r = glm::rotate(glm::mat4{1.0f}, angle, axis);
+            r = glm::rotate(glm::mat4{1.0F}, angle, axis);
         }
 
         // scale
-        auto s = glm::scale(glm::mat4{1.0f}, scale);
+        auto s = glm::scale(glm::mat4{1.0F}, scale);
         AddInstance(t * r * s);
     }
 
@@ -206,15 +232,15 @@ class RenderBuffer {
     anchor::Buffer anchor_buffer;
 
     // attributes for rendering
-    glm::vec4 color{1.0f};
-    float size = 1.0f;
+    glm::vec4 color{1.0F};
+    float size = 1.0F;
 
     // line drawing state
     size_t line_counter = 0;
-    glm::vec3 line_prev_prev{0.0f};
-    glm::vec3 line_prev{0.0f};
-    glm::vec4 color_prev{1.0f};
-    float size_prev = 1.0f;
+    glm::vec3 line_prev_prev{0.0F};
+    glm::vec3 line_prev{0.0F};
+    glm::vec4 color_prev{1.0F};
+    float size_prev = 1.0F;
 
     friend class Renderer;
 };
