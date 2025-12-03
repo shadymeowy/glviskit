@@ -1,6 +1,6 @@
 #pragma once
 #define SDL_MAIN_HANDLED
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #ifdef CreateWindow
 #undef CreateWindow
 #endif
@@ -50,7 +50,7 @@ class SDLGLContextPtr {
     SDLGLContextPtr(SDL_GLContext handle) : ctx{handle} {}
     ~SDLGLContextPtr() {
         if (ctx) {
-            SDL_GL_DeleteContext(ctx);
+            SDL_GL_DestroyContext(ctx);
             ctx = nullptr;
         }
     }
@@ -63,7 +63,7 @@ class SDLGLContextPtr {
     SDLGLContextPtr &operator=(SDLGLContextPtr &&other) noexcept {
         if (this != &other) {
             if (ctx) {
-                SDL_GL_DeleteContext(ctx);
+                SDL_GL_DestroyContext(ctx);
             }
             ctx = other.ctx;
             other.ctx = nullptr;
@@ -87,8 +87,7 @@ class Window {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
         auto handle = SDL_CreateWindow(
-            title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+            title, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
         if (!handle) {
             std::cerr << "Failed to create SDL window: " << SDL_GetError()
                       << std::endl;
@@ -126,16 +125,16 @@ class Window {
     void Render() {
         // make context current
         // renderer expects the context to be current
-        int ret = SDL_GL_MakeCurrent(window_.ptr, context_.ctx);
-        if (ret != 0) {
-            std::cerr << "Failed to make master context current: "
-                      << SDL_GetError() << std::endl;
+        bool ret = SDL_GL_MakeCurrent(window_.ptr, context_.ctx);
+        if (!ret) {
+            std::cerr << "Failed to make context current: " << SDL_GetError()
+                      << std::endl;
             exit(EXIT_FAILURE);
         }
 
         // update screen size
         int width, height;
-        SDL_GetWindowSize(window_.ptr, &width, &height);
+        SDL_GetWindowSizeInPixels(window_.ptr, &width, &height);
 
         // do rendering
         gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -153,7 +152,7 @@ class Window {
 
     void CallbackKeyDown(const SDL_KeyboardEvent &key) {
         std::cout << "Key down in window " << window_id_ << ": "
-                  << SDL_GetKeyName(key.keysym.sym) << std::endl;
+                  << SDL_GetKeyName(key.key) << std::endl;
     }
 
     Uint32 GetWindowID() const { return window_id_; }
@@ -171,7 +170,16 @@ class Window {
 class Manager {
    public:
     Manager() {
-        SDL_Init(SDL_INIT_VIDEO);
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            std::cerr << "Failed to initialize SDL: " << SDL_GetError()
+                      << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        if (!SDL_GL_LoadLibrary(nullptr)) {
+            std::cerr << "Failed to load SDL GL library: " << SDL_GetError()
+                      << std::endl;
+            exit(EXIT_FAILURE);
+        }
 
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -181,9 +189,7 @@ class Manager {
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
         window_master_ = SDL_CreateWindow(
-            "Hidden", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600,
-            SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-
+            "Hidden", 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
         if (!window_master_.ptr) {
             std::cerr << "Failed to create SDL master window: "
                       << SDL_GetError() << std::endl;
@@ -199,7 +205,7 @@ class Manager {
         }
 
         int ret = gladLoadGLContext(&gl_, (GLADloadfunc)SDL_GL_GetProcAddress);
-        if (ret == 0) {
+        if (!ret) {
             std::cerr << "Failed to initialize GLAD" << std::endl;
             exit(EXIT_FAILURE);
         }
@@ -228,10 +234,10 @@ class Manager {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_QUIT:
+                case SDL_EVENT_QUIT:
                     return false;
-                case SDL_KEYDOWN:
-                    if (event.key.keysym.sym == SDLK_ESCAPE) {
+                case SDL_EVENT_KEY_DOWN:
+                    if (event.key.key == SDLK_ESCAPE) {
                         return false;
                     }
                     if (windows_.find(event.key.windowID) != windows_.end()) {
