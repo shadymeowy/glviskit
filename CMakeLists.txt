@@ -11,9 +11,12 @@ project(glviskittest
 )
 
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
-if(CLANG_TIDY_EXE)
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-endif()
+# if(CLANG_TIDY_EXE)
+#     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+# endif()
+
+find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(nanobind CONFIG REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(SDL3
@@ -49,6 +52,12 @@ target_link_libraries(glviskit_test_app PRIVATE
     glviskit_core
 )
 
+nanobind_add_module(glviskit_py
+    NB_STATIC LTO "src/bindings.cpp"
+)
+target_link_libraries(glviskit_py PRIVATE glviskit_core)
+set_target_properties(glviskit_py PROPERTIES OUTPUT_NAME "glviskit")
+
 macro(apply_static_flags TARGET_NAME)
     if(WIN32 AND MINGW)
         target_link_libraries(${TARGET_NAME} PRIVATE
@@ -70,4 +79,7 @@ macro(apply_static_flags TARGET_NAME)
     set_target_properties(${TARGET_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 endmacro()
 
+apply_static_flags(glviskit_py)
 apply_static_flags(glviskit_test_app)
+
+install(TARGETS glviskit_py LIBRARY DESTINATION .)
