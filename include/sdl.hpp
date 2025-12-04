@@ -1,5 +1,6 @@
 #pragma once
 #define SDL_MAIN_HANDLED
+#define NOMINMAX
 #include <SDL3/SDL.h>
 #ifdef CreateWindow
 #undef CreateWindow
