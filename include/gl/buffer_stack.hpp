@@ -67,7 +67,8 @@ class BufferStack {
 
     void Restore() {
         elements.resize(restore_point);
-        size = std::min(size, restore_point);
+        
+        size = (std::min)(size, restore_point);
     }
 
     void Clear() {

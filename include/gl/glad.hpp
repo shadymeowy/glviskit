@@ -28,6 +28,7 @@
  */
 
 // NOLINTBEGIN
+#define NOMINMAX
 
 #ifndef GLAD_GL_H_
 #define GLAD_GL_H_
