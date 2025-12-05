@@ -1,7 +1,12 @@
 #pragma once
+// if not emscripten, prevent SDL main redefinition
+#ifndef EMSCRIPTEN
 #define SDL_MAIN_HANDLED
+#endif
+// prevent min/max macros on Windows
 #define NOMINMAX
 #include <SDL3/SDL.h>
+// undefine CreateWindow macro if defined from Windows.h
 #ifdef CreateWindow
 #undef CreateWindow
 #endif
@@ -211,9 +216,7 @@ class Manager {
     }
 
     auto Loop() -> bool {
-        for (auto &[id, window] : windows_) {
-            window->Render();
-        }
+        Render();
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -222,6 +225,12 @@ class Manager {
             }
         }
         return true;
+    }
+
+    void Render() {
+        for (auto &[id, window] : windows_) {
+            window->Render();
+        }
     }
 
     auto ProcessEvent(const SDL_Event &event) -> bool {
@@ -303,7 +312,7 @@ class Manager {
 #elif defined(GLVISKIT_USE_GLAD_GLES2)
         int ret = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
 #else
-        int ret = 0;
+        int ret = 1;
 #endif
         if (ret == 0) {
             std::cerr << "Failed to initialize GLAD" << '\n';
