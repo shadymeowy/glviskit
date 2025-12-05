@@ -8,7 +8,7 @@ namespace glviskit {
 
 class Camera {
    public:
-    explicit Camera() {
+    Camera() {
         SetPerspectiveFov(glm::radians(60.0F), glm::radians(60.0F));
     }
 

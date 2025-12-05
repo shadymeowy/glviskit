@@ -1,6 +1,6 @@
 #pragma once
 
-#include "glad.hpp"
+#include "../gl/gl.hpp"
 
 #include <cstddef>
 
@@ -10,16 +10,16 @@ template <typename T, GLenum TYPE = GL_ARRAY_BUFFER,
           GLenum USAGE = GL_DYNAMIC_DRAW>
 class BufferObject {
    public:
-    explicit BufferObject(GladGLContext &gl, size_t size)
-        : gl{gl}, size_{size} {
-        gl.GenBuffers(1, &buffer);
+    explicit BufferObject(size_t size)
+        : size_{size} {
+        glGenBuffers(1, &buffer);
         Bind();
-        gl.BufferData(TYPE, size * sizeof(T), nullptr, USAGE);
+        glBufferData(TYPE, size * sizeof(T), nullptr, USAGE);
         Unbind();
     }
 
     // destructor
-    ~BufferObject() { gl.DeleteBuffers(1, &buffer); }
+    ~BufferObject() { glDeleteBuffers(1, &buffer); }
 
     // this class is non-copyable
     BufferObject(const BufferObject &) = delete;
@@ -27,17 +27,16 @@ class BufferObject {
 
     // movable
     BufferObject(BufferObject &&other) noexcept
-        : size_(other.size_), gl(other.gl), buffer(other.buffer) {
+        : size_(other.size_), buffer(other.buffer) {
         other.size_ = 0;
         other.buffer = 0;
     }
 
     auto operator=(BufferObject &&other) noexcept -> BufferObject & {
         if (this != &other) {
-            gl.DeleteBuffers(1, &buffer);
+            glDeleteBuffers(1, &buffer);
 
             size_ = other.size_;
-            gl = other.gl;
             buffer = other.buffer;
 
             other.size_ = 0;
@@ -47,14 +46,13 @@ class BufferObject {
     }
 
     [[nodiscard]] auto Get() const -> GLuint { return buffer; }
-    void Bind() { gl.BindBuffer(TYPE, buffer); }
-    void Unbind() { gl.BindBuffer(TYPE, 0); }
+    void Bind() { glBindBuffer(TYPE, buffer); }
+    void Unbind() { glBindBuffer(TYPE, 0); }
     [[nodiscard]] auto Size() const -> size_t { return size_; }
 
    private:
     size_t size_;
 
-    GladGLContext &gl;
     GLuint buffer{};
 };
 

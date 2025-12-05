@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "camera.hpp"
-#include "gl/glad.hpp"
+#include "gl/gl.hpp"
 #include "primitive/anchor.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
@@ -16,12 +16,7 @@ namespace glviskit {
 
 class Renderer {
    public:
-    explicit Renderer(GladGLContext &gl)
-        : gl{gl},
-          program_line{gl},
-          program_point{gl},
-          program_anchor{gl},
-          camera{std::make_shared<Camera>()} {}
+    Renderer() : camera{std::make_shared<Camera>()} {}
 
     void Render(GLuint ctx_id, int _width, int _height) {
         // if gl context not initialized, do it now
@@ -35,9 +30,9 @@ class Renderer {
         // update camera viewport size
         camera->SetViewportSize(width, height);
         // set viewport
-        gl.Viewport(0, 0, _width, _height);
+        glViewport(0, 0, _width, _height);
         // clear buffers
-        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // get camera transform matrix
         auto mvp = camera->GetTransformMatrix();
@@ -67,7 +62,7 @@ class Renderer {
         }
     }
 
-    void AddRenderBuffer(const std::shared_ptr<RenderBuffer>& render_buffer) {
+    void AddRenderBuffer(const std::shared_ptr<RenderBuffer> &render_buffer) {
         buffers.push_back(render_buffer);
     }
 
@@ -76,19 +71,16 @@ class Renderer {
 
    private:
     void InitializeContext() {
-        gl.ClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        gl.Enable(GL_DEPTH_TEST);
-        gl.Enable(GL_BLEND);
-        gl.Disable(GL_CULL_FACE);
-        gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        gl.BlendEquation(GL_FUNC_ADD);
-        gl.Enable(GL_PROGRAM_POINT_SIZE);
-        gl.Enable(GL_MULTISAMPLE);
+        glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glDisable(GL_CULL_FACE);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
 
         initialized_ = true;
     }
 
-    GladGLContext &gl;
     line::Program program_line;
     point::Program program_point;
     anchor::Program program_anchor;

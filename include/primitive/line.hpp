@@ -5,7 +5,7 @@
 #include <map>
 
 #include "../gl/buffer_stack.hpp"
-#include "../gl/glad.hpp"
+#include "../gl/gl.hpp"
 #include "../gl/instance.hpp"
 #include "../gl/program.hpp"
 #include "../gl/vao.hpp"
@@ -13,9 +13,7 @@
 namespace glviskit::line {
 
 // NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
-inline constexpr char shader_vertex[] = R"glsl(
-    #version 330 core
-
+inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
     layout(location = 0) in vec3 a_position;
     layout(location = 1) in vec3 a_velocity;
     layout(location = 2) in vec4 a_color;
@@ -47,8 +45,7 @@ inline constexpr char shader_vertex[] = R"glsl(
 )glsl";
 
 // NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
-inline constexpr char shader_fragment[] = R"glsl(
-    #version 330 core
+inline constexpr char shader_fragment[] = GLVISKIT_FRAG_HEADER R"glsl(
     in vec4 v_color;
     out vec4 f_color;
     
@@ -69,8 +66,7 @@ class Buffer {
         float size;
     };
 
-    explicit Buffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
-        : gl{gl}, vbo{gl}, ebo{gl}, vbo_inst{vbo_inst} {}
+    explicit Buffer(InstanceBuffer &vbo_inst) : vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {
         if (ebo.Size() == 0 || vbo_inst.Size() == 0) {
@@ -91,9 +87,9 @@ class Buffer {
 
         auto &vao = vaos.at(ctx_id);
         vao.Bind();
-        gl.DrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ebo.Size()),
-                                 GL_UNSIGNED_INT, nullptr,
-                                 static_cast<GLsizei>(vbo_inst.Size()));
+        glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(ebo.Size()),
+                                GL_UNSIGNED_INT, nullptr,
+                                static_cast<GLsizei>(vbo_inst.Size()));
         vao.Unbind();
     }
 
@@ -116,7 +112,6 @@ class Buffer {
     auto EBO() -> auto & { return ebo; }
 
    private:
-    GladGLContext &gl;
     std::map<GLuint, VAO> vaos;
     BufferStack<Element, GL_ARRAY_BUFFER> vbo;
     BufferStack<GLuint, GL_ELEMENT_ARRAY_BUFFER> ebo;
@@ -130,28 +125,28 @@ class Buffer {
 
         vbo.Bind();
         // NOLINTBEGIN(performance-no-int-to-ptr)
-        gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
-                               (void *)offsetof(Element, position));
-        gl.EnableVertexAttribArray(0);
-        gl.VertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
-                               (void *)offsetof(Element, velocity));
-        gl.EnableVertexAttribArray(1);
-        gl.VertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Element),
-                               (void *)offsetof(Element, color));
-        gl.EnableVertexAttribArray(2);
-        gl.VertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Element),
-                               (void *)offsetof(Element, size));
-        gl.EnableVertexAttribArray(3);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, position));
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, velocity));
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, color));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, size));
+        glEnableVertexAttribArray(3);
         vbo.Unbind();
 
         vbo_inst.Bind();
         std::size_t vec4_size = sizeof(glm::vec4);
         for (int i = 0; i < 4; i++) {
-            gl.VertexAttribPointer(
+            glVertexAttribPointer(
                 4 + i, 4, GL_FLOAT, GL_FALSE, sizeof(Instance),
                 (void *)(offsetof(Instance, transform) + (vec4_size * i)));
-            gl.EnableVertexAttribArray(4 + i);
-            gl.VertexAttribDivisor(4 + i, 1);
+            glEnableVertexAttribArray(4 + i);
+            glVertexAttribDivisor(4 + i, 1);
         }
         // NOLINTEND(performance-no-int-to-ptr)
         vbo_inst.Unbind();
@@ -170,7 +165,7 @@ class Buffer {
     void EnsureVAO(GLuint ctx_id) {
         // create VAO for the context if it does not exist
         if (!vaos.contains(ctx_id)) {
-            vaos.emplace(ctx_id, VAO{gl});
+            vaos.emplace(ctx_id, VAO{});
             vao_configured.emplace(ctx_id, false);
         }
     }

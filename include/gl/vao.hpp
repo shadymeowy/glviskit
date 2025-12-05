@@ -1,28 +1,27 @@
 #pragma once
 
-#include "glad.hpp"
+#include "../gl/gl.hpp"
 
 namespace glviskit {
 
 class VAO {
    public:
-    explicit VAO(GladGLContext &gl) : gl{gl} { gl.GenVertexArrays(1, &vao); }
+    VAO() { glGenVertexArrays(1, &vao); }
 
     // destructor
-    ~VAO() { gl.DeleteVertexArrays(1, &vao); }
+    ~VAO() { glDeleteVertexArrays(1, &vao); }
 
     // this class is non-copyable
     VAO(const VAO &) = delete;
     auto operator=(const VAO &) -> VAO & = delete;
 
     // but movable
-    VAO(VAO &&other) noexcept : gl{other.gl}, vao{other.vao} { other.vao = 0; }
+    VAO(VAO &&other) noexcept : vao{other.vao} { other.vao = 0; }
 
     auto operator=(VAO &&other) noexcept -> VAO & {
         if (this != &other) {
-            gl.DeleteVertexArrays(1, &vao);
+            glDeleteVertexArrays(1, &vao);
 
-            gl = other.gl;
             vao = other.vao;
 
             other.vao = 0;
@@ -31,11 +30,11 @@ class VAO {
     }
 
     [[nodiscard]] auto Get() const -> GLuint { return vao; }
-    void Bind() const { gl.BindVertexArray(vao); }
-    void Unbind() const { gl.BindVertexArray(0); }
+    void Bind() const { glBindVertexArray(vao); }
+    // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+    void Unbind() const { glBindVertexArray(0); }
 
    private:
-    GladGLContext &gl;
     GLuint vao{};
 };
 

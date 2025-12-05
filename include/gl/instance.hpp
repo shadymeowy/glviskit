@@ -3,7 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "buffer_stack.hpp"
-#include "glad.hpp"
+#include "../gl/gl.hpp"
 
 namespace glviskit {
 

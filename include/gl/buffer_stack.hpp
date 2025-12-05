@@ -5,16 +5,15 @@
 #include <utility>
 #include <vector>
 
+#include "../gl/gl.hpp"
 #include "buffer_object.hpp"
-#include "glad.hpp"
 
 namespace glviskit {
 
 template <typename T, GLenum TYPE = GL_ARRAY_BUFFER>
 class BufferStack {
    public:
-    explicit BufferStack(GladGLContext &gl, size_t capacity = 4)
-        : gl{gl}, buffer{gl, capacity} {}
+    explicit BufferStack(size_t capacity = 4) : buffer{capacity} {}
 
     void Append(const T &element) { elements.push_back(element); }
 
@@ -36,27 +35,28 @@ class BufferStack {
             // create new buffer object with new capacity
             // and get old buffer object for data copy
             auto old_buffer =
-                std::exchange(buffer, BufferObject<T, TYPE>(gl, new_capacity));
+                std::exchange(buffer, BufferObject<T, TYPE>(new_capacity));
 
             // copy old data
-            gl.BindBuffer(GL_COPY_READ_BUFFER, old_buffer.Get());
-            gl.BindBuffer(GL_COPY_WRITE_BUFFER, buffer.Get());
-            gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0,
-                                 0, size * sizeof(T));
-            gl.BindBuffer(GL_COPY_READ_BUFFER, 0);
-            gl.BindBuffer(GL_COPY_WRITE_BUFFER, 0);
+            glBindBuffer(GL_COPY_READ_BUFFER, old_buffer.Get());
+            glBindBuffer(GL_COPY_WRITE_BUFFER, buffer.Get());
+            glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0,
+                                size * sizeof(T));
+            glBindBuffer(GL_COPY_READ_BUFFER, 0);
+            glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
 
             reallocated = true;
         }
 
         // map the rest of the buffer and copy new data
         buffer.Bind();
-        void *ptr = gl.MapBufferRange(
+
+        void *ptr = glMapBufferRange(
             TYPE, size * sizeof(T), (elements.size() - size) * sizeof(T),
             GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
         std::copy(elements.data() + size, elements.data() + elements.size(),
                   static_cast<T *>(ptr));
-        gl.UnmapBuffer(TYPE);
+        glUnmapBuffer(TYPE);
         buffer.Unbind();
 
         size = elements.size();
@@ -67,7 +67,7 @@ class BufferStack {
 
     void Restore() {
         elements.resize(restore_point);
-        
+
         size = (std::min)(size, restore_point);
     }
 
@@ -88,7 +88,6 @@ class BufferStack {
     size_t restore_point{};
     std::vector<T> elements;
 
-    GladGLContext &gl;
     BufferObject<T, TYPE> buffer;
 };
 

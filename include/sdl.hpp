@@ -12,7 +12,7 @@
 #include <utility>
 
 #include "camera.hpp"
-#include "gl/glad.hpp"
+#include "gl/gl.hpp"
 #include "render_buffer.hpp"
 #include "renderer.hpp"
 
@@ -84,8 +84,8 @@ class SDLGLContextPtr {
 
 class Window {
    public:
-    Window(GladGLContext &gl, const char *title, int w, int h)
-        : gl{gl}, renderer(gl), window_{nullptr}, context_{nullptr} {
+    Window(const char *title, int w, int h)
+        : window_{nullptr}, context_{nullptr} {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
@@ -148,13 +148,13 @@ class Window {
         SDL_GetWindowSizeInPixels(window_.Get(), &width, &height);
 
         // do rendering
-        gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer.Render(window_id_, width, height);
 
         // swap buffers
         SDL_GL_SwapWindow(window_.Get());
 
-        GLenum error2 = gl.GetError();
+        GLenum error2 = glGetError();
         if (error2 != GL_NO_ERROR) {
             std::cerr << "OpenGL error in window 2: " << error2 << '\n';
             exit(EXIT_FAILURE);
@@ -169,8 +169,6 @@ class Window {
     [[nodiscard]] auto GetWindowID() const -> Uint32 { return window_id_; }
 
    private:
-    GladGLContext &gl;
-
     SDLWindowPtr window_;
     SDLGLContextPtr context_;
 
@@ -191,10 +189,19 @@ class Manager {
             exit(EXIT_FAILURE);
         }
 
+#if defined(GLVISKIT_GL33)
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
                             SDL_GL_CONTEXT_PROFILE_CORE);
+#elif defined(GLVISKIT_GLES2)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_ES);
+#else
+#error "No GL version defined"
+#endif
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 
@@ -215,11 +222,22 @@ class Manager {
             exit(EXIT_FAILURE);
         }
 
-        int ret = gladLoadGLContext(&gl_, (GLADloadfunc)SDL_GL_GetProcAddress);
+#if defined(GLVISKIT_USE_GLAD_GL)
+        int ret = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+#elif defined(GLVISKIT_USE_GLAD_GLES2)
+        int ret = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
+#else
+        int ret = 0;
+#endif
         if (ret == 0) {
             std::cerr << "Failed to initialize GLAD" << '\n';
             exit(EXIT_FAILURE);
         }
+
+        // Print GL version and renderer info
+        SDL_GL_MakeCurrent(window_master_.Get(), context_master_.Get());
+        std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << '\n';
+        std::cout << "OpenGL Renderer: " << glGetString(GL_RENDERER) << '\n';
     }
 
     // movable but not copyable
@@ -239,7 +257,7 @@ class Manager {
         // make master context current for context sharing
         SDL_GL_MakeCurrent(window_master_.Get(), context_master_.Get());
 
-        auto window = std::make_shared<Window>(gl_, title, w, h);
+        auto window = std::make_shared<Window>(title, w, h);
         windows_.insert({window->GetWindowID(), window});
         return window;
     }
@@ -270,8 +288,9 @@ class Manager {
         return true;
     }
 
+    // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
-        return std::make_shared<RenderBuffer>(gl_);
+        return std::make_shared<RenderBuffer>();
     }
 
     static auto GetTimeSeconds() -> float {
@@ -279,7 +298,6 @@ class Manager {
     }
 
    private:
-    GladGLContext gl_{};
     SDLWindowPtr window_master_{nullptr};
     SDLGLContextPtr context_master_{nullptr};
     std::map<Uint32, std::shared_ptr<Window>> windows_;

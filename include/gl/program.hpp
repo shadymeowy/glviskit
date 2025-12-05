@@ -4,63 +4,73 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-#include "glad.hpp"
+#include "../gl/gl.hpp"
 
 namespace glviskit {
+
+#if defined(GLVISKIT_GL33)
+    #define GLVISKIT_VERT_HEADER "#version 330 core\n"
+    #define GLVISKIT_FRAG_HEADER "#version 330 core\n"
+#elif defined(GLVISKIT_GLES2)
+    #define GLVISKIT_VERT_HEADER "#version 300 es\nprecision highp float;\n"
+    #define GLVISKIT_FRAG_HEADER "#version 300 es\nprecision mediump float;\n"
+#else
+    #error "No GL version defined"
+#endif
 
 template <const char *shader_vertex, const char *shader_fragment>
 class Program {
    public:
-    explicit Program(GladGLContext &gl) : gl{gl} {
-        GLuint s_vertex = gl.CreateShader(GL_VERTEX_SHADER);
+    Program() {
+        GLuint s_vertex = glCreateShader(GL_VERTEX_SHADER);
         const char *src_vertex = shader_vertex;
-        gl.ShaderSource(s_vertex, 1, &src_vertex, nullptr);
-        gl.CompileShader(s_vertex);
+        glShaderSource(s_vertex, 1, &src_vertex, nullptr);
+        glCompileShader(s_vertex);
 
         // check compile errors
         GLint success;
-        gl.GetShaderiv(s_vertex, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(s_vertex, GL_COMPILE_STATUS, &success);
         if (success == 0) {
             std::array<GLchar, 512> info_log{};
-            gl.GetShaderInfoLog(s_vertex, 512, nullptr, info_log.data());
+            glGetShaderInfoLog(s_vertex, 512, nullptr, info_log.data());
             std::cerr << "Error compiling vertex shader: " << info_log.data()
                       << '\n';
             exit(EXIT_FAILURE);
         }
 
-        GLuint s_frag = gl.CreateShader(GL_FRAGMENT_SHADER);
+        GLuint s_frag = glCreateShader(GL_FRAGMENT_SHADER);
         const char *src_frag = shader_fragment;
-        gl.ShaderSource(s_frag, 1, &src_frag, nullptr);
-        gl.CompileShader(s_frag);
+        glShaderSource(s_frag, 1, &src_frag, nullptr);
+        glCompileShader(s_frag);
 
         // check compile errors
-        gl.GetShaderiv(s_frag, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(s_frag, GL_COMPILE_STATUS, &success);
         if (success == 0) {
             std::array<GLchar, 512> info_log{};
-            gl.GetShaderInfoLog(s_frag, 512, nullptr, info_log.data());
+            glGetShaderInfoLog(s_frag, 512, nullptr, info_log.data());
             std::cerr << "Error compiling fragment shader: " << info_log.data()
                       << '\n';
             exit(EXIT_FAILURE);
         }
 
-        program = gl.CreateProgram();
+        program = glCreateProgram();
         if (program == 0) {
             std::cerr << "Error creating shader program" << '\n';
             exit(EXIT_FAILURE);
         }
 
-        gl.AttachShader(program, s_vertex);
-        gl.AttachShader(program, s_frag);
-        gl.LinkProgram(program);
-        gl.DeleteShader(s_vertex);
-        gl.DeleteShader(s_frag);
+        glAttachShader(program, s_vertex);
+        glAttachShader(program, s_frag);
+        glLinkProgram(program);
+        glDeleteShader(s_vertex);
+        glDeleteShader(s_frag);
 
-        loc_mvp = gl.GetUniformLocation(program, "mvp");
+        loc_mvp = glGetUniformLocation(program, "mvp");
         if (loc_mvp == -1) {
             std::cerr << "Warning: mvp uniform not found in shader program"
                       << '\n';
         }
-        loc_screen_size = gl.GetUniformLocation(program, "screen_size");
+        loc_screen_size = glGetUniformLocation(program, "screen_size");
         if (loc_screen_size == -1) {
             std::cerr
                 << "Warning: screen_size uniform not found in shader program"
@@ -71,7 +81,7 @@ class Program {
     // destructor
     ~Program() {
         if (program != 0) {
-            gl.DeleteProgram(program);
+            glDeleteProgram(program);
             program = 0;
             loc_mvp = 0;
             loc_screen_size = 0;
@@ -84,8 +94,7 @@ class Program {
 
     // but movable
     Program(Program &&other) noexcept
-        : gl(other.gl),
-          program(other.program),
+        : program(other.program),
           loc_mvp(other.loc_mvp),
           loc_screen_size(other.loc_screen_size) {
         other.program = 0;
@@ -96,9 +105,8 @@ class Program {
     auto operator=(Program &&other) noexcept -> Program & {
         if (this != &other) {
             if (program != 0) {
-                gl.DeleteProgram(program);
+                glDeleteProgram(program);
             }
-            gl = other.gl;
             program = other.program;
             loc_mvp = other.loc_mvp;
             loc_screen_size = other.loc_screen_size;
@@ -109,24 +117,23 @@ class Program {
         return *this;
     }
 
-    void Use() { gl.UseProgram(program); }
+    void Use() { glUseProgram(program); }
 
     void SetMVP(const glm::mat4 &mvp) {
         if (loc_mvp == -1) {
             return;
         }
-        gl.UniformMatrix4fv(loc_mvp, 1, GL_FALSE, &mvp[0][0]);
+        glUniformMatrix4fv(loc_mvp, 1, GL_FALSE, &mvp[0][0]);
     }
 
     void SetScreenSize(const glm::vec2 &screen_size) {
         if (loc_screen_size == -1) {
             return;
         }
-        gl.Uniform2fv(loc_screen_size, 1, &screen_size[0]);
+        glUniform2fv(loc_screen_size, 1, &screen_size[0]);
     }
 
    private:
-    GladGLContext &gl;
     GLuint program{};
     GLuint loc_mvp{}, loc_screen_size{};
 };

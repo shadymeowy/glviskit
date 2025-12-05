@@ -5,8 +5,8 @@
 #include <glm/glm.hpp>
 
 #include "gl/buffer_stack.hpp"
-#include "gl/glad.hpp"
 #include "gl/instance.hpp"
+#include "gl/gl.hpp"
 #include "primitive/anchor.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
@@ -15,12 +15,10 @@ namespace glviskit {
 
 class RenderBuffer {
    public:
-    explicit RenderBuffer(GladGLContext &gl)
-        : gl{gl},
-          vbo_inst{gl},
-          line_buffer{gl, vbo_inst},
-          point_buffer{gl, vbo_inst},
-          anchor_buffer{gl, vbo_inst} {
+    RenderBuffer()
+        : line_buffer{vbo_inst},
+          point_buffer{vbo_inst},
+          anchor_buffer{vbo_inst} {
         // create identity instance
         AddInstance(glm::mat4{1.0F});
     }
@@ -37,10 +35,9 @@ class RenderBuffer {
     void Point(glm::vec3 position) {
         auto &vbo = point_buffer.VBO();
         auto &ebo = point_buffer.EBO();
-        
+
         size_t index = vbo.Size();
-        vbo.Append(
-            {.position = position, .color = color, .size = size});
+        vbo.Append({.position = position, .color = color, .size = size});
         ebo.Append(index);
     }
 
@@ -63,13 +60,13 @@ class RenderBuffer {
             // for second point append initial vertices with direction
             auto direction = position - line_prev;
             vbo.Append({.position = line_prev,
-                                    .velocity = direction,
-                                    .color = color_prev,
-                                    .size = size_prev});
+                        .velocity = direction,
+                        .color = color_prev,
+                        .size = size_prev});
             vbo.Append({.position = line_prev,
-                                    .velocity = -direction,
-                                    .color = color_prev,
-                                    .size = size_prev});
+                        .velocity = -direction,
+                        .color = color_prev,
+                        .size = size_prev});
 
             // nothing add to ebo yet
 
@@ -89,13 +86,13 @@ class RenderBuffer {
 
         // append two vertices at the previous point with bisector direction
         vbo.Append({.position = line_prev,
-                                .velocity = bisector,
-                                .color = color_prev,
-                                .size = size_prev});
+                    .velocity = bisector,
+                    .color = color_prev,
+                    .size = size_prev});
         vbo.Append({.position = line_prev,
-                                .velocity = -bisector,
-                                .color = color_prev,
-                                .size = size_prev});
+                    .velocity = -bisector,
+                    .color = color_prev,
+                    .size = size_prev});
 
         // add two triangles to connect previous segment
         ebo.Append(base_index - 2);
@@ -122,13 +119,13 @@ class RenderBuffer {
             size_t base_index = vbo.Size();
             auto direction = line_prev - line_prev_prev;
             vbo.Append({.position = line_prev,
-                                    .velocity = direction,
-                                    .color = color_prev,
-                                    .size = size_prev});
+                        .velocity = direction,
+                        .color = color_prev,
+                        .size = size_prev});
             vbo.Append({.position = line_prev,
-                                    .velocity = -direction,
-                                    .color = color_prev,
-                                    .size = size_prev});
+                        .velocity = -direction,
+                        .color = color_prev,
+                        .size = size_prev});
 
             ebo.Append(base_index - 2);
             ebo.Append(base_index + 0);
@@ -150,14 +147,10 @@ class RenderBuffer {
         size_t index = vbo.Size();
         auto s = size * 0.5F;
         // four vertices
-        vbo.Append(
-            {.anchor = anchor, .position = {-s, -s, 0}, .color = color});
-        vbo.Append(
-            {.anchor = anchor, .position = {s, -s, 0}, .color = color});
-        vbo.Append(
-            {.anchor = anchor, .position = {s, s, 0}, .color = color});
-        vbo.Append(
-            {.anchor = anchor, .position = {-s, s, 0}, .color = color});
+        vbo.Append({.anchor = anchor, .position = {-s, -s, 0}, .color = color});
+        vbo.Append({.anchor = anchor, .position = {s, -s, 0}, .color = color});
+        vbo.Append({.anchor = anchor, .position = {s, s, 0}, .color = color});
+        vbo.Append({.anchor = anchor, .position = {-s, s, 0}, .color = color});
         // two triangles
         ebo.Append(index + 0);
         ebo.Append(index + 1);
@@ -221,8 +214,6 @@ class RenderBuffer {
     void ClearInstances() { vbo_inst.Clear(); }
 
    private:
-    GladGLContext &gl;
-
     // instance transform buffer
     InstanceBuffer vbo_inst;
 
