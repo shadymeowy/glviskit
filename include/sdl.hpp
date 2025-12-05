@@ -217,21 +217,27 @@ class Manager {
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            switch (event.type) {
-                case SDL_EVENT_QUIT:
-                    return false;
-                case SDL_EVENT_KEY_DOWN:
-                    if (event.key.key == SDLK_ESCAPE) {
-                        return false;
-                    }
-                    if (windows_.contains(event.key.windowID)) {
-                        windows_[event.key.windowID]->CallbackKeyDown(
-                            event.key);
-                    }
-                    break;
-                default:
-                    break;
+            if (!ProcessEvent(event)) {
+                return false;
             }
+        }
+        return true;
+    }
+
+    auto ProcessEvent(const SDL_Event &event) -> bool {
+        switch (event.type) {
+            case SDL_EVENT_QUIT:
+                return false;
+            case SDL_EVENT_KEY_DOWN:
+                if (event.key.key == SDLK_ESCAPE) {
+                    return false;
+                }
+                if (windows_.contains(event.key.windowID)) {
+                    windows_[event.key.windowID]->CallbackKeyDown(event.key);
+                }
+                break;
+            default:
+                break;
         }
         return true;
     }
