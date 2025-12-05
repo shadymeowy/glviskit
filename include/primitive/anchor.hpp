@@ -4,11 +4,11 @@
 #include <glm/glm.hpp>
 #include <map>
 
-#include "gl/buffer_stack.hpp"
-#include "gl/glad.hpp"
-#include "gl/instance.hpp"
-#include "gl/program.hpp"
-#include "gl/vao.hpp"
+#include "../gl/buffer_stack.hpp"
+#include "../gl/glad.hpp"
+#include "../gl/instance.hpp"
+#include "../gl/program.hpp"
+#include "../gl/vao.hpp"
 
 namespace glviskit::anchor {
 
@@ -63,10 +63,7 @@ class Buffer {
     };
 
     explicit Buffer(GladGLContext &gl, InstanceBuffer &vbo_inst)
-        : gl{gl},
-          vbo{gl},
-          ebo{gl},
-          vbo_inst{vbo_inst} {}
+        : gl{gl}, vbo{gl}, ebo{gl}, vbo_inst{vbo_inst} {}
 
     void Render(GLuint ctx_id) {
         if (ebo.Size() == 0 || vbo_inst.Size() == 0) {

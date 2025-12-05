@@ -5,8 +5,8 @@
 #include <utility>
 #include <vector>
 
-#include "gl/buffer_object.hpp"
-#include "gl/glad.hpp"
+#include "buffer_object.hpp"
+#include "glad.hpp"
 
 namespace glviskit {
 

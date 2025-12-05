@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-#include "gl/glad.hpp"
+#include "glad.hpp"
 
 namespace glviskit {
 

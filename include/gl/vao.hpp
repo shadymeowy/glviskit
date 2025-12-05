@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gl/glad.hpp"
+#include "glad.hpp"
 
 namespace glviskit {
 
