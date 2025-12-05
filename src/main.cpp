@@ -9,7 +9,7 @@ auto main() -> int {
     std::uniform_real_distribution<float> dis(0.0F, 1.0F);
     auto rnf = [&]() -> float { return dis(gen); };
 
-    glviskit::Manager sdl_manager{};
+    auto &sdl_manager = glviskit::Manager::GetInstance();
 
     // create a window 1
     auto window1 = sdl_manager.CreateWindow("Window1", 800, 600);

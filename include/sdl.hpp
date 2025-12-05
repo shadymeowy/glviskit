@@ -84,15 +84,10 @@ class SDLGLContextPtr {
 
 class Window {
    public:
-    Window(const char *title, int w, int h)
+    Window(const char *title, int w, int h, bool share_context)
         : window_{nullptr}, context_{nullptr} {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                            SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-        SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+        SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
+                            share_context ? 1 : 0);
 
         auto *handle = SDL_CreateWindow(
             title, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -174,77 +169,22 @@ class Window {
 
     Renderer renderer;
     GLuint window_id_;
+
+    friend class Manager;
 };
 
 class Manager {
    public:
-    Manager() {
-        if (!SDL_Init(SDL_INIT_VIDEO)) {
-            std::cerr << "Failed to initialize SDL: " << SDL_GetError() << '\n';
-            exit(EXIT_FAILURE);
-        }
-        if (!SDL_GL_LoadLibrary(nullptr)) {
-            std::cerr << "Failed to load SDL GL library: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
-        }
-
-#if defined(GLVISKIT_GL33)
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                            SDL_GL_CONTEXT_PROFILE_CORE);
-#elif defined(GLVISKIT_GLES2)
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                            SDL_GL_CONTEXT_PROFILE_ES);
-#else
-#error "No GL version defined"
-#endif
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-
-        window_master_ = SDLWindowPtr(SDL_CreateWindow(
-            "Hidden", 800, 600, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN));
-        if (window_master_.Get() == nullptr) {
-            std::cerr << "Failed to create SDL master window: "
-                      << SDL_GetError() << '\n';
-            exit(EXIT_FAILURE);
-        }
-
-        context_master_ =
-            SDLGLContextPtr(SDL_GL_CreateContext(window_master_.Get()));
-
-        if (context_master_.Get() == nullptr) {
-            std::cerr << "Failed to create SDL master GL context: "
-                      << SDL_GetError() << '\n';
-            exit(EXIT_FAILURE);
-        }
-
-#if defined(GLVISKIT_USE_GLAD_GL)
-        int ret = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
-#elif defined(GLVISKIT_USE_GLAD_GLES2)
-        int ret = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
-#else
-        int ret = 0;
-#endif
-        if (ret == 0) {
-            std::cerr << "Failed to initialize GLAD" << '\n';
-            exit(EXIT_FAILURE);
-        }
-
-        // Print GL version and renderer info
-        SDL_GL_MakeCurrent(window_master_.Get(), context_master_.Get());
-        std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << '\n';
-        std::cout << "OpenGL Renderer: " << glGetString(GL_RENDERER) << '\n';
+    // singleton access
+    static auto GetInstance() -> Manager & {
+        static Manager instance;
+        return instance;
     }
 
-    // movable but not copyable
     Manager(const Manager &) = delete;
     auto operator=(const Manager &) -> Manager & = delete;
-    Manager(Manager &&) = default;
-    auto operator=(Manager &&) -> Manager & = default;
+    Manager(Manager &&) = delete;
+    auto operator=(Manager &&) -> Manager & = delete;
 
     ~Manager() {
         windows_.clear();
@@ -254,10 +194,18 @@ class Manager {
 
     auto CreateWindow(const char *title, int w, int h)
         -> std::shared_ptr<Window> {
-        // make master context current for context sharing
-        SDL_GL_MakeCurrent(window_master_.Get(), context_master_.Get());
+        std::shared_ptr<Window> window;
 
-        auto window = std::make_shared<Window>(title, w, h);
+        if (!windows_.empty()) {
+            auto any_window = GetAnyWindow();
+            any_window->MakeCurrent();
+            window = std::make_shared<Window>(title, w, h, true);
+        } else {
+            window = std::make_shared<Window>(title, w, h, false);
+            window->MakeCurrent();
+            LoadGLAD();
+        }
+
         windows_.insert({window->GetWindowID(), window});
         return window;
     }
@@ -290,6 +238,7 @@ class Manager {
 
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
     auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
+        EnsureContext();
         return std::make_shared<RenderBuffer>();
     }
 
@@ -298,9 +247,66 @@ class Manager {
     }
 
    private:
-    SDLWindowPtr window_master_{nullptr};
-    SDLGLContextPtr context_master_{nullptr};
     std::map<Uint32, std::shared_ptr<Window>> windows_;
+
+    Manager() {
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            std::cerr << "Failed to initialize SDL: " << SDL_GetError() << '\n';
+            exit(EXIT_FAILURE);
+        }
+        if (!SDL_GL_LoadLibrary(nullptr)) {
+            std::cerr << "Failed to load SDL GL library: " << SDL_GetError()
+                      << '\n';
+            exit(EXIT_FAILURE);
+        }
+
+#if defined(GLVISKIT_GL33)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_CORE);
+#elif defined(GLVISKIT_GLES2)
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
+                            SDL_GL_CONTEXT_PROFILE_ES);
+#else
+#error "No GL version defined"
+#endif
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    }
+
+    // get any active window (for context sharing)
+    auto GetAnyWindow() -> std::shared_ptr<Window> {
+        EnsureContext();
+        return windows_.begin()->second;
+    }
+
+    void EnsureContext() {
+        if (windows_.empty()) {
+            throw std::runtime_error(
+                "No context initialized, create a window first");
+        }
+    }
+
+    // load glad after context creation
+    static void LoadGLAD() {
+#if defined(GLVISKIT_USE_GLAD_GL)
+        int ret = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+#elif defined(GLVISKIT_USE_GLAD_GLES2)
+        int ret = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
+#else
+        int ret = 0;
+#endif
+        if (ret == 0) {
+            std::cerr << "Failed to initialize GLAD" << '\n';
+            exit(EXIT_FAILURE);
+        }
+
+        std::cerr << "OpenGL Version: " << glGetString(GL_VERSION) << '\n';
+        std::cerr << "OpenGL Renderer: " << glGetString(GL_RENDERER) << '\n';
+    }
 };
 
 }  // namespace glviskit::sdl

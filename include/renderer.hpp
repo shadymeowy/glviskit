@@ -38,25 +38,25 @@ class Renderer {
         auto mvp = camera->GetTransformMatrix();
 
         // Render all line buffers
-        program_line.Use();
-        program_line.SetScreenSize({width, height});
-        program_line.SetMVP(mvp);
+        program_line->Use();
+        program_line->SetScreenSize({width, height});
+        program_line->SetMVP(mvp);
         for (auto &line_buf : buffers) {
             line_buf->line_buffer.Render(ctx_id);
         }
 
         // Render all point buffers
-        program_point.Use();
-        program_point.SetScreenSize({width, height});
-        program_point.SetMVP(mvp);
+        program_point->Use();
+        program_point->SetScreenSize({width, height});
+        program_point->SetMVP(mvp);
         for (auto &point_buf : buffers) {
             point_buf->point_buffer.Render(ctx_id);
         }
 
         // Render all anchor buffers
-        program_anchor.Use();
-        program_anchor.SetScreenSize({width, height});
-        program_anchor.SetMVP(mvp);
+        program_anchor->Use();
+        program_anchor->SetScreenSize({width, height});
+        program_anchor->SetMVP(mvp);
         for (auto &anchor_buf : buffers) {
             anchor_buf->anchor_buffer.Render(ctx_id);
         }
@@ -71,6 +71,10 @@ class Renderer {
 
    private:
     void InitializeContext() {
+        program_line = std::make_unique<line::Program>();
+        program_point = std::make_unique<point::Program>();
+        program_anchor = std::make_unique<anchor::Program>();
+
         glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
@@ -81,9 +85,10 @@ class Renderer {
         initialized_ = true;
     }
 
-    line::Program program_line;
-    point::Program program_point;
-    anchor::Program program_anchor;
+    // TODO: share programs across multiple renderers?
+    std::unique_ptr<line::Program> program_line{nullptr};
+    std::unique_ptr<point::Program> program_point{nullptr};
+    std::unique_ptr<anchor::Program> program_anchor{nullptr};
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;
