@@ -18,7 +18,10 @@ target_link_libraries(glviskit_py PRIVATE
     glm::glm
 )
 set_target_properties(glviskit_py PROPERTIES OUTPUT_NAME "glviskit")
+
 # set static flags, we dont want any dynamic dependencies
-apply_static_flags(glviskit_py)
+# include(${CMAKE_CURRENT_LIST_DIR}/Static.cmake)
+# apply_static_flags(glviskit_py)
+
 # needed for python module
 install(TARGETS glviskit_py LIBRARY DESTINATION .)

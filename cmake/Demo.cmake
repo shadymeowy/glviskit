@@ -14,4 +14,5 @@ target_link_libraries(glviskit_demo PRIVATE
     glm::glm
 )
 # set static flags
-apply_static_flags(glviskit_demo)
+# include(${CMAKE_CURRENT_LIST_DIR}/Static.cmake)
+# apply_static_flags(glviskit_demo)
