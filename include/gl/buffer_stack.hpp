@@ -51,12 +51,22 @@ class BufferStack {
         // map the rest of the buffer and copy new data
         buffer.Bind();
 
+#if defined(__EMSCRIPTEN__)
+        // slower emscripten compatible but slower
+        glBufferSubData(TYPE, size * sizeof(T),
+                        (elements.size() - size) * sizeof(T),
+                        elements.data() + size);
+
+#else
+        // fast but not emscripten compatible
         void *ptr = glMapBufferRange(
             TYPE, size * sizeof(T), (elements.size() - size) * sizeof(T),
             GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
         std::copy(elements.data() + size, elements.data() + elements.size(),
                   static_cast<T *>(ptr));
         glUnmapBuffer(TYPE);
+#endif
+
         buffer.Unbind();
 
         size = elements.size();
