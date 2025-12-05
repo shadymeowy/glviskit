@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Drawing3D GL</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            border: 0;
+            outline: none;
+            touch-action: none;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">Loading...</div>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+    <script type='text/javascript'>
+        var canvasElement = document.getElementById('canvas');
+        var loadingElement = document.getElementById('loading');
+
+        var Module = {
+            canvas: canvasElement,
+            print: (text) => console.log(text),
+            printErr: (text) => console.error(text),
+            onRuntimeInitialized: () => {
+                loadingElement.style.display = 'none';
+                canvasElement.focus();
+            },
+            setStatus: (text) => {
+                if (text === "Running...") loadingElement.style.display = 'none';
+                else loadingElement.innerText = text;
+            }
+        };
+        window.onerror = (event) => {
+            loadingElement.style.display = 'block';
+            loadingElement.innerText = 'Error: Check Console';
+        };
+    </script>
+
+    {{{ SCRIPT }}}
+</body>
+
+</html>

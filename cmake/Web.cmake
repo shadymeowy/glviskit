@@ -23,6 +23,7 @@ target_link_options(glviskit_wasm PRIVATE
     "-sMAX_WEBGL_VERSION=2"
     "-sWASM=1"
     "-sALLOW_MEMORY_GROWTH=1"
+    "--shell-file" "${CMAKE_CURRENT_SOURCE_DIR}/web/shell_minimal.html"
 )
 
 # link libraries
