@@ -94,8 +94,10 @@ class Window {
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
                             share_context ? 1 : 0);
 
-        auto *handle = SDL_CreateWindow(
-            title, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        auto *handle =
+            SDL_CreateWindow(title, w, h,
+                             SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
+                                 SDL_WINDOW_HIGH_PIXEL_DENSITY);
         if (handle == nullptr) {
             std::cerr << "Failed to create SDL window: " << SDL_GetError()
                       << '\n';
