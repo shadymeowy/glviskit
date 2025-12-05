@@ -12,6 +12,9 @@ project(glviskit
     LANGUAGES CXX C
 )
 
+# possible versions
+set(GLVISKIT_GL_TYPE "AUTO" CACHE STRING "Type of OpenGL backend to use (AUTO, GLAD_GL, GLAD_GLES2, NATIVE_GL, NATIVE_GLES2, NONE)")
+
 # enable clang-tidy if available
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 # if(CLANG_TIDY_EXE)

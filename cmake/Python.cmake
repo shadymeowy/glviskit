@@ -1,13 +1,18 @@
 # fetch SDL3
 include(${CMAKE_CURRENT_LIST_DIR}/SDL3.cmake)
 
+# handle GL source files
+include(${CMAKE_CURRENT_LIST_DIR}/GL.cmake)
+
 # setup nanobind python module
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(nanobind CONFIG REQUIRED)
 
 # create the python module
 nanobind_add_module(glviskit_py
-    NB_STATIC LTO "src/bindings.cpp"
+    NB_STATIC LTO
+    "src/bindings.cpp"
+    "src/gl.c"
 )
 # include and link
 target_include_directories(glviskit_py PRIVATE
