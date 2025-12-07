@@ -1,9 +1,11 @@
 #pragma once
 
+// NOLINTBEGIN(unused-includes)
 #include "camera.hpp"
 #include "render_buffer.hpp"
 #include "renderer.hpp"
-#include "sdl.hpp"
+#include "sdl/manager.hpp"
+// NOLINTEND(unused-includes)
 
 namespace glviskit {
 

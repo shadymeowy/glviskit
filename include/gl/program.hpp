@@ -11,7 +11,7 @@ namespace glviskit {
 #if defined(GLVISKIT_GL33)
     #define GLVISKIT_VERT_HEADER "#version 330 core\n"
     #define GLVISKIT_FRAG_HEADER "#version 330 core\n"
-#elif defined(GLVISKIT_GLES2)
+#elif defined(GLVISKIT_GLES3)
     #define GLVISKIT_VERT_HEADER "#version 300 es\nprecision highp float;\n"
     #define GLVISKIT_FRAG_HEADER "#version 300 es\nprecision mediump float;\n"
 #else
