@@ -3,6 +3,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
+#include <vector>
 
 #include "gl/buffer_stack.hpp"
 #include "gl/instance.hpp"
@@ -31,10 +32,6 @@ class RenderBuffer {
         LineEnd();
     }
 
-    void Line(float x1, float y1, float z1, float x2, float y2, float z2) {
-        Line({x1, y1, z1}, {x2, y2, z2});
-    }
-
     void Point(glm::vec3 position) {
         auto &vbo = point_buffer.VBO();
         auto &ebo = point_buffer.EBO();
@@ -43,8 +40,6 @@ class RenderBuffer {
         vbo.Append({.position = position, .color = color, .size = size});
         ebo.Append(index);
     }
-
-    void Point(float x, float y, float z) { Point({x, y, z}); }
 
     // Efficient way to draw connected lines
     void LineTo(glm::vec3 position) {
@@ -115,8 +110,6 @@ class RenderBuffer {
         line_counter++;
     }
 
-    void LineTo(float x, float y, float z) { LineTo({x, y, z}); }
-
     void LineEnd() {
         if (line_counter >= 2) {
             auto &vbo = line_buffer.VBO();
@@ -167,22 +160,13 @@ class RenderBuffer {
         ebo.Append(index + 0);
     }
 
-    void AnchoredSquare(float x, float y, float z) {
-        AnchoredSquare({x, y, z});
-    }
-
     // attributes for subsequent drawing
     void Color(const glm::vec4 &c) { color = c; }
-    void Color(float r, float g, float b, float a) { Color({r, g, b, a}); }
     void Size(float s) { size = s; }
 
     // instancing
     void AddInstance(const glm::mat4 &transform) {
         vbo_inst.Append({transform});
-    }
-
-    void AddInstance(const std::array<float, 16> &transform) {
-        AddInstance(glm::mat4(*transform.data()));
     }
 
     void AddInstance(const glm::vec3 &position,
@@ -202,12 +186,6 @@ class RenderBuffer {
         // scale
         auto s = glm::scale(glm::mat4{1.0F}, scale);
         AddInstance(t * r * s);
-    }
-
-    void AddInstance(float px, float py, float pz, float rx = 0.0F,
-                     float ry = 0.0F, float rz = 0.0F, float sx = 1.0F,
-                     float sy = 1.0F, float sz = 1.0F) {
-        AddInstance({px, py, pz}, {rx, ry, rz}, {sx, sy, sz});
     }
 
     // save and restore buffers
