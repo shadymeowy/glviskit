@@ -52,14 +52,14 @@ auto main() -> int {
     }
 
     auto camera = window1->GetCamera();
-    camera->SetPerspectiveFov(60.0F, 60.0F);
+    camera->PerspectiveFov(60.0F, 60.0F);
     camera->SetPosition({0.0F, 0.0F, 0.0F});
     camera->SetRotation({0.0F, 0.0F, 0.0F});
     camera->SetPreserveAspectRatio(true);
     camera->SetDistance(15.0F);
 
     auto camera2 = window2->GetCamera();
-    camera2->SetPerspectiveFov(60.0F, 60.0F);
+    camera2->PerspectiveFov(60.0F, 60.0F);
     camera2->SetPosition({0.0F, 0.0F, 0.0F});
     camera2->SetRotation({0.0F, 0.0F, 0.0F});
     camera2->SetPreserveAspectRatio(true);

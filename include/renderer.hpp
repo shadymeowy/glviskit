@@ -28,14 +28,14 @@ class Renderer {
         const auto height = static_cast<float>(_height);
 
         // update camera viewport size
-        camera->SetViewportSize(width, height);
+        camera->SetViewportSize({width, height});
         // set viewport
         glViewport(0, 0, _width, _height);
         // clear buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // get camera transform matrix
-        auto mvp = camera->GetTransformMatrix();
+        auto mvp = camera->CalculateTransform();
 
         // Render all line buffers
         program_line->Use();
