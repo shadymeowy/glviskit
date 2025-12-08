@@ -11,6 +11,7 @@ find_package(nanobind CONFIG REQUIRED)
 # create the python module
 nanobind_add_module(glviskit_py
     NB_STATIC LTO
+    NB_DOMAIN "glviskit"
     "src/bindings.cpp"
     "src/gl.c"
 )
