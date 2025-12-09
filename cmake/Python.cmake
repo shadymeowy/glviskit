@@ -9,26 +9,39 @@ find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(nanobind CONFIG REQUIRED)
 
 # create the python module
-nanobind_add_module(glviskit_py
+nanobind_add_module(glviskit
     NB_STATIC LTO
     NB_DOMAIN "glviskit"
     STABLE_ABI
     "src/bindings.cpp"
     "src/gl.c"
 )
+nanobind_add_stub(
+    glviskit_stub
+    MODULE glviskit
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/glviskit.pyi"
+    DEPENDS glviskit
+    MARKER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/py.typed"
+)
 # include and link
-target_include_directories(glviskit_py PRIVATE
+target_include_directories(glviskit PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
-target_link_libraries(glviskit_py PRIVATE
+target_link_libraries(glviskit PRIVATE
     SDL3::SDL3-static
     glm::glm
 )
-set_target_properties(glviskit_py PROPERTIES OUTPUT_NAME "glviskit")
+set_target_properties(glviskit PROPERTIES OUTPUT_NAME "glviskit")
 
 # set static flags, we dont want any dynamic dependencies
 # include(${CMAKE_CURRENT_LIST_DIR}/Static.cmake)
-# apply_static_flags(glviskit_py)
+# apply_static_flags(glviskit)
 
 # needed for python module
-install(TARGETS glviskit_py LIBRARY DESTINATION .)
+install(TARGETS glviskit LIBRARY DESTINATION .)
+# install the stub file too
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/glviskit.pyi"
+    "${CMAKE_CURRENT_BINARY_DIR}/py.typed"
+    DESTINATION .
+)
