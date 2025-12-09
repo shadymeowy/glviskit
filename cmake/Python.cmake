@@ -16,13 +16,8 @@ nanobind_add_module(glviskit
     "src/bindings.cpp"
     "src/gl.c"
 )
-nanobind_add_stub(
-    glviskit_stub
-    MODULE glviskit
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/glviskit.pyi"
-    DEPENDS glviskit
-    MARKER_FILE "${CMAKE_CURRENT_SOURCE_DIR}/py.typed"
-)
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/py.typed" "")
+
 # include and link
 target_include_directories(glviskit PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
@@ -41,7 +36,7 @@ set_target_properties(glviskit PROPERTIES OUTPUT_NAME "glviskit")
 install(TARGETS glviskit LIBRARY DESTINATION .)
 # install the stub file too
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/glviskit.pyi"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/glviskit.pyi"
     "${CMAKE_CURRENT_BINARY_DIR}/py.typed"
     DESTINATION .
 )
