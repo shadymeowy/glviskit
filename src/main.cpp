@@ -9,14 +9,12 @@ auto main() -> int {
     std::uniform_real_distribution<float> dis(0.0F, 1.0F);
     auto rnf = [&]() -> float { return dis(gen); };
 
-    auto &sdl_manager = glviskit::Manager::GetInstance();
-
     // create a window 1
-    auto window1 = sdl_manager.CreateWindow("Window1", 800, 600);
+    auto window1 = glviskit::CreateWindow("Window1", 800, 600);
 
     // create a window 2
-    auto window2 = sdl_manager.CreateWindow("Window2", 800, 600);
-    auto render_buffer = sdl_manager.CreateRenderBuffer();
+    auto window2 = glviskit::CreateWindow("Window2", 800, 600);
+    auto render_buffer = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer);
     window2->AddRenderBuffer(render_buffer);
 
@@ -28,11 +26,11 @@ auto main() -> int {
                                    {-0.5F * s, 0, 0});
     }
 
-    auto render_buffer_sine = sdl_manager.CreateRenderBuffer();
+    auto render_buffer_sine = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer_sine);
     window2->AddRenderBuffer(render_buffer_sine);
 
-    auto render_buffer_axes = sdl_manager.CreateRenderBuffer();
+    auto render_buffer_axes = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer_axes);
     window2->AddRenderBuffer(render_buffer_axes);
 
@@ -68,8 +66,8 @@ auto main() -> int {
     float angle = 0.0F;
     int frame_index = 0;
 
-    while (sdl_manager.Loop()) {
-        const float curr_time = glviskit::Manager::GetTimeSeconds();
+    while (glviskit::Loop()) {
+        const float curr_time = glviskit::GetTimeSeconds();
 
         frame_index++;
         angle += 0.005F;

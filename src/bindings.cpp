@@ -10,18 +10,17 @@
 namespace nb = nanobind;
 
 NB_MODULE(glviskit, m) {
+    nb::set_leak_warnings(false);
+
     m.doc() = "Python bindings for glviskit";
 
-    m.def("manager", &glviskit::Manager::GetInstance, nb::rv_policy::reference);
-
-    nb::class_<glviskit::Manager>(m, "Manager")
-        .def_static("get_instance", &glviskit::Manager::GetInstance,
-                    nb::rv_policy::reference)
-        .def("create_window", &glviskit::Manager::CreateWindow)
-        .def("loop", &glviskit::Manager::Loop,
-             nb::call_guard<nb::gil_scoped_release>())
-        .def("create_render_buffer", &glviskit::Manager::CreateRenderBuffer)
-        .def_static("get_time_seconds", &glviskit::Manager::GetTimeSeconds);
+    m.def("create_window", &glviskit::CreateWindow);
+    m.def("create_render_buffer", &glviskit::CreateRenderBuffer);
+    m.def("get_time_seconds", &glviskit::GetTimeSeconds);
+    m.def("loop", &glviskit::Loop,
+          nb::call_guard<nb::gil_scoped_release>());
+    m.def("render", &glviskit::Render,
+          nb::call_guard<nb::gil_scoped_release>());
 
     nb::class_<glviskit::sdl::Window>(m, "Window")
         .def("add_render_buffer", &glviskit::sdl::Window::AddRenderBuffer)

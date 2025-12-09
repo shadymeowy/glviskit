@@ -16,14 +16,12 @@ std::shared_ptr<glviskit::sdl::Window> window1{nullptr};
 
 auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
     -> SDL_AppResult {
-    auto &manager = glviskit::Manager::GetInstance();
-
     // create a window 1
-    window1 = manager.CreateWindow("Window1", 800, 600);
+    window1 = glviskit::CreateWindow("Window1", 800, 600);
 
     // create a window 2
     // window2 = manager.CreateWindow("Window2", 800, 600);
-    render_buffer = manager.CreateRenderBuffer();
+    render_buffer = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer);
     // window2->AddRenderBuffer(render_buffer);
 
@@ -35,11 +33,11 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
                                    {-0.5F * s, 0, 0});
     }
 
-    render_buffer_sine = manager.CreateRenderBuffer();
+    render_buffer_sine = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer_sine);
     // window2->AddRenderBuffer(render_buffer_sine);
 
-    render_buffer_axes = manager.CreateRenderBuffer();
+    render_buffer_axes = glviskit::CreateRenderBuffer();
     window1->AddRenderBuffer(render_buffer_axes);
     // window2->AddRenderBuffer(render_buffer_axes);
 
@@ -69,7 +67,7 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
 }
 
 auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
-    const float curr_time = glviskit::Manager::GetTimeSeconds();
+    const float curr_time = glviskit::GetTimeSeconds();
 
     static float angle = 0.0F;
     static int frame_index = 0;
@@ -78,7 +76,6 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
     static std::uniform_real_distribution<float> dis(0.0F, 1.0F);
     static auto rnf = [&]() -> float { return dis(gen); };
 
-    auto &manager = glviskit::Manager::GetInstance();
     auto camera = window1->GetCamera();
     // auto camera2 = window2->GetCamera();
 
@@ -131,7 +128,7 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
         render_buffer_sine->LineTo({20.0F * x, 1.5 * y, 1.5 * z});
     }
     render_buffer_sine->LineEnd();
-    manager.Render();
+    glviskit::Render();
 
     return SDL_APP_CONTINUE;
 }
