@@ -8,6 +8,7 @@ if (NOT EMSCRIPTEN)
     set(SDL_SHARED OFF CACHE BOOL "" FORCE)
     set(SDL_STATIC ON CACHE BOOL "" FORCE)
     set(SDL_TEST OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC_PIC ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(SDL3)
 
     # link SDL3 to the main library
