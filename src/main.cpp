@@ -45,7 +45,7 @@ auto main() -> int {
     render_buffer->Color({1.0F, 1.0F, 1.0F, 1.0F});
     render_buffer->Size(3.0F);
     for (int i = 0; i < 10; i++) {
-        render_buffer->Point({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
+        render_buffer->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
                               (rnf() * 2.0F) - 1.0F});
     }
 

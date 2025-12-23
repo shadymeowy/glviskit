@@ -10,15 +10,17 @@
 #include "../gl/program.hpp"
 #include "../gl/vao.hpp"
 
-namespace glviskit::anchor {
+namespace glviskit::circle {
 
 // NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
-    layout(location = 0) in vec3 a_anchor;
+    layout(location = 0) in vec3 a_circle;
     layout(location = 1) in vec3 a_position;
     layout(location = 2) in vec4 a_color;
     layout(location = 3) in mat4 a_transform;
     out vec4 v_color;
+    out float v_radius;
+    out vec2 v_offset;
 
     uniform mat4 mvp;
     uniform vec2 screen_size;
@@ -26,7 +28,7 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
     void main()
     {
         mat4 T = mvp * a_transform;
-        vec4 p = T * vec4(a_anchor, 1.0);
+        vec4 p = T * vec4(a_circle, 1.0);
 
         vec2 offset = a_position.xy / screen_size;
         
@@ -34,6 +36,8 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
         gl_Position.xy += offset * p.w;
 
         v_color = a_color;
+        v_offset = a_position.xy;
+        v_radius = abs(a_position.x);
     }
 
 )glsl";
@@ -41,10 +45,19 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
 // NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_fragment[] = GLVISKIT_FRAG_HEADER R"glsl(
     in vec4 v_color;
+    in float v_radius;
+    in vec2 v_offset;
     out vec4 f_color;
     
     void main() {
-        f_color = v_color;
+        float dist = length(v_offset);
+        if (dist > v_radius) {
+            discard;
+        }
+        
+        float delta = fwidth(dist);
+        float alpha = 1.0 - smoothstep(v_radius - delta, v_radius, dist);
+        f_color = vec4(v_color.rgb, v_color.a * alpha);
     }
 )glsl";
 
@@ -54,7 +67,7 @@ using Program = Program<shader_vertex, shader_fragment>;
 class Buffer {
    public:
     struct Element {
-        glm::vec3 anchor;
+        glm::vec3 circle;
         glm::vec3 position;
         glm::vec4 color;
     };
@@ -119,7 +132,7 @@ class Buffer {
         vbo.Bind();
         // NOLINTBEGIN(performance-no-int-to-ptr)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
-                              (void *)offsetof(Element, anchor));
+                              (void *)offsetof(Element, circle));
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Element),
                               (void *)offsetof(Element, position));
@@ -168,4 +181,4 @@ class Buffer {
     }
 };
 
-}  // namespace glviskit::anchor
+}  // namespace glviskit::circle

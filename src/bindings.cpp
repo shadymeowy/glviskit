@@ -152,20 +152,20 @@ NB_MODULE(glviskit, m) {
         .def("line_end", &glviskit::RenderBuffer::LineEnd,
              "End the current line sequence")
         .def(
-            "anchored_square",
+            "circle",
             [](glviskit::RenderBuffer &rb, const std::array<float, 3> &pos) {
-                rb.AnchoredSquare(glm::make_vec3(pos.data()));
+                rb.Circle(glm::make_vec3(pos.data()));
             },
-            "pos"_a, "Draw an anchored square at position pos")
+            "pos"_a, "Draw an circle at position pos")
         .def(
-            "anchored_square",
+            "circle",
             [](glviskit::RenderBuffer &rb, const Points &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    rb.AnchoredSquare({v(i, 0), v(i, 1), v(i, 2)});
+                    rb.Circle({v(i, 0), v(i, 1), v(i, 2)});
                 }
             },
-            "points"_a, "Draw multiple anchored squares at given positions")
+            "points"_a, "Draw multiple circle at given positions")
         .def(
             "color",
             [](glviskit::RenderBuffer &rb, const std::array<float, 4> &c) {

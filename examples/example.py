@@ -36,7 +36,7 @@ render_buffer_axes.line([0.0, 0.0, 0.0], [0.0, 0.0, 1.0])
 
 render_buffer.color([1.0, 1.0, 1.0, 1.0])
 render_buffer.size(5.0)
-render_buffer.anchored_square(np.random.uniform(-1.0, 1.0, size=(10, 3)))
+render_buffer.circle(np.random.uniform(-1.0, 1.0, size=(10, 3)))
 
 camera = window1.camera
 camera.perspective_fov(60.0, 60.0)

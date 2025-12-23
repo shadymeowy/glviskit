@@ -7,7 +7,7 @@
 
 #include "camera.hpp"
 #include "gl/gl.hpp"
-#include "primitive/anchor.hpp"
+#include "primitive/circle.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
 #include "render_buffer.hpp"
@@ -53,12 +53,12 @@ class Renderer {
             point_buf->point_buffer.Render(ctx_id);
         }
 
-        // Render all anchor buffers
-        program_anchor->Use();
-        program_anchor->SetScreenSize({width, height});
-        program_anchor->SetMVP(mvp);
-        for (auto &anchor_buf : buffers) {
-            anchor_buf->anchor_buffer.Render(ctx_id);
+        // Render all circle buffers
+        program_circle->Use();
+        program_circle->SetScreenSize({width, height});
+        program_circle->SetMVP(mvp);
+        for (auto &circle_buf : buffers) {
+            circle_buf->circle_buffer.Render(ctx_id);
         }
     }
 
@@ -73,7 +73,7 @@ class Renderer {
     void InitializeContext() {
         program_line = std::make_unique<line::Program>();
         program_point = std::make_unique<point::Program>();
-        program_anchor = std::make_unique<anchor::Program>();
+        program_circle = std::make_unique<circle::Program>();
 
         glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         glDisable(GL_CULL_FACE);
@@ -89,7 +89,7 @@ class Renderer {
     // TODO: share programs across multiple renderers?
     std::unique_ptr<line::Program> program_line{nullptr};
     std::unique_ptr<point::Program> program_point{nullptr};
-    std::unique_ptr<anchor::Program> program_anchor{nullptr};
+    std::unique_ptr<circle::Program> program_circle{nullptr};
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;

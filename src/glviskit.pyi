@@ -137,17 +137,17 @@ class RenderBuffer:
         """End the current line sequence"""
 
     @overload
-    def anchored_square(self, pos: Sequence[float]) -> None:
-        """Draw an anchored square at position pos"""
+    def circle(self, pos: Sequence[float]) -> None:
+        """Draw an circle at position pos"""
 
     @overload
-    def anchored_square(
+    def circle(
         self,
         points: Annotated[
             NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
         ],
     ) -> None:
-        """Draw multiple anchored squares at given positions"""
+        """Draw multiple circle at given positions"""
 
     def color(self, c: Sequence[float]) -> None:
         """Set the current drawing color"""

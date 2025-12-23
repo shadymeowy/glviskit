@@ -6,7 +6,7 @@
 
 #include "gl/buffer_stack.hpp"
 #include "gl/instance.hpp"
-#include "primitive/anchor.hpp"
+#include "primitive/circle.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
 
@@ -17,7 +17,7 @@ class RenderBuffer {
     RenderBuffer()
         : line_buffer{vbo_inst},
           point_buffer{vbo_inst},
-          anchor_buffer{vbo_inst} {
+          circle_buffer{vbo_inst} {
         // create identity instance
         AddInstance(glm::mat4{1.0F});
     }
@@ -140,16 +140,16 @@ class RenderBuffer {
         line_prev = glm::vec3{0.0F};
     }
 
-    void AnchoredSquare(glm::vec3 anchor) {
-        auto &vbo = anchor_buffer.VBO();
-        auto &ebo = anchor_buffer.EBO();
+    void Circle(glm::vec3 circle) {
+        auto &vbo = circle_buffer.VBO();
+        auto &ebo = circle_buffer.EBO();
         size_t index = vbo.Size();
-        auto s = size * 0.5F;
+        auto s = size;
         // four vertices
-        vbo.Append({.anchor = anchor, .position = {-s, -s, 0}, .color = color});
-        vbo.Append({.anchor = anchor, .position = {s, -s, 0}, .color = color});
-        vbo.Append({.anchor = anchor, .position = {s, s, 0}, .color = color});
-        vbo.Append({.anchor = anchor, .position = {-s, s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {-s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {-s, s, 0}, .color = color});
         // two triangles
         ebo.Append(index + 0);
         ebo.Append(index + 1);
@@ -191,19 +191,19 @@ class RenderBuffer {
     void Save() {
         line_buffer.Save();
         point_buffer.Save();
-        anchor_buffer.Save();
+        circle_buffer.Save();
     }
 
     void Restore() {
         line_buffer.Restore();
         point_buffer.Restore();
-        anchor_buffer.Restore();
+        circle_buffer.Restore();
     }
 
     void Clear() {
         line_buffer.Clear();
         point_buffer.Clear();
-        anchor_buffer.Clear();
+        circle_buffer.Clear();
     }
 
     void SaveInstances() { vbo_inst.Save(); }
@@ -219,7 +219,7 @@ class RenderBuffer {
     // buffers to render
     line::Buffer line_buffer;
     point::Buffer point_buffer;
-    anchor::Buffer anchor_buffer;
+    circle::Buffer circle_buffer;
 
     // attributes for rendering
     glm::vec4 color{1.0F};
