@@ -77,7 +77,9 @@ class Renderer {
 
         glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
         glDisable(GL_CULL_FACE);
+#ifdef GLVISKIT_GL33
         glEnable(GL_MULTISAMPLE);
+#endif
         glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
