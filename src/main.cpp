@@ -43,7 +43,7 @@ auto main() -> int {
     render_buffer_axes->Line({0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F});
 
     render_buffer->Color({1.0F, 1.0F, 1.0F, 1.0F});
-    render_buffer->Size(3.0F);
+    render_buffer->Size(10.0F);
     for (int i = 0; i < 10; i++) {
         render_buffer->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
                               (rnf() * 2.0F) - 1.0F});

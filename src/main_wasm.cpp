@@ -12,6 +12,13 @@ std::shared_ptr<glviskit::RenderBuffer> render_buffer_sine{nullptr};
 std::shared_ptr<glviskit::RenderBuffer> render_buffer_axes{nullptr};
 std::shared_ptr<glviskit::sdl::Window> window1{nullptr};
 // std::shared_ptr<glviskit::sdl::Window> window2{nullptr};
+
+auto rnf() -> float {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(0.0F, 1.0F);
+    return dis(gen);
+}
 }  // namespace
 
 auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
@@ -49,6 +56,13 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
     render_buffer_axes->Color({0.0F, 0.0F, 1.0F, 1.0F});
     render_buffer_axes->Line({0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F});
 
+    render_buffer->Color({1.0F, 1.0F, 1.0F, 1.0F});
+    render_buffer->Size(10.0F);
+    for (int i = 0; i < 10; i++) {
+        render_buffer->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
+                               (rnf() * 2.0F) - 1.0F});
+    }
+
     auto camera = window1->GetCamera();
     camera->PerspectiveFov(60.0F, 60.0F);
     camera->SetPosition({0.0F, 0.0F, 0.0F});
@@ -71,10 +85,6 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
 
     static float angle = 0.0F;
     static int frame_index = 0;
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_real_distribution<float> dis(0.0F, 1.0F);
-    static auto rnf = [&]() -> float { return dis(gen); };
 
     auto camera = window1->GetCamera();
     // auto camera2 = window2->GetCamera();
