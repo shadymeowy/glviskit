@@ -20,6 +20,7 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
     layout(location = 3) in float a_size;
     layout(location = 4) in mat4 a_transform;
     out vec4 v_color;
+    out float v_dist;
 
     uniform mat4 mvp;
     uniform vec2 screen_size;
@@ -27,19 +28,23 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
     void main()
     {
         mat4 T = mvp * a_transform;
+        float size = abs(a_size);
+        float sgn = sign(a_size);
+
         vec4 p = T * vec4(a_position, 1.0);
-        vec4 v = T * vec4(a_velocity, 0.0);
+        vec4 v = T * vec4(sgn * a_velocity, 0.0);
 
         vec2 v_screen = (v.xy * p.w - p.xy * v.w) * screen_size;
         vec2 v2 = normalize(v_screen);
 
         vec2 normal = vec2(v2.y, -v2.x);
-        vec2 offset = normal * a_size / screen_size;
+        vec2 offset = normal * size / screen_size;
         
         gl_Position = p;
         gl_Position.xy += offset * p.w;
 
         v_color = a_color;
+        v_dist = sgn;
     }
 
 )glsl";
@@ -47,10 +52,14 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
 // NOLINTNEXTLINE(hicpp-avoid-c-arrays, modernize-avoid-c-arrays)
 inline constexpr char shader_fragment[] = GLVISKIT_FRAG_HEADER R"glsl(
     in vec4 v_color;
+    in float v_dist;
     out vec4 f_color;
     
     void main() {
-        f_color = v_color;
+        float d = abs(v_dist);
+        float delta = fwidth(d);
+        float alpha = 1.0 - smoothstep(1.0 - delta, 1.0, d);
+        f_color = vec4(v_color.rgb, v_color.a * alpha);
     }
 )glsl";
 
