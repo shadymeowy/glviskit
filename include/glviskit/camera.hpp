@@ -1,10 +1,9 @@
 #pragma once
 
+#include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/matrix.hpp>
-
-#include "glm/fwd.hpp"
 
 namespace glviskit {
 

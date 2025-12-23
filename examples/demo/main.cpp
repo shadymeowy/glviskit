@@ -1,8 +1,6 @@
 #include <cmath>
+#include <glviskit/glviskit.hpp>
 #include <random>
-
-#include <glviskit.hpp>
-#include <camera.hpp>
 
 auto main() -> int {
     std::random_device rd;
@@ -22,7 +20,7 @@ auto main() -> int {
     render_buffer->ClearInstances();
     for (int i = 1; i < 5; i++) {
         const double s = (i % 2 == 0) ? 1 : -1;
-        render_buffer->AddInstance({3.0F * (i - 0.5), 0, 0,}, {0.5F * s, 0, 0});
+        render_buffer->AddInstance({3.0F * (i - 0.5), 0, 0}, {0.5F * s, 0, 0});
         render_buffer->AddInstance({-3.0F * (i - 0.5), 0, 0},
                                    {-0.5F * s, 0, 0});
     }
@@ -47,7 +45,7 @@ auto main() -> int {
     render_buffer->Size(10.0F);
     for (int i = 0; i < 10; i++) {
         render_buffer->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
-                              (rnf() * 2.0F) - 1.0F});
+                               (rnf() * 2.0F) - 1.0F});
     }
 
     auto camera = window1->GetCamera();
