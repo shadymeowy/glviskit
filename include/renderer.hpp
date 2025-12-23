@@ -76,11 +76,12 @@ class Renderer {
         program_anchor = std::make_unique<anchor::Program>();
 
         glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
         glDisable(GL_CULL_FACE);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glBlendEquation(GL_FUNC_ADD);
+        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthFunc(GL_LEQUAL);
 
         initialized_ = true;
     }
