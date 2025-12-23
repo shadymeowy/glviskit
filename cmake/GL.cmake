@@ -18,20 +18,29 @@ message(STATUS "Using GLVISKIT_GL_TYPE: ${GLVISKIT_GL_TYPE}")
 
 # set flags accordingly
 if(GLVISKIT_GL_TYPE STREQUAL "GLAD_GL")
-    add_compile_definitions(GLVISKIT_USE_GLAD_GL=1)
+    target_compile_definitions(glviskit_lib PUBLIC GLVISKIT_USE_GLAD_GL=1)
 elseif(GLVISKIT_GL_TYPE STREQUAL "GLAD_GLES2")
-    add_compile_definitions(GLVISKIT_USE_GLAD_GLES2=1)
+    target_compile_definitions(glviskit_lib PUBLIC GLVISKIT_USE_GLAD_GLES2=1)
 elseif(GLVISKIT_GL_TYPE STREQUAL "NATIVE_GL")
-    add_compile_definitions(GLVISKIT_USE_GL_NATIVE=1)
+    target_compile_definitions(glviskit_lib PUBLIC GLVISKIT_USE_GL_NATIVE=1)
 elseif(GLVISKIT_GL_TYPE STREQUAL "NATIVE_GLES2")
-    add_compile_definitions(GLVISKIT_USE_GLES_NATIVE=1)
+    target_compile_definitions(glviskit_lib PUBLIC GLVISKIT_USE_GLES_NATIVE=1)
 else()
     message(FATAL_ERROR "Unknown GLVISKIT_GL_TYPE: ${GLVISKIT_GL_TYPE}")
 endif()
 
 # set source file variable
 if(GLVISKIT_GL_TYPE STREQUAL "GLAD_GL")
-    list(APPEND GLVISKIT_GL_SOURCES "src/gl.c")
+    list(APPEND GLVISKIT_GL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/gl.c")
+    # export the glad symbols
+    target_compile_definitions(glviskit_lib PUBLIC GLAD_API_CALL_EXPORT)
 elseif(GLVISKIT_GL_TYPE STREQUAL "GLAD_GLES2")
-    list(APPEND GLVISKIT_GL_SOURCES "src/gles2.c")
+    list(APPEND GLVISKIT_GL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/gles2.c")
+    # export the glad symbols
+    target_compile_definitions(glviskit_lib PUBLIC GLAD_API_CALL_EXPORT)
 endif()
+
+# add the sources to the main library
+target_sources(glviskit_lib PRIVATE
+    ${GLVISKIT_GL_SOURCES}
+)

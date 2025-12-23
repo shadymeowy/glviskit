@@ -13,21 +13,20 @@ namespace glviskit {
 // use SDL as the default window manager
 using Manager = sdl::Manager;
 
-auto CreateWindow(const char *title, int w, int h)
+static auto CreateWindow(const char *title, int w, int h)
     -> std::shared_ptr<sdl::Window> {
     return Manager::GetInstance().CreateWindow(title, w, h);
 }
 
-auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
+static auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
     return Manager::GetInstance().CreateRenderBuffer();
 }
 
-auto GetTimeSeconds() -> float {
-    return Manager::GetInstance().GetTimeSeconds();
+static auto GetTimeSeconds() -> float {
+    return Manager::GetTimeSeconds();
 }
 
-auto Loop() -> bool { return Manager::GetInstance().Loop(); }
-
-void Render() { Manager::GetInstance().Render(); }
+static auto Loop() -> bool { return Manager::GetInstance().Loop(); }
+static void Render() { Manager::GetInstance().Render(); }
 
 }  // namespace glviskit

@@ -1,7 +1,8 @@
 #include <cmath>
 #include <random>
 
-#include "glviskit.hpp"
+#include <glviskit.hpp>
+#include <camera.hpp>
 
 auto main() -> int {
     std::random_device rd;
