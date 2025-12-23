@@ -5,7 +5,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "glviskit.hpp"
+#include <glviskit/glviskit.hpp>
 
 namespace nb = nanobind;
 using namespace nb::literals;
