@@ -32,12 +32,8 @@ endif()
 # set source file variable
 if(GLVISKIT_GL_TYPE STREQUAL "GLAD_GL")
     list(APPEND GLVISKIT_GL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/gl.c")
-    # export the glad symbols
-    target_compile_definitions(glviskit_lib PUBLIC GLAD_API_CALL_EXPORT)
 elseif(GLVISKIT_GL_TYPE STREQUAL "GLAD_GLES2")
     list(APPEND GLVISKIT_GL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/gles2.c")
-    # export the glad symbols
-    target_compile_definitions(glviskit_lib PUBLIC GLAD_API_CALL_EXPORT)
 endif()
 
 # add the sources to the main library
