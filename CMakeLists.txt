@@ -6,9 +6,11 @@ project(glviskit
     LANGUAGES CXX C
 )
 
-# set cmake options
+# set cmake options if this is the top-level project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+    # this is used for python bindings
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # possible gl backends
@@ -44,3 +46,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/SDL3.cmake)
 
 # handle GL source files and autodetect GL type
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GL.cmake)
+
+# if skbuild is available, build python bindings
+if(SKBUILD)
+    add_subdirectory(python)
+endif()

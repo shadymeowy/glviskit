@@ -1,23 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
-project(glviskit_python LANGUAGES CXX)
-
-# set cpp standard
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# enable position independent code for everything
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# fetch glviskit
-include(FetchContent)
-FetchContent_Declare(
-    glviskit
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.."
-)
-FetchContent_MakeAvailable(glviskit)
-
 # setup nanobind python module
 find_package(Python COMPONENTS Interpreter Development.Module REQUIRED)
 find_package(nanobind CONFIG REQUIRED)
