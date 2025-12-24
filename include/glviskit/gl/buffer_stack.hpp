@@ -53,15 +53,28 @@ class BufferStack {
 
 #if defined(__EMSCRIPTEN__)
         // slower emscripten compatible but slower
+        // orphan the buffer if we are writing the whole buffer
+        if (size == 0) {
+            glBufferData(TYPE, buffer.Size() * sizeof(T), nullptr,
+                         GL_STREAM_DRAW);
+        }
+
         glBufferSubData(TYPE, size * sizeof(T),
                         (elements.size() - size) * sizeof(T),
                         elements.data() + size);
 
 #else
         // fast but not emscripten compatible
-        void *ptr = glMapBufferRange(
-            TYPE, size * sizeof(T), (elements.size() - size) * sizeof(T),
-            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+        GLbitfield flags = GL_MAP_WRITE_BIT;
+        // invalidate if we are writing the whole buffer
+        if (size == 0) {
+            flags |= GL_MAP_INVALIDATE_BUFFER_BIT;
+        } else {
+            flags |= GL_MAP_INVALIDATE_RANGE_BIT;
+        }
+        void *ptr =
+            glMapBufferRange(TYPE, size * sizeof(T),
+                             (elements.size() - size) * sizeof(T), flags);
         std::copy(elements.data() + size, elements.data() + elements.size(),
                   static_cast<T *>(ptr));
         glUnmapBuffer(TYPE);
