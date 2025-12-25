@@ -55,77 +55,37 @@ class RenderBuffer {
             line_counter++;
             return;
         }
-        if (line_counter == 1) {
-            // for second point append initial vertices with direction
-            auto direction = position - line_prev;
-            vbo.Append({.position = line_prev,
-                        .velocity = direction,
-                        .color = color_prev,
-                        .size = size_prev});
-            vbo.Append({.position = line_prev,
-                        .velocity = direction,
-                        .color = color_prev,
-                        .size = -size_prev});
 
-            // nothing add to ebo yet
-
-            // update previous points
-            line_prev_prev = line_prev;
-            line_prev = position;
-            color_prev = color;
-            size_prev = size;
-            line_counter++;
-            return;
-        }
-
-        // for subsequent points, we will calculate the bisector direction
-        auto dir1 = glm::normalize(line_prev - line_prev_prev);
-        auto dir2 = glm::normalize(position - line_prev);
-        auto bisector = glm::normalize(dir1 + dir2);
-
-        // append two vertices at the previous point with bisector direction
+        auto direction = position - line_prev;
+        // vertices for new line segment
         vbo.Append({.position = line_prev,
-                    .velocity = bisector,
+                    .velocity = direction,
                     .color = color_prev,
                     .size = size_prev});
         vbo.Append({.position = line_prev,
-                    .velocity = bisector,
+                    .velocity = direction,
                     .color = color_prev,
                     .size = -size_prev});
+        vbo.Append({.position = position,
+                    .velocity = direction,
+                    .color = color,
+                    .size = size});
+        vbo.Append({.position = position,
+                    .velocity = direction,
+                    .color = color,
+                    .size = -size});
 
-        // add two triangles to connect previous segment
-        ebo.Append(base_index - 2);
+        // new line segment
         ebo.Append(base_index + 0);
-        ebo.Append(base_index - 1);
-        ebo.Append(base_index - 1);
-        ebo.Append(base_index + 0);
+        ebo.Append(base_index + 2);
         ebo.Append(base_index + 1);
+        ebo.Append(base_index + 1);
+        ebo.Append(base_index + 2);
+        ebo.Append(base_index + 3);
 
-        // update previous points
-        line_prev_prev = line_prev;
-        line_prev = position;
-        color_prev = color;
-        size_prev = size;
-        line_counter++;
-    }
-
-    void LineEnd() {
-        if (line_counter >= 2) {
-            auto &vbo = line_buffer.VBO();
-            auto &ebo = line_buffer.EBO();
-
-            // if we have at least two points, finish the last segment
-            size_t base_index = vbo.Size();
-            auto direction = line_prev - line_prev_prev;
-            vbo.Append({.position = line_prev,
-                        .velocity = direction,
-                        .color = color_prev,
-                        .size = size_prev});
-            vbo.Append({.position = line_prev,
-                        .velocity = direction,
-                        .color = color_prev,
-                        .size = -size_prev});
-
+        if (line_counter > 1) {
+            // connect previous segment
+            // we have +0, +1 from new segment and -2, -1 from previous segment
             ebo.Append(base_index - 2);
             ebo.Append(base_index + 0);
             ebo.Append(base_index - 1);
@@ -134,10 +94,16 @@ class RenderBuffer {
             ebo.Append(base_index + 1);
         }
 
+        // update previous points
+        line_prev = position;
+        color_prev = color;
+        size_prev = size;
+        line_counter++;
+    }
+
+    void LineEnd() {
         // reset line drawing state
         line_counter = 0;
-        line_prev_prev = glm::vec3{0.0F};
-        line_prev = glm::vec3{0.0F};
     }
 
     void Circle(glm::vec3 circle) {
@@ -227,7 +193,6 @@ class RenderBuffer {
 
     // line drawing state
     size_t line_counter = 0;
-    glm::vec3 line_prev_prev{0.0F};
     glm::vec3 line_prev{0.0F};
     glm::vec4 color_prev{1.0F};
     float size_prev = 1.0F;
