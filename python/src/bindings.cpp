@@ -4,22 +4,23 @@
 #include <nanobind/stl/shared_ptr.h>
 
 #include <glm/gtc/type_ptr.hpp>
-
 #include <glviskit/glviskit.hpp>
 
 namespace nb = nanobind;
 using namespace nb::literals;
 
-using Points =
+using Points32 =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using Points64 =
+    nb::ndarray<double, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 
 NB_MODULE(glviskit, m) {
     nb::set_leak_warnings(false);
 
     m.doc() = "Python bindings for glviskit";
 
-    m.def("create_window", &glviskit::CreateWindow, "width"_a = 800,
-          "height"_a = 600, "title"_a = "glviskit Window");
+    m.def("create_window", &glviskit::CreateWindow,
+          "title"_a = "glviskit Window", "width"_a = 800, "height"_a = 600);
     m.def("create_render_buffer", &glviskit::CreateRenderBuffer,
           "Create a new RenderBuffer");
     m.def("get_time_seconds", &glviskit::GetTimeSeconds,
@@ -99,16 +100,8 @@ NB_MODULE(glviskit, m) {
     nb::class_<glviskit::RenderBuffer>(m, "RenderBuffer")
         .def(
             "line",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &start,
-               const std::array<float, 3> &end) {
-                rb.Line(glm::make_vec3(start.data()),
-                        glm::make_vec3(end.data()));
-            },
-            "start"_a, "end"_a, "Draw a line from start to end")
-        .def(
-            "line",
-            [](glviskit::RenderBuffer &rb, const Points &starts,
-               const Points &ends) {
+            [](glviskit::RenderBuffer &rb, const Points32 &starts,
+               const Points32 &ends) {
                 auto s = starts.view();
                 auto e = ends.view();
                 for (size_t i = 0; i < s.shape(0); ++i) {
@@ -116,7 +109,55 @@ NB_MODULE(glviskit, m) {
                             {e(i, 0), e(i, 1), e(i, 2)});
                 }
             },
-            "starts"_a, "ends"_a, "Draw multiple lines from starts to ends")
+            "starts"_a.noconvert(), "ends"_a.noconvert(),
+            "Draw multiple lines from starts to ends")
+        .def(
+            "line",
+            [](glviskit::RenderBuffer &rb, const Points64 &starts,
+               const Points64 &ends) {
+                auto s = starts.view();
+                auto e = ends.view();
+                for (size_t i = 0; i < s.shape(0); ++i) {
+                    rb.Line({static_cast<float>(s(i, 0)),
+                             static_cast<float>(s(i, 1)),
+                             static_cast<float>(s(i, 2))},
+                            {static_cast<float>(e(i, 0)),
+                             static_cast<float>(e(i, 1)),
+                             static_cast<float>(e(i, 2))});
+                }
+            },
+            "starts"_a.noconvert(), "ends"_a.noconvert(),
+            "Draw multiple lines from starts to ends")
+        .def(
+            "line",
+            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &start,
+               const std::array<float, 3> &end) {
+                rb.Line(glm::make_vec3(start.data()),
+                        glm::make_vec3(end.data()));
+            },
+            "start"_a, "end"_a, "Draw a line from start to end")
+        .def(
+            "point",
+            [](glviskit::RenderBuffer &rb, const Points32 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    glm::vec3 p{v(i, 0), v(i, 1), v(i, 2)};
+                    rb.Point(p);
+                }
+            },
+            "points"_a.noconvert(), "Draw multiple points at given positions")
+        .def(
+            "point",
+            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    glm::vec3 p{static_cast<float>(v(i, 0)),
+                                static_cast<float>(v(i, 1)),
+                                static_cast<float>(v(i, 2))};
+                    rb.Point(p);
+                }
+            },
+            "points"_a.noconvert(), "Draw multiple points at given positions")
         .def(
             "point",
             [](glviskit::RenderBuffer &rb, const std::array<float, 3> &p) {
@@ -124,48 +165,61 @@ NB_MODULE(glviskit, m) {
             },
             "p"_a, "Draw a point at position p")
         .def(
-            "point",
-            [](glviskit::RenderBuffer &rb, const Points &points) {
+            "line_to",
+            [](glviskit::RenderBuffer &rb, const Points32 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    for (size_t j = 0; j < v.shape(1); ++j) {
-                        rb.Point({v(i, 0), v(i, 1), v(i, 2)});
-                    }
+                    rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
                 }
             },
-            "points"_a, "Draw multiple points at given positions")
+            "points"_a.noconvert(), "Call line_to for multiple points consecutively")
+        .def(
+            "line_to",
+            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    rb.LineTo({static_cast<float>(v(i, 0)),
+                               static_cast<float>(v(i, 1)),
+                               static_cast<float>(v(i, 2))});
+                }
+            },
+            "points"_a.noconvert(), "Call line_to for multiple points consecutively")
         .def(
             "line_to",
             [](glviskit::RenderBuffer &rb, const std::array<float, 3> &p) {
                 rb.LineTo(glm::make_vec3(p.data()));
             },
             "p"_a, "Draw a line to position p")
-        .def(
-            "line_to",
-            [](glviskit::RenderBuffer &rb, const Points &points) {
-                auto v = points.view();
-                for (size_t i = 0; i < v.shape(0); ++i) {
-                    rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
-                }
-            },
-            "points"_a, "Call line_to for multiple points consecutively")
+
         .def("line_end", &glviskit::RenderBuffer::LineEnd,
              "End the current line sequence")
+        .def(
+            "circle",
+            [](glviskit::RenderBuffer &rb, const Points32 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    rb.Circle({v(i, 0), v(i, 1), v(i, 2)});
+                }
+            },
+            "points"_a.noconvert(), "Draw multiple circle at given positions")
+        .def(
+            "circle",
+            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    rb.Circle({static_cast<float>(v(i, 0)),
+                               static_cast<float>(v(i, 1)),
+                               static_cast<float>(v(i, 2))});
+                }
+            },
+            "points"_a.noconvert(), "Draw multiple circle at given positions")
         .def(
             "circle",
             [](glviskit::RenderBuffer &rb, const std::array<float, 3> &pos) {
                 rb.Circle(glm::make_vec3(pos.data()));
             },
             "pos"_a, "Draw an circle at position pos")
-        .def(
-            "circle",
-            [](glviskit::RenderBuffer &rb, const Points &points) {
-                auto v = points.view();
-                for (size_t i = 0; i < v.shape(0); ++i) {
-                    rb.Circle({v(i, 0), v(i, 1), v(i, 2)});
-                }
-            },
-            "points"_a, "Draw multiple circle at given positions")
+
         .def(
             "color",
             [](glviskit::RenderBuffer &rb, const std::array<float, 4> &c) {
