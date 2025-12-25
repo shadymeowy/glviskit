@@ -5,7 +5,7 @@ import numpy
 from numpy.typing import NDArray
 
 def create_window(
-    width: str = 800, height: int = 600, title: int = "glviskit Window"
+    title: str = "glviskit Window", width: int = 800, height: int = 600
 ) -> Window: ...
 def create_render_buffer() -> RenderBuffer:
     """Create a new RenderBuffer"""
