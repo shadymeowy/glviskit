@@ -4,6 +4,7 @@
 
 #include "../gl/gl.hpp"
 #include "../renderer.hpp"
+#include "SDL3/SDL_events.h"
 #include "sdl.hpp"
 
 namespace glviskit::sdl {
@@ -89,10 +90,19 @@ class Window {
                   << SDL_GetKeyName(event.key) << " " << event.down << "  \n";
     }
 
-    void CallbackMouse(const SDL_MouseButtonEvent &event) const {
-        std::cout << "Mouse key in window" << window_id_ << ": "
-                  << SDL_GetKeyName(event.button) << " " << event.down
-                  << "  \n";
+    void CallbackButton(const SDL_MouseButtonEvent &event) const {
+        std::cout << "Button in window" << window_id_ << ": " << event.button
+                  << " " << event.down << "  \n";
+    }
+
+    void CallbackMotion(const SDL_MouseMotionEvent &event) const {
+        std::cout << "Motion in window" << window_id_ << ": " << event.x
+                  << ", " << event.y << "  \n";
+    }
+
+    void CallbackWheel(const SDL_MouseWheelEvent &event) const {
+        std::cout << "Mouse wheel in window" << window_id_ << ": " << event.x
+                  << ", " << event.y << "  \n";
     }
 
     [[nodiscard]] auto GetWindowID() const -> Uint32 { return window_id_; }

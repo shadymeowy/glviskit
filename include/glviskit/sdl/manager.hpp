@@ -79,10 +79,21 @@ class Manager {
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP:
-                if (windows_.contains(event.key.windowID)) {
-                    windows_[event.key.windowID]->CallbackMouse(event.button);
+                if (windows_.contains(event.button.windowID)) {
+                    windows_[event.button.windowID]->CallbackButton(
+                        event.button);
                 }
                 break;
+            case SDL_EVENT_MOUSE_MOTION:
+                if (windows_.contains(event.motion.windowID)) {
+                    windows_[event.motion.windowID]->CallbackMotion(
+                        event.motion);
+                }
+                break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                if (windows_.contains(event.wheel.windowID)) {
+                    windows_[event.wheel.windowID]->CallbackWheel(event.wheel);
+                }
             default:
                 break;
         }
