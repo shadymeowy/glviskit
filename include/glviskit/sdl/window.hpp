@@ -84,9 +84,15 @@ class Window {
         }
     }
 
-    void CallbackKeyDown(const SDL_KeyboardEvent &key) const {
-        std::cout << "Key down in window " << window_id_ << ": "
-                  << SDL_GetKeyName(key.key) << '\n';
+    void CallbackKey(const SDL_KeyboardEvent &event) const {
+        std::cout << "Key in window " << window_id_ << ": "
+                  << SDL_GetKeyName(event.key) << " " << event.down << "  \n";
+    }
+
+    void CallbackMouse(const SDL_MouseButtonEvent &event) const {
+        std::cout << "Mouse key in window" << window_id_ << ": "
+                  << SDL_GetKeyName(event.button) << " " << event.down
+                  << "  \n";
     }
 
     [[nodiscard]] auto GetWindowID() const -> Uint32 { return window_id_; }

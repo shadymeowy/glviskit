@@ -69,11 +69,18 @@ class Manager {
             case SDL_EVENT_QUIT:
                 return false;
             case SDL_EVENT_KEY_DOWN:
+            case SDL_EVENT_KEY_UP:
                 if (event.key.key == SDLK_ESCAPE) {
                     return false;
                 }
                 if (windows_.contains(event.key.windowID)) {
-                    windows_[event.key.windowID]->CallbackKeyDown(event.key);
+                    windows_[event.key.windowID]->CallbackKey(event.key);
+                }
+                break;
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                if (windows_.contains(event.key.windowID)) {
+                    windows_[event.key.windowID]->CallbackMouse(event.button);
                 }
                 break;
             default:
