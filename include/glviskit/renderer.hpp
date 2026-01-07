@@ -80,10 +80,11 @@ class Renderer {
 #ifdef GLVISKIT_GL33
         glEnable(GL_MULTISAMPLE);
 #endif
-        glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glDepthFunc(GL_LEQUAL);
+        // glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glDepthFunc(GL_ALWAYS);
 
         initialized_ = true;
     }
