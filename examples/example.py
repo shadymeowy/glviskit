@@ -79,13 +79,13 @@ while glviskit.loop():
         )
 
     render_list_sine.restore()
-    render_list_sine.color([1.0, 0.0, 0.0, 1.0])
-    render_list_sine.size(4.0)
+    path = render_list_sine.path_begin()
+    path.color([1.0, 0.0, 0.0, 1.0])
+    path.size(4.0)
     for ix in range(-1000, 1001):
         x = ix / 1000.0
         y = np.sin((50.0 * x) + (10 * curr_time))
         z = np.cos((50.0 * x) + (10 * curr_time))
 
-        render_list_sine.color([(x * 0.5) + 0.5, (y * 0.5) + 0.5, 0.5, 1.0])
-        render_list_sine.line_to([20.0 * x, 1.5 * y, 1.5 * z])
-    render_list_sine.line_end()
+        path.color([(x * 0.5) + 0.5, (y * 0.5) + 0.5, 0.5, 1.0])
+        path.line_to([20.0 * x, 1.5 * y, 1.5 * z])

@@ -31,8 +31,8 @@ NB_MODULE(glviskit, m) {
           "Render all windows without processing events");
 
     nb::class_<glviskit::sdl::Window>(m, "Window")
-        .def("add_render_list", &glviskit::sdl::Window::AddRenderList,
-             "rb"_a, "Add a RenderList to the window for rendering")
+        .def("add_render_list", &glviskit::sdl::Window::AddRenderList, "rb"_a,
+             "Add a RenderList to the window for rendering")
         .def_prop_rw("camera", &glviskit::sdl::Window::GetCamera,
                      &glviskit::sdl::Window::SetCamera, "Camera of the window")
         .def("make_current", &glviskit::sdl::Window::MakeCurrent,
@@ -164,35 +164,9 @@ NB_MODULE(glviskit, m) {
                 rb.Point(glm::make_vec3(p.data()));
             },
             "p"_a, "Draw a point at position p")
-        .def(
-            "line_to",
-            [](glviskit::RenderList &rb, const Points32 &points) {
-                auto v = points.view();
-                for (size_t i = 0; i < v.shape(0); ++i) {
-                    rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
-                }
-            },
-            "points"_a.noconvert(), "Call line_to for multiple points consecutively")
-        .def(
-            "line_to",
-            [](glviskit::RenderList &rb, const Points64 &points) {
-                auto v = points.view();
-                for (size_t i = 0; i < v.shape(0); ++i) {
-                    rb.LineTo({static_cast<float>(v(i, 0)),
-                               static_cast<float>(v(i, 1)),
-                               static_cast<float>(v(i, 2))});
-                }
-            },
-            "points"_a.noconvert(), "Call line_to for multiple points consecutively")
-        .def(
-            "line_to",
-            [](glviskit::RenderList &rb, const std::array<float, 3> &p) {
-                rb.LineTo(glm::make_vec3(p.data()));
-            },
-            "p"_a, "Draw a line to position p")
-
-        .def("line_end", &glviskit::RenderList::LineEnd,
-             "End the current line sequence")
+        .def("path_begin", &glviskit::RenderList::PathBegin,
+             "Create a Path object for drawing complex paths which is "
+             "save/restore aware")
         .def(
             "circle",
             [](glviskit::RenderList &rb, const Points32 &points) {
@@ -252,4 +226,44 @@ NB_MODULE(glviskit, m) {
              "Restore the previously saved instances")
         .def("clear_instances", &glviskit::RenderList::ClearInstances,
              "Clear the instances");
+
+    nb::class_<glviskit::Path>(m, "Path")
+        .def(
+            "line_to",
+            [](glviskit::Path &rb, const Points32 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
+                }
+            },
+            "points"_a.noconvert(),
+            "Call line_to for multiple points consecutively")
+        .def(
+            "line_to",
+            [](glviskit::Path &rb, const Points64 &points) {
+                auto v = points.view();
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    rb.LineTo({static_cast<float>(v(i, 0)),
+                               static_cast<float>(v(i, 1)),
+                               static_cast<float>(v(i, 2))});
+                }
+            },
+            "points"_a.noconvert(),
+            "Call line_to for multiple points consecutively")
+        .def(
+            "line_to",
+            [](glviskit::Path &rb, const std::array<float, 3> &p) {
+                rb.LineTo(glm::make_vec3(p.data()));
+            },
+            "p"_a, "Draw a line to position p")
+        .def("line_end", &glviskit::Path::LineEnd,
+             "End the current line sequence")
+        .def(
+            "color",
+            [](glviskit::Path &rb, const std::array<float, 4> &c) {
+                rb.Color({c[0], c[1], c[2], c[3]});
+            },
+            "c"_a, "Set the current drawing color")
+        .def("size", &glviskit::Path::Size, "size"_a,
+             "Set the current drawing size");
 }
