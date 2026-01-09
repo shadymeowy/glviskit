@@ -21,8 +21,7 @@ auto main() -> int {
     for (int i = 1; i < 5; i++) {
         const double s = (i % 2 == 0) ? 1 : -1;
         render_list->AddInstance({3.0F * (i - 0.5), 0, 0}, {0.5F * s, 0, 0});
-        render_list->AddInstance({-3.0F * (i - 0.5), 0, 0},
-                                   {-0.5F * s, 0, 0});
+        render_list->AddInstance({-3.0F * (i - 0.5), 0, 0}, {-0.5F * s, 0, 0});
     }
 
     auto render_list_sine = glviskit::CreateRenderList();
@@ -45,7 +44,7 @@ auto main() -> int {
     render_list->Size(10.0F);
     for (int i = 0; i < 10; i++) {
         render_list->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
-                               (rnf() * 2.0F) - 1.0F});
+                             (rnf() * 2.0F) - 1.0F});
     }
 
     auto camera = window1->GetCamera();
@@ -61,17 +60,11 @@ auto main() -> int {
     camera2->SetRotation({0.0F, 0.0F, 0.0F});
     camera2->SetPreserveAspectRatio(true);
     camera2->SetDistance(15.0F);
-
-    float angle = 0.0F;
     int frame_index = 0;
 
     while (glviskit::Loop()) {
         const float curr_time = glviskit::GetTimeSeconds();
-
         frame_index++;
-        angle += 0.005F;
-        camera->SetRotation({-0.5F, angle, 0.0F});
-        camera2->SetRotation({-0.5F, -angle, 0.0F});
 
         for (int i = 0; i < 10; i++) {
             render_list->Size((rnf() * 1.0F) + 1.0F);

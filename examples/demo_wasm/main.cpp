@@ -1,7 +1,6 @@
 #include <cmath>
-#include <random>
-
 #include <glviskit/glviskit.hpp>
+#include <random>
 
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL_main.h>
@@ -12,6 +11,7 @@ std::shared_ptr<glviskit::RenderList> render_list_sine{nullptr};
 std::shared_ptr<glviskit::RenderList> render_list_axes{nullptr};
 std::shared_ptr<glviskit::sdl::Window> window1{nullptr};
 // std::shared_ptr<glviskit::sdl::Window> window2{nullptr};
+int frame_index = 0;
 
 auto rnf() -> float {
     std::random_device rd;
@@ -36,8 +36,7 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
     for (int i = 1; i < 5; i++) {
         const double s = (i % 2 == 0) ? 1 : -1;
         render_list->AddInstance({3.0F * (i - 0.5), 0, 0}, {0.5F * s, 0, 0});
-        render_list->AddInstance({-3.0F * (i - 0.5), 0, 0},
-                                   {-0.5F * s, 0, 0});
+        render_list->AddInstance({-3.0F * (i - 0.5), 0, 0}, {-0.5F * s, 0, 0});
     }
 
     render_list_sine = glviskit::CreateRenderList();
@@ -60,7 +59,7 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
     render_list->Size(10.0F);
     for (int i = 0; i < 10; i++) {
         render_list->Circle({(rnf() * 2.0F) - 1.0F, (rnf() * 2.0F) - 1.0F,
-                               (rnf() * 2.0F) - 1.0F});
+                             (rnf() * 2.0F) - 1.0F});
     }
 
     auto camera = window1->GetCamera();
@@ -83,16 +82,11 @@ auto SDL_AppInit(void ** /*appstate*/, int /*argc*/, char ** /*argv*/)
 auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
     const float curr_time = glviskit::GetTimeSeconds();
 
-    static float angle = 0.0F;
-    static int frame_index = 0;
-
     auto camera = window1->GetCamera();
     // auto camera2 = window2->GetCamera();
 
     frame_index++;
-    angle += 0.005F;
-    camera->SetRotation({-0.5F, angle, 0.0F});
-    // camera2->SetRotation({-0.5F, -angle, 0.0F});
+    // camera->SetRotation({-0.5F, angle, 0.0F});
 
     for (int i = 0; i < 10; i++) {
         render_list->Size((rnf() * 1.0F) + 1.0F);
@@ -134,8 +128,7 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
         const float y = sinf((50.0F * x) + (10 * curr_time));
         const float z = cosf((50.0F * x) + (10 * curr_time));
 
-        path->Color(
-            {(x * 0.5F) + 0.5F, (y * 0.5F) + 0.5F, 0.5F, 1.0F});
+        path->Color({(x * 0.5F) + 0.5F, (y * 0.5F) + 0.5F, 0.5F, 1.0F});
         path->LineTo({20.0F * x, 1.5 * y, 1.5 * z});
     }
     glviskit::Render();
