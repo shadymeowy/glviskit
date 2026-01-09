@@ -167,9 +167,6 @@ class Manager {
             std::cerr << "Failed to initialize GLAD" << '\n';
             exit(EXIT_FAILURE);
         }
-
-        std::cerr << "OpenGL Version: " << glGetString(GL_VERSION) << '\n';
-        std::cerr << "OpenGL Renderer: " << glGetString(GL_RENDERER) << '\n';
     }
 };
 

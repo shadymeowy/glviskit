@@ -100,26 +100,18 @@ class Window {
     }
 
     void CallbackKey(const SDL_KeyboardEvent &event) const {
-        std::cout << "Key in window " << window_id_ << ": "
-                  << SDL_GetKeyName(event.key) << " " << event.down << "  \n";
         camera_controller_->KeyEvent(event.key, event.down);
     }
 
     void CallbackButton(const SDL_MouseButtonEvent &event) const {
-        std::cout << "Button in window" << window_id_ << ": " << event.button
-                  << " " << event.down << "  \n";
         camera_controller_->ButtonEvent(event.button, event.down);
     }
 
     void CallbackMotion(const SDL_MouseMotionEvent &event) const {
-        std::cout << "Motion in window" << window_id_ << ": " << event.x << ", "
-                  << event.y << "  \n";
         camera_controller_->MouseMotionEvent(event.xrel, event.yrel);
     }
 
     void CallbackWheel(const SDL_MouseWheelEvent &event) const {
-        std::cout << "Mouse wheel in window" << window_id_ << ": " << event.x
-                  << ", " << event.y << "  \n";
         camera_controller_->MouseWheelEvent(event.y);
     }
 

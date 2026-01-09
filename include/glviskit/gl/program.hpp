@@ -67,20 +67,12 @@ class Program {
 
         loc_mvp = glGetUniformLocation(program, "mvp");
         if (loc_mvp == -1) {
-            std::cerr << "Warning: mvp uniform not found in shader program"
-                      << '\n';
         }
         loc_screen_size = glGetUniformLocation(program, "screen_size");
         if (loc_screen_size == -1) {
-            std::cerr
-                << "Warning: screen_size uniform not found in shader program"
-                << '\n';
         }
         loc_alpha_test = glGetUniformLocation(program, "alpha_test");
         if (loc_alpha_test == -1) {
-            std::cerr
-                << "Warning: alpha_test uniform not found in shader program"
-                << '\n';
         }
     }
 
