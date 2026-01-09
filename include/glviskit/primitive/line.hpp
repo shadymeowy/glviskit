@@ -54,12 +54,19 @@ inline constexpr char shader_fragment[] = GLVISKIT_FRAG_HEADER R"glsl(
     in vec4 v_color;
     in float v_dist;
     out vec4 f_color;
+
+    uniform int alpha_test;
     
     void main() {
-        float d = abs(v_dist);
-        float delta = fwidth(d);
-        float alpha = 1.0 - smoothstep(1.0 - delta, 1.0, d);
-        f_color = vec4(v_color.rgb, v_color.a * alpha);
+        if (alpha_test == 1 && v_color.a < 0.99) {
+            discard;
+        }
+
+        if (alpha_test == 0 && v_color.a >= 0.99) {
+            discard;
+        }
+
+        f_color = v_color;
     }
 )glsl";
 

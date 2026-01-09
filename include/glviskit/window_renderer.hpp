@@ -29,37 +29,27 @@ class WindowRenderer {
 
         // update camera viewport size
         camera->SetViewportSize({width, height});
-        // set viewport
-        glViewport(0, 0, _width, _height);
-        // clear buffers
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // get camera transform matrix
         auto mvp = camera->CalculateTransform();
 
-        // Render all line buffers
-        program_line->Use();
-        program_line->SetScreenSize({width, height});
-        program_line->SetMVP(mvp);
-        for (auto &line_buf : buffers) {
-            line_buf->line_buffer.Render(ctx_id);
-        }
+        // set viewport
+        glViewport(0, 0, _width, _height);
 
-        // Render all point buffers
-        program_point->Use();
-        program_point->SetScreenSize({width, height});
-        program_point->SetMVP(mvp);
-        for (auto &point_buf : buffers) {
-            point_buf->point_buffer.Render(ctx_id);
-        }
+        // opaque objects first
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
 
-        // Render all circle buffers
-        program_circle->Use();
-        program_circle->SetScreenSize({width, height});
-        program_circle->SetMVP(mvp);
-        for (auto &circle_buf : buffers) {
-            circle_buf->circle_buffer.Render(ctx_id);
-        }
+        // clear buffers
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // draw everything with alpha test 1
+        RenderBuffers(ctx_id, width, height, mvp, 1);
+
+        // render transparent objects
+        glEnable(GL_BLEND);
+        glDepthMask(GL_FALSE);
+        // draw everything with alpha test 0
+        RenderBuffers(ctx_id, width, height, mvp, 0);
     }
 
     void AddRenderBuffer(const std::shared_ptr<RenderBuffer> &render_buffer) {
@@ -75,18 +65,46 @@ class WindowRenderer {
         program_point = std::make_unique<point::Program>();
         program_circle = std::make_unique<circle::Program>();
 
-        glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+        glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
         glDisable(GL_CULL_FACE);
 #ifdef GLVISKIT_GL33
         glEnable(GL_MULTISAMPLE);
 #endif
-        // glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        // glDepthFunc(GL_ALWAYS);
+        glDepthFunc(GL_LESS);
 
         initialized_ = true;
+    }
+
+    void RenderBuffers(GLuint ctx_id, float width, float height,
+                       const glm::mat4 &mvp, int alpha_test) {
+        // Render all line buffers
+        program_line->Use();
+        program_line->SetScreenSize({width, height});
+        program_line->SetMVP(mvp);
+        program_line->SetAlphaTest(alpha_test);
+        for (auto &line_buf : buffers) {
+            line_buf->line_buffer.Render(ctx_id);
+        }
+
+        // Render all point buffers
+        program_point->Use();
+        program_point->SetScreenSize({width, height});
+        program_point->SetMVP(mvp);
+        program_point->SetAlphaTest(alpha_test);
+        for (auto &point_buf : buffers) {
+            point_buf->point_buffer.Render(ctx_id);
+        }
+
+        // Render all circle buffers
+        program_circle->Use();
+        program_circle->SetScreenSize({width, height});
+        program_circle->SetMVP(mvp);
+        program_circle->SetAlphaTest(alpha_test);
+        for (auto &circle_buf : buffers) {
+            circle_buf->circle_buffer.Render(ctx_id);
+        }
     }
 
     // TODO: share programs across multiple renderers?

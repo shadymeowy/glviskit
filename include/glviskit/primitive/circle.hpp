@@ -48,16 +48,24 @@ inline constexpr char shader_fragment[] = GLVISKIT_FRAG_HEADER R"glsl(
     in float v_radius;
     in vec2 v_offset;
     out vec4 f_color;
+
+    uniform int alpha_test;
     
     void main() {
+        if (alpha_test == 1 && v_color.a < 0.99) {
+            discard;
+        }
+
+        if (alpha_test == 0 && v_color.a >= 0.99) {
+            discard;
+        }
+
         float dist = length(v_offset);
         if (dist > v_radius) {
             discard;
         }
-        
-        float delta = fwidth(dist);
-        float alpha = 1.0 - smoothstep(v_radius - delta, v_radius, dist);
-        f_color = vec4(v_color.rgb, v_color.a * alpha);
+
+        f_color = v_color;
     }
 )glsl";
 

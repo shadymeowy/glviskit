@@ -9,13 +9,13 @@
 namespace glviskit {
 
 #if defined(GLVISKIT_GL33)
-    #define GLVISKIT_VERT_HEADER "#version 330 core\n"
-    #define GLVISKIT_FRAG_HEADER "#version 330 core\n"
+#define GLVISKIT_VERT_HEADER "#version 330 core\n"
+#define GLVISKIT_FRAG_HEADER "#version 330 core\n"
 #elif defined(GLVISKIT_GLES3)
-    #define GLVISKIT_VERT_HEADER "#version 300 es\nprecision highp float;\n"
-    #define GLVISKIT_FRAG_HEADER "#version 300 es\nprecision mediump float;\n"
+#define GLVISKIT_VERT_HEADER "#version 300 es\nprecision highp float;\n"
+#define GLVISKIT_FRAG_HEADER "#version 300 es\nprecision mediump float;\n"
 #else
-    #error "No GL version defined"
+#error "No GL version defined"
 #endif
 
 template <const char *shader_vertex, const char *shader_fragment>
@@ -76,6 +76,12 @@ class Program {
                 << "Warning: screen_size uniform not found in shader program"
                 << '\n';
         }
+        loc_alpha_test = glGetUniformLocation(program, "alpha_test");
+        if (loc_alpha_test == -1) {
+            std::cerr
+                << "Warning: alpha_test uniform not found in shader program"
+                << '\n';
+        }
     }
 
     // destructor
@@ -85,6 +91,7 @@ class Program {
             program = 0;
             loc_mvp = 0;
             loc_screen_size = 0;
+            loc_alpha_test = 0;
         }
     }
 
@@ -96,10 +103,12 @@ class Program {
     Program(Program &&other) noexcept
         : program(other.program),
           loc_mvp(other.loc_mvp),
-          loc_screen_size(other.loc_screen_size) {
+          loc_screen_size(other.loc_screen_size),
+          loc_alpha_test(other.loc_alpha_test) {
         other.program = 0;
         other.loc_mvp = 0;
         other.loc_screen_size = 0;
+        other.loc_alpha_test = 0;
     }
 
     auto operator=(Program &&other) noexcept -> Program & {
@@ -110,9 +119,11 @@ class Program {
             program = other.program;
             loc_mvp = other.loc_mvp;
             loc_screen_size = other.loc_screen_size;
+            loc_alpha_test = other.loc_alpha_test;
             other.program = 0;
             other.loc_mvp = 0;
             other.loc_screen_size = 0;
+            other.loc_alpha_test = 0;
         }
         return *this;
     }
@@ -133,9 +144,16 @@ class Program {
         glUniform2fv(loc_screen_size, 1, &screen_size[0]);
     }
 
+    void SetAlphaTest(int alpha_test) {
+        if (loc_alpha_test == -1) {
+            return;
+        }
+        glUniform1i(loc_alpha_test, alpha_test);
+    }
+
    private:
     GLuint program{};
-    GLuint loc_mvp{}, loc_screen_size{};
+    GLuint loc_mvp{}, loc_screen_size{}, loc_alpha_test{};
 };
 
 }  // namespace glviskit
