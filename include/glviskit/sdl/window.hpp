@@ -3,7 +3,7 @@
 #include <iostream>
 
 #include "../gl/gl.hpp"
-#include "../renderer.hpp"
+#include "../window_renderer.hpp"
 #include "SDL3/SDL_events.h"
 #include "sdl.hpp"
 
@@ -46,12 +46,12 @@ class Window {
     }
 
     void AddRenderBuffer(const std::shared_ptr<RenderBuffer> &render_buffer) {
-        renderer.AddRenderBuffer(render_buffer);
+        window_renderer_.AddRenderBuffer(render_buffer);
     }
 
-    auto GetCamera() -> std::shared_ptr<Camera> { return renderer.GetCamera(); }
+    auto GetCamera() -> std::shared_ptr<Camera> { return window_renderer_.GetCamera(); }
     void SetCamera(std::shared_ptr<Camera> cam) {
-        renderer.SetCamera(std::move(cam));
+        window_renderer_.SetCamera(std::move(cam));
     }
 
     void MakeCurrent() { SDL_GL_MakeCurrent(window_.Get(), context_.Get()); }
@@ -73,7 +73,7 @@ class Window {
 
         // do rendering
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        renderer.Render(window_id_, width, height);
+        window_renderer_.Render(window_id_, width, height);
 
         // swap buffers
         SDL_GL_SwapWindow(window_.Get());
@@ -111,7 +111,7 @@ class Window {
     SDLWindowPtr window_;
     SDLGLContextPtr context_;
 
-    Renderer renderer;
+    WindowRenderer window_renderer_;
     GLuint window_id_;
 
     friend class Manager;

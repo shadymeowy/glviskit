@@ -3,9 +3,9 @@
 // NOLINTBEGIN(unused-includes)
 #include "camera.hpp"
 #include "render_buffer.hpp"
-#include "renderer.hpp"
 #include "sdl/manager.hpp"
 #include "sdl/window.hpp"
+#include "window_renderer.hpp"
 // NOLINTEND(unused-includes)
 
 namespace glviskit {

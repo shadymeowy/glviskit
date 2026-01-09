@@ -14,9 +14,9 @@
 
 namespace glviskit {
 
-class Renderer {
+class WindowRenderer {
    public:
-    Renderer() : camera{std::make_shared<Camera>()} {}
+    WindowRenderer() : camera{std::make_shared<Camera>()} {}
 
     void Render(GLuint ctx_id, int _width, int _height) {
         // if gl context not initialized, do it now

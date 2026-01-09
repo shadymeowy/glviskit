@@ -197,7 +197,7 @@ class RenderBuffer {
     glm::vec4 color_prev{1.0F};
     float size_prev = 1.0F;
 
-    friend class Renderer;
+    friend class WindowRenderer;
 };
 
 }  // namespace glviskit
