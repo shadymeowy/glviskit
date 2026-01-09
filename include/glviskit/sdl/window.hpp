@@ -2,9 +2,10 @@
 
 #include <iostream>
 
+#include "../controller/spherical_controller.hpp"
 #include "../gl/gl.hpp"
 #include "../window_renderer.hpp"
-#include "SDL3/SDL_events.h"
+#include "glviskit/controller/base_controller.hpp"
 #include "sdl.hpp"
 
 namespace glviskit::sdl {
@@ -12,7 +13,11 @@ namespace glviskit::sdl {
 class Window {
    public:
     Window(const char *title, int w, int h, bool share_context)
-        : window_{nullptr}, context_{nullptr} {
+        : window_{nullptr},
+          context_{nullptr},
+          camera_controller_(std::make_unique<SphericalController>()),
+          time_prev_(static_cast<float>(SDL_GetTicks()) / 1000.0F) {
+        // set GL attributes
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
                             share_context ? 1 : 0);
 
@@ -49,7 +54,10 @@ class Window {
         window_renderer_.AddRenderList(render_list);
     }
 
-    auto GetCamera() -> std::shared_ptr<Camera> { return window_renderer_.GetCamera(); }
+    auto GetCamera() -> std::shared_ptr<Camera> {
+        return window_renderer_.GetCamera();
+    }
+
     void SetCamera(std::shared_ptr<Camera> cam) {
         window_renderer_.SetCamera(std::move(cam));
     }
@@ -57,6 +65,12 @@ class Window {
     void MakeCurrent() { SDL_GL_MakeCurrent(window_.Get(), context_.Get()); }
 
     void Render() {
+        // update camera controller
+        float time_now = static_cast<float>(SDL_GetTicks()) / 1000.0F;
+        float delta_time = time_now - time_prev_;
+        time_prev_ = time_now;
+        camera_controller_->Update(delta_time, *GetCamera());
+
         // make context current
         // renderer expects the context to be current
         bool ret = SDL_GL_MakeCurrent(window_.Get(), context_.Get());
@@ -88,21 +102,25 @@ class Window {
     void CallbackKey(const SDL_KeyboardEvent &event) const {
         std::cout << "Key in window " << window_id_ << ": "
                   << SDL_GetKeyName(event.key) << " " << event.down << "  \n";
+        camera_controller_->KeyEvent(event.key, event.down);
     }
 
     void CallbackButton(const SDL_MouseButtonEvent &event) const {
         std::cout << "Button in window" << window_id_ << ": " << event.button
                   << " " << event.down << "  \n";
+        camera_controller_->ButtonEvent(event.button, event.down);
     }
 
     void CallbackMotion(const SDL_MouseMotionEvent &event) const {
-        std::cout << "Motion in window" << window_id_ << ": " << event.x
-                  << ", " << event.y << "  \n";
+        std::cout << "Motion in window" << window_id_ << ": " << event.x << ", "
+                  << event.y << "  \n";
+        camera_controller_->MouseMotionEvent(event.xrel, event.yrel);
     }
 
     void CallbackWheel(const SDL_MouseWheelEvent &event) const {
         std::cout << "Mouse wheel in window" << window_id_ << ": " << event.x
                   << ", " << event.y << "  \n";
+        camera_controller_->MouseWheelEvent(event.y);
     }
 
     [[nodiscard]] auto GetWindowID() const -> Uint32 { return window_id_; }
@@ -111,8 +129,11 @@ class Window {
     SDLWindowPtr window_;
     SDLGLContextPtr context_;
 
+    std::unique_ptr<BaseController> camera_controller_;
     WindowRenderer window_renderer_;
     GLuint window_id_;
+
+    float time_prev_;
 
     friend class Manager;
 };
