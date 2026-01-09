@@ -10,7 +10,7 @@
 #include "primitive/circle.hpp"
 #include "primitive/line.hpp"
 #include "primitive/point.hpp"
-#include "render_buffer.hpp"
+#include "render_list.hpp"
 
 namespace glviskit {
 
@@ -43,17 +43,17 @@ class WindowRenderer {
         // clear buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // draw everything with alpha test 1
-        RenderBuffers(ctx_id, width, height, mvp, 1);
+        RenderLists(ctx_id, width, height, mvp, 1);
 
         // render transparent objects
         glEnable(GL_BLEND);
         glDepthMask(GL_FALSE);
         // draw everything with alpha test 0
-        RenderBuffers(ctx_id, width, height, mvp, 0);
+        RenderLists(ctx_id, width, height, mvp, 0);
     }
 
-    void AddRenderBuffer(const std::shared_ptr<RenderBuffer> &render_buffer) {
-        buffers.push_back(render_buffer);
+    void AddRenderList(const std::shared_ptr<RenderList> &render_list) {
+        buffers.push_back(render_list);
     }
 
     auto GetCamera() -> std::shared_ptr<Camera> { return camera; }
@@ -77,7 +77,7 @@ class WindowRenderer {
         initialized_ = true;
     }
 
-    void RenderBuffers(GLuint ctx_id, float width, float height,
+    void RenderLists(GLuint ctx_id, float width, float height,
                        const glm::mat4 &mvp, int alpha_test) {
         // Render all line buffers
         program_line->Use();
@@ -116,7 +116,7 @@ class WindowRenderer {
     std::shared_ptr<Camera> camera;
     bool initialized_{false};
 
-    std::vector<std::shared_ptr<RenderBuffer>> buffers;
+    std::vector<std::shared_ptr<RenderList>> buffers;
 };
 
 }  // namespace glviskit

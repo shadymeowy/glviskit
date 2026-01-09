@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "../gl/gl.hpp"
-#include "../render_buffer.hpp"
+#include "../render_list.hpp"
 #include "window.hpp"
 
 namespace glviskit::sdl {
@@ -101,9 +101,9 @@ class Manager {
     }
 
     // NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-    auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
+    auto CreateRenderList() -> std::shared_ptr<RenderList> {
         EnsureContext();
-        return std::make_shared<RenderBuffer>();
+        return std::make_shared<RenderList>();
     }
 
     static auto GetTimeSeconds() -> float {

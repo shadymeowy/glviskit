@@ -12,9 +12,9 @@
 
 namespace glviskit {
 
-class RenderBuffer {
+class DrawList {
    public:
-    RenderBuffer()
+    DrawList()
         : line_buffer{vbo_inst},
           point_buffer{vbo_inst},
           circle_buffer{vbo_inst} {

@@ -45,8 +45,8 @@ class Window {
         MakeCurrent();
     }
 
-    void AddRenderBuffer(const std::shared_ptr<RenderBuffer> &render_buffer) {
-        window_renderer_.AddRenderBuffer(render_buffer);
+    void AddRenderList(const std::shared_ptr<RenderList> &render_list) {
+        window_renderer_.AddRenderList(render_list);
     }
 
     auto GetCamera() -> std::shared_ptr<Camera> { return window_renderer_.GetCamera(); }

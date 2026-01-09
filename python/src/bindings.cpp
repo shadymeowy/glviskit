@@ -21,8 +21,8 @@ NB_MODULE(glviskit, m) {
 
     m.def("create_window", &glviskit::CreateWindow,
           "title"_a = "glviskit Window", "width"_a = 800, "height"_a = 600);
-    m.def("create_render_buffer", &glviskit::CreateRenderBuffer,
-          "Create a new RenderBuffer");
+    m.def("create_render_list", &glviskit::CreateRenderList,
+          "Create a new RenderList");
     m.def("get_time_seconds", &glviskit::GetTimeSeconds,
           "Get the current time in seconds since the program started");
     m.def("loop", &glviskit::Loop, nb::call_guard<nb::gil_scoped_release>(),
@@ -31,8 +31,8 @@ NB_MODULE(glviskit, m) {
           "Render all windows without processing events");
 
     nb::class_<glviskit::sdl::Window>(m, "Window")
-        .def("add_render_buffer", &glviskit::sdl::Window::AddRenderBuffer,
-             "rb"_a, "Add a RenderBuffer to the window for rendering")
+        .def("add_render_list", &glviskit::sdl::Window::AddRenderList,
+             "rb"_a, "Add a RenderList to the window for rendering")
         .def_prop_rw("camera", &glviskit::sdl::Window::GetCamera,
                      &glviskit::sdl::Window::SetCamera, "Camera of the window")
         .def("make_current", &glviskit::sdl::Window::MakeCurrent,
@@ -97,10 +97,10 @@ NB_MODULE(glviskit, m) {
                      &glviskit::Camera::SetPreserveAspectRatio,
                      "Whether to preserve aspect ratio when resizing viewport");
 
-    nb::class_<glviskit::RenderBuffer>(m, "RenderBuffer")
+    nb::class_<glviskit::RenderList>(m, "RenderList")
         .def(
             "line",
-            [](glviskit::RenderBuffer &rb, const Points32 &starts,
+            [](glviskit::RenderList &rb, const Points32 &starts,
                const Points32 &ends) {
                 auto s = starts.view();
                 auto e = ends.view();
@@ -113,7 +113,7 @@ NB_MODULE(glviskit, m) {
             "Draw multiple lines from starts to ends")
         .def(
             "line",
-            [](glviskit::RenderBuffer &rb, const Points64 &starts,
+            [](glviskit::RenderList &rb, const Points64 &starts,
                const Points64 &ends) {
                 auto s = starts.view();
                 auto e = ends.view();
@@ -130,7 +130,7 @@ NB_MODULE(glviskit, m) {
             "Draw multiple lines from starts to ends")
         .def(
             "line",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &start,
+            [](glviskit::RenderList &rb, const std::array<float, 3> &start,
                const std::array<float, 3> &end) {
                 rb.Line(glm::make_vec3(start.data()),
                         glm::make_vec3(end.data()));
@@ -138,7 +138,7 @@ NB_MODULE(glviskit, m) {
             "start"_a, "end"_a, "Draw a line from start to end")
         .def(
             "point",
-            [](glviskit::RenderBuffer &rb, const Points32 &points) {
+            [](glviskit::RenderList &rb, const Points32 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     glm::vec3 p{v(i, 0), v(i, 1), v(i, 2)};
@@ -148,7 +148,7 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Draw multiple points at given positions")
         .def(
             "point",
-            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+            [](glviskit::RenderList &rb, const Points64 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     glm::vec3 p{static_cast<float>(v(i, 0)),
@@ -160,13 +160,13 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Draw multiple points at given positions")
         .def(
             "point",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &p) {
+            [](glviskit::RenderList &rb, const std::array<float, 3> &p) {
                 rb.Point(glm::make_vec3(p.data()));
             },
             "p"_a, "Draw a point at position p")
         .def(
             "line_to",
-            [](glviskit::RenderBuffer &rb, const Points32 &points) {
+            [](glviskit::RenderList &rb, const Points32 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
@@ -175,7 +175,7 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Call line_to for multiple points consecutively")
         .def(
             "line_to",
-            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+            [](glviskit::RenderList &rb, const Points64 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     rb.LineTo({static_cast<float>(v(i, 0)),
@@ -186,16 +186,16 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Call line_to for multiple points consecutively")
         .def(
             "line_to",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &p) {
+            [](glviskit::RenderList &rb, const std::array<float, 3> &p) {
                 rb.LineTo(glm::make_vec3(p.data()));
             },
             "p"_a, "Draw a line to position p")
 
-        .def("line_end", &glviskit::RenderBuffer::LineEnd,
+        .def("line_end", &glviskit::RenderList::LineEnd,
              "End the current line sequence")
         .def(
             "circle",
-            [](glviskit::RenderBuffer &rb, const Points32 &points) {
+            [](glviskit::RenderList &rb, const Points32 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     rb.Circle({v(i, 0), v(i, 1), v(i, 2)});
@@ -204,7 +204,7 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Draw multiple circle at given positions")
         .def(
             "circle",
-            [](glviskit::RenderBuffer &rb, const Points64 &points) {
+            [](glviskit::RenderList &rb, const Points64 &points) {
                 auto v = points.view();
                 for (size_t i = 0; i < v.shape(0); ++i) {
                     rb.Circle({static_cast<float>(v(i, 0)),
@@ -215,22 +215,22 @@ NB_MODULE(glviskit, m) {
             "points"_a.noconvert(), "Draw multiple circle at given positions")
         .def(
             "circle",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &pos) {
+            [](glviskit::RenderList &rb, const std::array<float, 3> &pos) {
                 rb.Circle(glm::make_vec3(pos.data()));
             },
             "pos"_a, "Draw an circle at position pos")
 
         .def(
             "color",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 4> &c) {
+            [](glviskit::RenderList &rb, const std::array<float, 4> &c) {
                 rb.Color({c[0], c[1], c[2], c[3]});
             },
             "c"_a, "Set the current drawing color")
-        .def("size", &glviskit::RenderBuffer::Size, "size"_a,
+        .def("size", &glviskit::RenderList::Size, "size"_a,
              "Set the current drawing size")
         .def(
             "add_instance",
-            [](glviskit::RenderBuffer &rb, const std::array<float, 3> &pos,
+            [](glviskit::RenderList &rb, const std::array<float, 3> &pos,
                const std::array<float, 3> &rot,
                const std::array<float, 3> &scale) {
                 rb.AddInstance(glm::make_vec3(pos.data()),
@@ -241,15 +241,15 @@ NB_MODULE(glviskit, m) {
             "rot"_a = std::array<float, 3>{0.0f, 0.0f, 0.0f},
             "scale"_a = std::array<float, 3>{1.0f, 1.0f, 1.0f},
             "Add an instance with given position, rotation and scale")
-        .def("save", &glviskit::RenderBuffer::Save,
+        .def("save", &glviskit::RenderList::Save,
              "Save the current render buffer state")
-        .def("restore", &glviskit::RenderBuffer::Restore,
+        .def("restore", &glviskit::RenderList::Restore,
              "Restore the previously saved render buffer state")
-        .def("clear", &glviskit::RenderBuffer::Clear, "Clear the render buffer")
-        .def("save_instances", &glviskit::RenderBuffer::SaveInstances,
+        .def("clear", &glviskit::RenderList::Clear, "Clear the render buffer")
+        .def("save_instances", &glviskit::RenderList::SaveInstances,
              "Save the current instances")
-        .def("restore_instances", &glviskit::RenderBuffer::RestoreInstances,
+        .def("restore_instances", &glviskit::RenderList::RestoreInstances,
              "Restore the previously saved instances")
-        .def("clear_instances", &glviskit::RenderBuffer::ClearInstances,
+        .def("clear_instances", &glviskit::RenderList::ClearInstances,
              "Clear the instances");
 }

@@ -1,0 +1,203 @@
+#pragma once
+
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/geometric.hpp>
+#include <glm/glm.hpp>
+
+#include "gl/buffer_stack.hpp"
+#include "gl/instance.hpp"
+#include "primitive/circle.hpp"
+#include "primitive/line.hpp"
+#include "primitive/point.hpp"
+
+namespace glviskit {
+
+class RenderList {
+   public:
+    RenderList()
+        : line_buffer{vbo_inst},
+          point_buffer{vbo_inst},
+          circle_buffer{vbo_inst} {
+        // create identity instance
+        AddInstance(glm::mat4{1.0F});
+    }
+
+    void Line(glm::vec3 start, glm::vec3 end) {
+        // if there is an ongoing line, end it first
+        // otherwise, this is noop
+        LineEnd();
+        LineTo(start);
+        LineTo(end);
+        LineEnd();
+    }
+
+    void Point(glm::vec3 position) {
+        auto &vbo = point_buffer.VBO();
+        auto &ebo = point_buffer.EBO();
+
+        size_t index = vbo.Size();
+        vbo.Append({.position = position, .color = color, .size = size});
+        ebo.Append(index);
+    }
+
+    // Efficient way to draw connected lines
+    void LineTo(glm::vec3 position) {
+        auto &vbo = line_buffer.VBO();
+        auto &ebo = line_buffer.EBO();
+
+        size_t base_index = vbo.Size();
+
+        if (line_counter == 0) {
+            // for first point just store and return
+            line_prev = position;
+            color_prev = color;
+            size_prev = size;
+            line_counter++;
+            return;
+        }
+
+        auto direction = position - line_prev;
+        // vertices for new line segment
+        vbo.Append({.position = line_prev,
+                    .velocity = direction,
+                    .color = color_prev,
+                    .size = size_prev});
+        vbo.Append({.position = line_prev,
+                    .velocity = direction,
+                    .color = color_prev,
+                    .size = -size_prev});
+        vbo.Append({.position = position,
+                    .velocity = direction,
+                    .color = color,
+                    .size = size});
+        vbo.Append({.position = position,
+                    .velocity = direction,
+                    .color = color,
+                    .size = -size});
+
+        // new line segment
+        ebo.Append(base_index + 0);
+        ebo.Append(base_index + 2);
+        ebo.Append(base_index + 1);
+        ebo.Append(base_index + 1);
+        ebo.Append(base_index + 2);
+        ebo.Append(base_index + 3);
+
+        if (line_counter > 1) {
+            // connect previous segment
+            // we have +0, +1 from new segment and -2, -1 from previous segment
+            ebo.Append(base_index - 2);
+            ebo.Append(base_index + 0);
+            ebo.Append(base_index - 1);
+            ebo.Append(base_index - 1);
+            ebo.Append(base_index + 0);
+            ebo.Append(base_index + 1);
+        }
+
+        // update previous points
+        line_prev = position;
+        color_prev = color;
+        size_prev = size;
+        line_counter++;
+    }
+
+    void LineEnd() {
+        // reset line drawing state
+        line_counter = 0;
+    }
+
+    void Circle(glm::vec3 circle) {
+        auto &vbo = circle_buffer.VBO();
+        auto &ebo = circle_buffer.EBO();
+        size_t index = vbo.Size();
+        auto s = size;
+        // four vertices
+        vbo.Append({.circle = circle, .position = {-s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {-s, s, 0}, .color = color});
+        // two triangles
+        ebo.Append(index + 0);
+        ebo.Append(index + 1);
+        ebo.Append(index + 2);
+        ebo.Append(index + 2);
+        ebo.Append(index + 3);
+        ebo.Append(index + 0);
+    }
+
+    // attributes for subsequent drawing
+    void Color(const glm::vec4 &c) { color = c; }
+    void Size(float s) { size = s; }
+
+    // instancing
+    void AddInstance(const glm::mat4 &transform) {
+        vbo_inst.Append({transform});
+    }
+
+    void AddInstance(const glm::vec3 &position,
+                     const glm::vec3 &rotation = glm::vec3{0.0F},
+                     const glm::vec3 &scale = glm::vec3{1.0F}) {
+        // translation
+        auto t = glm::translate(glm::mat4{1.0F}, position);
+
+        // rotation
+        auto angle = glm::length(rotation);
+        glm::mat4 r{1.0F};
+        if (angle > 1e-6F) {
+            auto axis = rotation / angle;
+            r = glm::rotate(glm::mat4{1.0F}, angle, axis);
+        }
+
+        // scale
+        auto s = glm::scale(glm::mat4{1.0F}, scale);
+        AddInstance(t * r * s);
+    }
+
+    // save and restore buffers
+    void Save() {
+        line_buffer.Save();
+        point_buffer.Save();
+        circle_buffer.Save();
+    }
+
+    void Restore() {
+        line_buffer.Restore();
+        point_buffer.Restore();
+        circle_buffer.Restore();
+    }
+
+    void Clear() {
+        line_buffer.Clear();
+        point_buffer.Clear();
+        circle_buffer.Clear();
+    }
+
+    void SaveInstances() { vbo_inst.Save(); }
+
+    void RestoreInstances() { vbo_inst.Restore(); }
+
+    void ClearInstances() { vbo_inst.Clear(); }
+
+   private:
+    // instance transform buffer
+    InstanceBuffer vbo_inst;
+
+    // buffers to render
+    line::Buffer line_buffer;
+    point::Buffer point_buffer;
+    circle::Buffer circle_buffer;
+
+    // attributes for rendering
+    glm::vec4 color{1.0F};
+    float size = 1.0F;
+
+    // line drawing state
+    size_t line_counter = 0;
+    glm::vec3 line_prev{0.0F};
+    glm::vec4 color_prev{1.0F};
+    float size_prev = 1.0F;
+
+    friend class WindowRenderer;
+};
+
+}  // namespace glviskit

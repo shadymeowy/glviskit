@@ -2,7 +2,7 @@
 
 // NOLINTBEGIN(unused-includes)
 #include "camera.hpp"
-#include "render_buffer.hpp"
+#include "render_list.hpp"
 #include "sdl/manager.hpp"
 #include "sdl/window.hpp"
 #include "window_renderer.hpp"
@@ -18,8 +18,8 @@ static auto CreateWindow(const char *title, int w, int h)
     return Manager::GetInstance().CreateWindow(title, w, h);
 }
 
-static auto CreateRenderBuffer() -> std::shared_ptr<RenderBuffer> {
-    return Manager::GetInstance().CreateRenderBuffer();
+static auto CreateRenderList() -> std::shared_ptr<RenderList> {
+    return Manager::GetInstance().CreateRenderList();
 }
 
 static auto GetTimeSeconds() -> float {

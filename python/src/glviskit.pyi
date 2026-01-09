@@ -7,8 +7,8 @@ from numpy.typing import NDArray
 def create_window(
     title: str = "glviskit Window", width: int = 800, height: int = 600
 ) -> Window: ...
-def create_render_buffer() -> RenderBuffer:
-    """Create a new RenderBuffer"""
+def create_render_list() -> RenderList:
+    """Create a new RenderList"""
 
 def get_time_seconds() -> float:
     """Get the current time in seconds since the program started"""
@@ -20,8 +20,8 @@ def render() -> None:
     """Render all windows without processing events"""
 
 class Window:
-    def add_render_buffer(self, rb: RenderBuffer) -> None:
-        """Add a RenderBuffer to the window for rendering"""
+    def add_render_list(self, rb: RenderList) -> None:
+        """Add a RenderList to the window for rendering"""
 
     @property
     def camera(self) -> Camera:
@@ -90,7 +90,7 @@ class Camera:
     @preserve_aspect_ratio.setter
     def preserve_aspect_ratio(self, arg: bool, /) -> None: ...
 
-class RenderBuffer:
+class RenderList:
     @overload
     def line(self, start: Sequence[float], end: Sequence[float]) -> None:
         """Draw a line from start to end"""
