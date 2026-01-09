@@ -53,7 +53,7 @@ class WindowRenderer {
     }
 
     void AddRenderList(const std::shared_ptr<RenderList> &render_list) {
-        buffers.push_back(render_list);
+        buffers.push_back(render_list->render_state_);
     }
 
     auto GetCamera() -> std::shared_ptr<Camera> { return camera; }
@@ -78,14 +78,14 @@ class WindowRenderer {
     }
 
     void RenderLists(GLuint ctx_id, float width, float height,
-                       const glm::mat4 &mvp, int alpha_test) {
+                     const glm::mat4 &mvp, int alpha_test) {
         // Render all line buffers
         program_line->Use();
         program_line->SetScreenSize({width, height});
         program_line->SetMVP(mvp);
         program_line->SetAlphaTest(alpha_test);
-        for (auto &line_buf : buffers) {
-            line_buf->line_buffer.Render(ctx_id);
+        for (auto &buf : buffers) {
+            buf->line_buffer.Render(ctx_id);
         }
 
         // Render all point buffers
@@ -93,8 +93,8 @@ class WindowRenderer {
         program_point->SetScreenSize({width, height});
         program_point->SetMVP(mvp);
         program_point->SetAlphaTest(alpha_test);
-        for (auto &point_buf : buffers) {
-            point_buf->point_buffer.Render(ctx_id);
+        for (auto &buf : buffers) {
+            buf->point_buffer.Render(ctx_id);
         }
 
         // Render all circle buffers
@@ -102,8 +102,8 @@ class WindowRenderer {
         program_circle->SetScreenSize({width, height});
         program_circle->SetMVP(mvp);
         program_circle->SetAlphaTest(alpha_test);
-        for (auto &circle_buf : buffers) {
-            circle_buf->circle_buffer.Render(ctx_id);
+        for (auto &buf : buffers) {
+            buf->circle_buffer.Render(ctx_id);
         }
     }
 
@@ -116,7 +116,7 @@ class WindowRenderer {
     std::shared_ptr<Camera> camera;
     bool initialized_{false};
 
-    std::vector<std::shared_ptr<RenderList>> buffers;
+    std::vector<std::shared_ptr<RenderState>> buffers;
 };
 
 }  // namespace glviskit
