@@ -7,6 +7,8 @@
 // prevent min/max macros on Windows
 #define NOMINMAX
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keycode.h>
 // undefine CreateWindow macro if defined from Windows.h
 #ifdef CreateWindow
 #undef CreateWindow
