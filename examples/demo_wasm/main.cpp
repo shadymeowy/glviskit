@@ -126,18 +126,18 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
     }
 
     render_list_sine->Restore();
-    render_list_sine->Color({1.0F, 0.0F, 0.0F, 1.0F});
-    render_list_sine->Size(4.0F);
+    auto path = render_list_sine->PathBegin();
+    path->Color({1.0F, 0.0F, 0.0F, 1.0F});
+    path->Size(4.0F);
     for (int ix = -1000; ix <= 1000; ix++) {
         const float x = static_cast<float>(ix) / 1000.0F;
         const float y = sinf((50.0F * x) + (10 * curr_time));
         const float z = cosf((50.0F * x) + (10 * curr_time));
 
-        render_list_sine->Color(
+        path->Color(
             {(x * 0.5F) + 0.5F, (y * 0.5F) + 0.5F, 0.5F, 1.0F});
-        render_list_sine->LineTo({20.0F * x, 1.5 * y, 1.5 * z});
+        path->LineTo({20.0F * x, 1.5 * y, 1.5 * z});
     }
-    render_list_sine->LineEnd();
     glviskit::Render();
 
     return SDL_APP_CONTINUE;
