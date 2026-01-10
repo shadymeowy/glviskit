@@ -35,6 +35,9 @@ NB_MODULE(glviskit, m) {
              "Add a RenderList to the window for rendering")
         .def_prop_rw("camera", &glviskit::sdl::Window::GetCamera,
                      &glviskit::sdl::Window::SetCamera, "Camera of the window")
+        .def_prop_rw("controller", &glviskit::sdl::Window::GetController,
+                     &glviskit::sdl::Window::SetController,
+                     "Camera controller of the window")
         .def("make_current", &glviskit::sdl::Window::MakeCurrent,
              "Make the window's OpenGL context current")
         .def("render", &glviskit::sdl::Window::Render,
@@ -266,4 +269,46 @@ NB_MODULE(glviskit, m) {
             "c"_a, "Set the current drawing color")
         .def("size", &glviskit::Path::Size, "size"_a,
              "Set the current drawing size");
+
+    nb::class_<glviskit::BaseController>(m, "BaseController");
+
+    nb::class_<glviskit::NullController, glviskit::BaseController>(
+        m, "NullController")
+        .def(nb::init<>(), "Create a NullController");
+
+    nb::class_<glviskit::FirstPersonController, glviskit::BaseController>(
+        m, "FirstPersonController")
+        .def(nb::init<>(), "Create a FirstPersonController")
+        .def_prop_rw("key_move_sensitivity",
+                     &glviskit::FirstPersonController::GetKeyMoveSensitivity,
+                     &glviskit::FirstPersonController::SetKeyMoveSensitivity,
+                     "Sensitivity of movement to key presses")
+        .def_prop_rw("key_rot_sensitivity",
+                     &glviskit::FirstPersonController::GetKeyRotSensitivity,
+                     &glviskit::FirstPersonController::SetKeyRotSensitivity,
+                     "Sensitivity of rotation to key presses")
+        .def_prop_rw("mouse_sensitivity",
+                     &glviskit::FirstPersonController::GetMouseSensitivity,
+                     &glviskit::FirstPersonController::SetMouseSensitivity,
+                     "Sensitivity of rotation to mouse movement");
+
+    nb::class_<glviskit::SphericalController, glviskit::BaseController>(
+        m, "SphericalController")
+        .def(nb::init<>(), "Create a SphericalController")
+        .def_prop_rw("key_move_sensitivity",
+                     &glviskit::SphericalController::GetKeyMoveSensitivity,
+                     &glviskit::SphericalController::SetKeyMoveSensitivity,
+                     "Sensitivity of distance change to key presses")
+        .def_prop_rw("key_rot_sensitivity",
+                     &glviskit::SphericalController::GetKeyRotSensitivity,
+                     &glviskit::SphericalController::SetKeyRotSensitivity,
+                     "Sensitivity of rotation to key presses")
+        .def_prop_rw("mouse_sensitivity",
+                     &glviskit::SphericalController::GetMouseSensitivity,
+                     &glviskit::SphericalController::SetMouseSensitivity,
+                     "Sensitivity of rotation to mouse movement")
+        .def_prop_rw("wheel_sensitivity",
+                     &glviskit::SphericalController::GetWheelSensitivity,
+                     &glviskit::SphericalController::SetWheelSensitivity,
+                     "Sensitivity of distance change to mouse wheel");
 }

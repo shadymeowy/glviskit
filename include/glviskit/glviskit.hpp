@@ -6,6 +6,10 @@
 #include "sdl/manager.hpp"
 #include "sdl/window.hpp"
 #include "window_renderer.hpp"
+#include "controller/base_controller.hpp"
+#include "controller/spherical_controller.hpp"
+#include "controller/first_person_controller.hpp"
+#include "controller/null_controller.hpp"
 // NOLINTEND(unused-includes)
 
 namespace glviskit {

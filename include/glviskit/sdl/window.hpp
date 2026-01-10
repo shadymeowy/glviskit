@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
 
 #include "../controller/spherical_controller.hpp"
 #include "../gl/gl.hpp"
@@ -15,7 +16,7 @@ class Window {
     Window(const char *title, int w, int h, bool share_context)
         : window_{nullptr},
           context_{nullptr},
-          camera_controller_(std::make_unique<SphericalController>()),
+          camera_controller_(std::make_shared<SphericalController>()),
           time_prev_(static_cast<float>(SDL_GetTicks()) / 1000.0F) {
         // set GL attributes
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
@@ -58,8 +59,16 @@ class Window {
         return window_renderer_.GetCamera();
     }
 
-    void SetCamera(std::shared_ptr<Camera> cam) {
-        window_renderer_.SetCamera(std::move(cam));
+    void SetCamera(const std::shared_ptr<Camera> &cam) {
+        window_renderer_.SetCamera(cam);
+    }
+
+    auto GetController() -> std::shared_ptr<BaseController> {
+        return camera_controller_;
+    }
+
+    void SetController(const std::shared_ptr<BaseController> &controller) {
+        camera_controller_ = controller;
     }
 
     void MakeCurrent() { SDL_GL_MakeCurrent(window_.Get(), context_.Get()); }
@@ -121,7 +130,7 @@ class Window {
     SDLWindowPtr window_;
     SDLGLContextPtr context_;
 
-    std::unique_ptr<BaseController> camera_controller_;
+    std::shared_ptr<BaseController> camera_controller_;
     WindowRenderer window_renderer_;
     GLuint window_id_;
 
