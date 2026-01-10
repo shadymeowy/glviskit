@@ -2,6 +2,17 @@ from typing import Any, Optional, overload, Typing, Sequence, Iterable, Union, C
 from enum import Enum
 import glviskit
 
+class BaseController:
+    """
+    None
+    """
+
+    def __init__(*args, **kwargs):
+        """
+        Initialize self.  See help(type(self)) for accurate signature.
+        """
+        ...
+    
 class Camera:
     """
     None
@@ -87,6 +98,67 @@ class Camera:
     def viewport_size(self) -> list[float]:
         """
         Viewport size of the camera
+        """
+        ...
+    
+class FirstPersonController:
+    """
+    None
+    """
+
+    def __init__(self) -> None:
+        """
+        Create a FirstPersonController
+        """
+        ...
+    
+    @property
+    def key_move_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of movement to key presses
+        """
+        ...
+    @key_move_sensitivity.setter
+    def key_move_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of movement to key presses
+        """
+        ...
+    
+    @property
+    def key_rot_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to key presses
+        """
+        ...
+    @key_rot_sensitivity.setter
+    def key_rot_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to key presses
+        """
+        ...
+    
+    @property
+    def mouse_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to mouse movement
+        """
+        ...
+    @mouse_sensitivity.setter
+    def mouse_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to mouse movement
+        """
+        ...
+    
+class NullController:
+    """
+    None
+    """
+
+    def __init__(self) -> None:
+        """
+        Create a NullController
         """
         ...
     
@@ -194,6 +266,19 @@ class RenderList:
         """
         ...
     
+    @property
+    def enabled(self) -> bool:
+        """
+        Whether this RenderList is enabled for rendering
+        """
+        ...
+    @enabled.setter
+    def enabled(self, arg: bool, /) -> None:
+        """
+        Whether this RenderList is enabled for rendering
+        """
+        ...
+    
     def line(self, start: collections.abc.Sequence[float], end: collections.abc.Sequence[float]) -> None:
         """
         Draw a line from start to end
@@ -270,6 +355,69 @@ class RenderList:
         """
         ...
     
+class SphericalController:
+    """
+    None
+    """
+
+    def __init__(self) -> None:
+        """
+        Create a SphericalController
+        """
+        ...
+    
+    @property
+    def key_move_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of distance change to key presses
+        """
+        ...
+    @key_move_sensitivity.setter
+    def key_move_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of distance change to key presses
+        """
+        ...
+    
+    @property
+    def key_rot_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to key presses
+        """
+        ...
+    @key_rot_sensitivity.setter
+    def key_rot_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to key presses
+        """
+        ...
+    
+    @property
+    def mouse_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to mouse movement
+        """
+        ...
+    @mouse_sensitivity.setter
+    def mouse_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of rotation to mouse movement
+        """
+        ...
+    
+    @property
+    def wheel_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of distance change to mouse wheel
+        """
+        ...
+    @wheel_sensitivity.setter
+    def wheel_sensitivity(self, arg: float, /) -> None:
+        """
+        Sensitivity of distance change to mouse wheel
+        """
+        ...
+    
 class Window:
     """
     None
@@ -297,6 +445,19 @@ class Window:
     def camera(self, arg: glviskit.Camera, /) -> None:
         """
         Camera of the window
+        """
+        ...
+    
+    @property
+    def controller(self) -> glviskit.BaseController:
+        """
+        Camera controller of the window
+        """
+        ...
+    @controller.setter
+    def controller(self, arg: glviskit.BaseController, /) -> None:
+        """
+        Camera controller of the window
         """
         ...
     

@@ -196,7 +196,6 @@ NB_MODULE(glviskit, m) {
                 rb.Circle(glm::make_vec3(pos.data()));
             },
             "pos"_a, "Draw an circle at position pos")
-
         .def(
             "color",
             [](glviskit::RenderList &rb, const std::array<float, 4> &c) {
