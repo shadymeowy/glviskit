@@ -15,6 +15,8 @@ class BaseController {
     virtual void ButtonEvent(uint8_t /*button*/, bool /*pressed*/) = 0;
     virtual void MouseMotionEvent(float /*xrel*/, float /*yrel*/) = 0;
     virtual void MouseWheelEvent(float /*y*/) = 0;
+
+    virtual ~BaseController() = default;
 };
 
 }  // namespace glviskit
