@@ -228,7 +228,10 @@ NB_MODULE(glviskit, m) {
         .def("restore_instances", &glviskit::RenderList::RestoreInstances,
              "Restore the previously saved instances")
         .def("clear_instances", &glviskit::RenderList::ClearInstances,
-             "Clear the instances");
+             "Clear the instances")
+        .def_prop_rw("enabled", &glviskit::RenderList::IsEnabled,
+                     &glviskit::RenderList::SetEnabled,
+                     "Whether this RenderList is enabled for rendering");
 
     nb::class_<glviskit::Path>(m, "Path")
         .def(

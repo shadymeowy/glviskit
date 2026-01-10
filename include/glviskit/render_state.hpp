@@ -11,35 +11,38 @@ namespace glviskit {
 class RenderState {
    public:
     RenderState()
-        : line_buffer{vbo_inst},
-          point_buffer{vbo_inst},
-          circle_buffer{vbo_inst} {}
+        : line_buffer_{vbo_inst},
+          point_buffer_{vbo_inst},
+          circle_buffer_{vbo_inst} {}
 
    private:
     // instance transform buffer
     InstanceBuffer vbo_inst;
 
     // buffers to render
-    line::Buffer line_buffer;
-    point::Buffer point_buffer;
-    circle::Buffer circle_buffer;
+    line::Buffer line_buffer_;
+    point::Buffer point_buffer_;
+    circle::Buffer circle_buffer_;
+
+    // allow skipping rendering
+    bool enabled_ = true;
 
     void Save() {
-        line_buffer.Save();
-        point_buffer.Save();
-        circle_buffer.Save();
+        line_buffer_.Save();
+        point_buffer_.Save();
+        circle_buffer_.Save();
     }
 
     void Restore() {
-        line_buffer.Restore();
-        point_buffer.Restore();
-        circle_buffer.Restore();
+        line_buffer_.Restore();
+        point_buffer_.Restore();
+        circle_buffer_.Restore();
     }
 
     void Clear() {
-        line_buffer.Clear();
-        point_buffer.Clear();
-        circle_buffer.Clear();
+        line_buffer_.Clear();
+        point_buffer_.Clear();
+        circle_buffer_.Clear();
     }
 
     void SaveInstances() { vbo_inst.Save(); }

@@ -16,8 +16,8 @@ class Path {
 
     // Efficient way to draw connected lines
     void LineTo(glm::vec3 position) {
-        auto &vbo = render_state->line_buffer.VBO();
-        auto &ebo = render_state->line_buffer.EBO();
+        auto &vbo = render_state->line_buffer_.VBO();
+        auto &ebo = render_state->line_buffer_.EBO();
 
         size_t index_current = vbo.Size();
 

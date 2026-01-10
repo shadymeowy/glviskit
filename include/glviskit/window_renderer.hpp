@@ -85,7 +85,10 @@ class WindowRenderer {
         program_line->SetMVP(mvp);
         program_line->SetAlphaTest(alpha_test);
         for (auto &buf : buffers) {
-            buf->line_buffer.Render(ctx_id);
+            if (!buf->enabled_) {
+                continue;
+            }
+            buf->line_buffer_.Render(ctx_id);
         }
 
         // Render all point buffers
@@ -94,7 +97,10 @@ class WindowRenderer {
         program_point->SetMVP(mvp);
         program_point->SetAlphaTest(alpha_test);
         for (auto &buf : buffers) {
-            buf->point_buffer.Render(ctx_id);
+            if (!buf->enabled_) {
+                continue;
+            }
+            buf->point_buffer_.Render(ctx_id);
         }
 
         // Render all circle buffers
@@ -103,7 +109,10 @@ class WindowRenderer {
         program_circle->SetMVP(mvp);
         program_circle->SetAlphaTest(alpha_test);
         for (auto &buf : buffers) {
-            buf->circle_buffer.Render(ctx_id);
+            if (!buf->enabled_) {
+                continue;
+            }
+            buf->circle_buffer_.Render(ctx_id);
         }
     }
 

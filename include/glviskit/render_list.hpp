@@ -48,8 +48,8 @@ class RenderList {
     }
 
     void Point(glm::vec3 position) {
-        auto &vbo = render_state_->point_buffer.VBO();
-        auto &ebo = render_state_->point_buffer.EBO();
+        auto &vbo = render_state_->point_buffer_.VBO();
+        auto &ebo = render_state_->point_buffer_.EBO();
 
         size_t index = vbo.Size();
         vbo.Append(
@@ -58,8 +58,8 @@ class RenderList {
     }
 
     void Circle(glm::vec3 circle) {
-        auto &vbo = render_state_->circle_buffer.VBO();
-        auto &ebo = render_state_->circle_buffer.EBO();
+        auto &vbo = render_state_->circle_buffer_.VBO();
+        auto &ebo = render_state_->circle_buffer_.EBO();
         size_t index = vbo.Size();
         auto s = state.size;
         // four vertices
@@ -156,6 +156,9 @@ class RenderList {
     void SaveInstances() { render_state_->SaveInstances(); }
     void RestoreInstances() { render_state_->RestoreInstances(); }
     void ClearInstances() { render_state_->ClearInstances(); }
+
+    void SetEnabled(bool enabled) { render_state_->enabled_ = enabled; }
+    auto IsEnabled() -> bool { return render_state_->enabled_; }
 
    private:
     struct State {
