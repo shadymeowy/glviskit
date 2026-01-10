@@ -19,7 +19,7 @@ class Path {
         auto &vbo = render_state->line_buffer.VBO();
         auto &ebo = render_state->line_buffer.EBO();
 
-        size_t base_index = vbo.Size();
+        size_t index_current = vbo.Size();
 
         if (state.line_counter == 0) {
             // for first point just store and return
@@ -50,22 +50,21 @@ class Path {
                     .size = -state.size});
 
         // new line segment
-        ebo.Append(base_index + 0);
-        ebo.Append(base_index + 2);
-        ebo.Append(base_index + 1);
-        ebo.Append(base_index + 1);
-        ebo.Append(base_index + 2);
-        ebo.Append(base_index + 3);
+        ebo.Append(index_current + 0);
+        ebo.Append(index_current + 2);
+        ebo.Append(index_current + 1);
+        ebo.Append(index_current + 1);
+        ebo.Append(index_current + 2);
+        ebo.Append(index_current + 3);
 
         if (state.line_counter > 1) {
             // connect previous segment
-            // we have +0, +1 from new segment and -2, -1 from previous segment
-            ebo.Append(base_index - 2);
-            ebo.Append(base_index + 0);
-            ebo.Append(base_index - 1);
-            ebo.Append(base_index - 1);
-            ebo.Append(base_index + 0);
-            ebo.Append(base_index + 1);
+            ebo.Append(state.index_prev + 2);
+            ebo.Append(index_current + 0);
+            ebo.Append(state.index_prev + 3);
+            ebo.Append(state.index_prev + 3);
+            ebo.Append(index_current + 0);
+            ebo.Append(index_current + 1);
         }
 
         // update previous points
@@ -73,6 +72,7 @@ class Path {
         state.color_prev = state.color;
         state.size_prev = state.size;
         state.line_counter++;
+        state.index_prev = index_current;
     }
 
     void LineEnd() {
@@ -94,6 +94,9 @@ class Path {
         glm::vec3 line_prev{0.0F};
         glm::vec4 color_prev{1.0F};
         float size_prev = 1.0F;
+
+        // previous ebo index
+        size_t index_prev = 0;
     };
 
     // associated render state
