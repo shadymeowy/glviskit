@@ -62,22 +62,22 @@ class Camera {
         return acc;
     }
 
-    void PerspectiveFov(float hfov, float vfov, float near = 0.1F,
-                        float far = 100.0F) {
+    void PerspectiveFov(float hfov, float vfov, float near_ = 0.1F,
+                        float far_ = 100.0F) {
         float fxn = 0.5F / tanf(glm::radians(hfov) / 2.0F);
         float fyn = 0.5F / tanf(glm::radians(vfov) / 2.0F);
-        Perspective(fxn, fyn, 0.5F, 0.5F, near, far);
+        Perspective(fxn, fyn, 0.5F, 0.5F, near_, far_);
     }
 
     void Perspective(float fxn, float fyn, float cx = 0.5, float cy = 0.5,
-                     float near = 0.1, float far = 100.0F) {
+                     float near_ = 0.1, float far_ = 100.0F) {
         m_intrinsic = glm::mat4(0.0F);
         m_intrinsic[0][0] = 2 * fxn;
         m_intrinsic[1][1] = 2 * fyn;
         m_intrinsic[2][0] = (2 * cx) - 1;
         m_intrinsic[2][1] = (2 * cy) - 1;
-        m_intrinsic[2][2] = -(far + near) / (far - near);
-        m_intrinsic[3][2] = -2.0F * far * near / (far - near);
+        m_intrinsic[2][2] = -(far_ + near_) / (far_ - near_);
+        m_intrinsic[3][2] = -2.0F * far_ * near_ / (far_ - near_);
         m_intrinsic[2][3] = -1.0F;
         aspect_ratio = fxn / fyn;
     }
