@@ -9,6 +9,7 @@
 #include "gl/gl.hpp"
 #include "primitive/circle.hpp"
 #include "primitive/line.hpp"
+#include "primitive/mesh.hpp"
 #include "primitive/point.hpp"
 #include "render_list.hpp"
 
@@ -64,6 +65,7 @@ class WindowRenderer {
         program_line = std::make_unique<line::Program>();
         program_point = std::make_unique<point::Program>();
         program_circle = std::make_unique<circle::Program>();
+        program_mesh = std::make_unique<mesh::Program>();
 
         glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
         glDisable(GL_CULL_FACE);
@@ -114,12 +116,24 @@ class WindowRenderer {
             }
             buf->circle_buffer_.Render(ctx_id);
         }
+
+        // Render all mesh buffers
+        program_mesh->Use();
+        program_mesh->SetMVP(mvp);
+        program_mesh->SetAlphaTest(alpha_test);
+        for (auto &buf : buffers) {
+            if (!buf->enabled_) {
+                continue;
+            }
+            buf->mesh_buffer_.Render(ctx_id);
+        }
     }
 
     // TODO: share programs across multiple renderers?
     std::unique_ptr<line::Program> program_line{nullptr};
     std::unique_ptr<point::Program> program_point{nullptr};
     std::unique_ptr<circle::Program> program_circle{nullptr};
+    std::unique_ptr<mesh::Program> program_mesh{nullptr};
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;

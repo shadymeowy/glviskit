@@ -4,6 +4,7 @@
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <memory>
+#include <span>
 
 #include "path.hpp"
 #include "render_state.hpp"
@@ -78,6 +79,23 @@ class RenderList {
         ebo.Append(index + 2);
         ebo.Append(index + 3);
         ebo.Append(index + 0);
+    }
+
+    void Mesh(std::span<const glm::vec3> vertices,
+              std::span<const glm::uvec3> indices) {
+        auto &vbo = render_state_->mesh_buffer_.VBO();
+        auto &ebo = render_state_->mesh_buffer_.EBO();
+        const size_t base = vbo.Size();
+
+        for (const auto &vertex : vertices) {
+            vbo.Append({.position = vertex, .color = state.color});
+        }
+
+        for (const auto &triangle : indices) {
+            ebo.Append(static_cast<GLuint>(base + triangle.x));
+            ebo.Append(static_cast<GLuint>(base + triangle.y));
+            ebo.Append(static_cast<GLuint>(base + triangle.z));
+        }
     }
 
     // attributes for subsequent drawing
