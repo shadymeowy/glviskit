@@ -58,6 +58,7 @@ class RenderState {
     friend class WindowRenderer;
     friend class RenderList;
     friend class Path;
+    friend class Mesh;
 };
 
 }  // namespace glviskit

@@ -186,8 +186,9 @@ Supported drawing primitives:
 - `line`
 - `point`
 - `circle`
-- `mesh(vertices, indices)`
+- `triangles(vertices, indices)`
 - `path_begin()` with `line_to()` and `line_end()`
+- `mesh_begin()` with `vertex()` and `triangle()`
 
 `RenderList` also supports:
 
@@ -195,7 +196,7 @@ Supported drawing primitives:
 - state save and restore with `save()` and `restore()`
 - instance stack save and restore with `save_instances()` and `restore_instances()`
 
-Triangle meshes use the same retained model as the rest of the API. A mesh submission appends indexed triangle geometry into the render list using the current drawing color, and then remains part of the retained scene until you clear or restore past it.
+Triangle geometry uses the same retained model as the rest of the API. A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
 
 This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 
@@ -290,8 +291,9 @@ Primitive drawing:
 - `Line(start, end)`
 - `Point(position)`
 - `Circle(position)`
-- `Mesh(vertices, indices)`
+- `Triangles(vertices, indices)`
 - `PathBegin()`
+- `MeshBegin()`
 
 Drawing state:
 
@@ -313,7 +315,9 @@ State and geometry control:
 
 `Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
 
-`Mesh(vertices, indices)` adds indexed triangle geometry to the render list using the current color. Like the other primitives, the geometry stays there until you clear it or restore past it.
+`Triangles(vertices, indices)` adds indexed triangle geometry to the render list using the current color. Like the other primitives, the geometry stays there until you clear it or restore past it.
+
+`MeshBegin()` creates a retained mesh builder object, similar in spirit to `PathBegin()`. It is useful when triangle geometry is built incrementally over time. `Vertex(...)` returns a mesh-local index, and `Triangle(i0, i1, i2)` uses those local indices rather than raw global buffer indices.
 
 ### Paths
 
@@ -334,6 +338,21 @@ Path state is also separate from the parent render list state. Path-local `Color
 
 Internally, line primitives and path segments share the same line vertex and index buffers. Interleaving different primitives does not break connectivity or ordering, because the geometry is stitched together through the index-buffer structure rather than by assuming a single contiguous submission pattern.
 
+### Mesh builders
+
+`Mesh` is a retained triangle builder bound to a render list.
+
+Typical usage:
+
+- start with `MeshBegin()`
+- append vertices with `Vertex(...)`
+- add triangles with `Triangle(i0, i1, i2)`
+- optionally change mesh-local color with `Color(...)`
+
+Like `Path`, a `Mesh` object is not limited to a single frame. It can outlive a render cycle, keep its own local state, and continue receiving geometry later.
+
+Each mesh keeps its own local vertex-index mapping. `Vertex(...)` returns indices relative to that mesh object, and `Triangle(...)` resolves them internally to the shared retained mesh buffers. That local mapping participates in `RenderList::Save()` and `RenderList::Restore()`, so incremental mesh construction works correctly across saved and restored states.
+
 ### Controllers
 
 Controllers handle camera motion from input.
@@ -352,4 +371,4 @@ The built-in controllers expose sensitivity controls for keyboard, mouse, and wh
 
 The Python bindings are intended to mirror the supported public C++ workflow closely. That includes window creation, render-list creation, camera access, path drawing, controller selection, state save and restore, instance management, and per-frame loop and render calls.
 
-On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, `mesh`, and `path.line_to()` using NumPy arrays. For meshes, the expected shape is `vertices: N x 3` and `indices: M x 3`.
+On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, `triangles`, and `path.line_to()` using NumPy arrays. For triangle geometry, the expected shape is `vertices: N x 3` and `indices: M x 3`. Python also exposes `mesh_begin()`, `vertex()`, and `triangle()` for incremental mesh building.

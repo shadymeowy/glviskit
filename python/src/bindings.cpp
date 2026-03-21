@@ -2,6 +2,7 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/array.h>
 #include <nanobind/stl/shared_ptr.h>
+#include <nanobind/stl/vector.h>
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glviskit/glviskit.hpp>
@@ -176,6 +177,9 @@ NB_MODULE(glviskit, m) {
         .def("path_begin", &glviskit::RenderList::PathBegin,
              "Create a Path object for drawing complex paths which is "
              "save/restore aware")
+        .def("mesh_begin", &glviskit::RenderList::MeshBegin,
+             "Create a Mesh object for incrementally building triangle "
+             "geometry which is save/restore aware")
         .def(
             "circle",
             [](glviskit::RenderList &rb, const Points32 &points) {
@@ -211,7 +215,7 @@ NB_MODULE(glviskit, m) {
         .def("size", &glviskit::RenderList::Size, "size"_a,
              "Set the current drawing size")
         .def(
-            "mesh",
+            "triangles",
             [](glviskit::RenderList &rb, const Points32 &vertices,
                const IndicesI32 &indices) {
                 auto v = vertices.view();
@@ -228,12 +232,12 @@ NB_MODULE(glviskit, m) {
                                     static_cast<uint32_t>(t(i, 1)),
                                     static_cast<uint32_t>(t(i, 2)));
                 }
-                rb.Mesh(vv, ii);
+                rb.Triangles(vv, ii);
             },
             "vertices"_a.noconvert(), "indices"_a.noconvert(),
             "Draw a triangle mesh from vertices and triangle indices")
         .def(
-            "mesh",
+            "triangles",
             [](glviskit::RenderList &rb, const Points64 &vertices,
                const IndicesI32 &indices) {
                 auto v = vertices.view();
@@ -252,7 +256,7 @@ NB_MODULE(glviskit, m) {
                                     static_cast<uint32_t>(t(i, 1)),
                                     static_cast<uint32_t>(t(i, 2)));
                 }
-                rb.Mesh(vv, ii);
+                rb.Triangles(vv, ii);
             },
             "vertices"_a.noconvert(), "indices"_a.noconvert(),
             "Draw a triangle mesh from vertices and triangle indices")
@@ -351,6 +355,68 @@ NB_MODULE(glviskit, m) {
             "c"_a, "Set the current drawing color")
         .def("size", &glviskit::Path::Size, "size"_a,
              "Set the current drawing size");
+
+    nb::class_<glviskit::Mesh>(m, "Mesh")
+        .def(
+            "vertex",
+            [](glviskit::Mesh &mesh, const Points32 &points) {
+                auto v = points.view();
+                std::vector<size_t> indices;
+                indices.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    indices.push_back(mesh.Vertex({v(i, 0), v(i, 1), v(i, 2)}));
+                }
+                return indices;
+            },
+            "points"_a.noconvert(),
+            "Add multiple vertices and return their mesh-local indices")
+        .def(
+            "vertex",
+            [](glviskit::Mesh &mesh, const Points64 &points) {
+                auto v = points.view();
+                std::vector<size_t> indices;
+                indices.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    indices.push_back(mesh.Vertex(
+                        {static_cast<float>(v(i, 0)),
+                         static_cast<float>(v(i, 1)),
+                         static_cast<float>(v(i, 2))}));
+                }
+                return indices;
+            },
+            "points"_a.noconvert(),
+            "Add multiple vertices and return their mesh-local indices")
+        .def(
+            "vertex",
+            [](glviskit::Mesh &mesh, const std::array<float, 3> &p) {
+                return mesh.Vertex(glm::make_vec3(p.data()));
+            },
+            "p"_a, "Add a vertex and return its mesh-local index")
+        .def(
+            "triangle",
+            [](glviskit::Mesh &mesh, const IndicesI32 &triangles) {
+                auto t = triangles.view();
+                for (size_t i = 0; i < t.shape(0); ++i) {
+                    mesh.Triangle(static_cast<size_t>(t(i, 0)),
+                                  static_cast<size_t>(t(i, 1)),
+                                  static_cast<size_t>(t(i, 2)));
+                }
+            },
+            "triangles"_a.noconvert(),
+            "Add multiple triangles using mesh-local vertex indices")
+        .def(
+            "triangle",
+            &glviskit::Mesh::Triangle,
+            "i0"_a,
+            "i1"_a,
+            "i2"_a,
+            "Add a triangle using mesh-local vertex indices")
+        .def(
+            "color",
+            [](glviskit::Mesh &mesh, const std::array<float, 4> &c) {
+                mesh.Color({c[0], c[1], c[2], c[3]});
+            },
+            "c"_a, "Set the current drawing color");
 
     nb::class_<glviskit::BaseController>(m, "BaseController");
 

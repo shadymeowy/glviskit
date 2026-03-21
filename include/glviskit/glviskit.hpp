@@ -2,14 +2,15 @@
 
 // NOLINTBEGIN(unused-includes)
 #include "camera.hpp"
+#include "controller/base_controller.hpp"
+#include "controller/first_person_controller.hpp"
+#include "controller/null_controller.hpp"
+#include "controller/spherical_controller.hpp"
+#include "mesh.hpp"
 #include "render_list.hpp"
 #include "sdl/manager.hpp"
 #include "sdl/window.hpp"
 #include "window_renderer.hpp"
-#include "controller/base_controller.hpp"
-#include "controller/spherical_controller.hpp"
-#include "controller/first_person_controller.hpp"
-#include "controller/null_controller.hpp"
 // NOLINTEND(unused-includes)
 
 namespace glviskit {
@@ -26,9 +27,7 @@ static auto CreateRenderList() -> std::shared_ptr<RenderList> {
     return Manager::GetInstance().CreateRenderList();
 }
 
-static auto GetTimeSeconds() -> float {
-    return Manager::GetTimeSeconds();
-}
+static auto GetTimeSeconds() -> float { return Manager::GetTimeSeconds(); }
 
 static auto Loop() -> bool { return Manager::GetInstance().Loop(); }
 static void Render() { Manager::GetInstance().Render(); }

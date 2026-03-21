@@ -152,6 +152,11 @@ class RenderList:
         Create a Path object for drawing complex paths which is save/restore aware
         """
 
+    def mesh_begin(self) -> Mesh:
+        """
+        Create a Mesh object for incrementally building triangle geometry which is save/restore aware
+        """
+
     @overload
     def circle(
         self,
@@ -181,7 +186,7 @@ class RenderList:
         """Set the current drawing size"""
 
     @overload
-    def mesh(
+    def triangles(
         self,
         vertices: Annotated[
             NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
@@ -193,7 +198,7 @@ class RenderList:
         """Draw a triangle mesh from vertices and triangle indices"""
 
     @overload
-    def mesh(
+    def triangles(
         self,
         vertices: Annotated[
             NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
@@ -285,6 +290,45 @@ class Path:
 
     def size(self, size: float) -> None:
         """Set the current drawing size"""
+
+class Mesh:
+    @overload
+    def vertex(
+        self,
+        points: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> list[int]:
+        """Add multiple vertices and return their mesh-local indices"""
+
+    @overload
+    def vertex(
+        self,
+        points: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> list[int]:
+        """Add multiple vertices and return their mesh-local indices"""
+
+    @overload
+    def vertex(self, p: Sequence[float]) -> int:
+        """Add a vertex and return its mesh-local index"""
+
+    @overload
+    def triangle(
+        self,
+        triangles: Annotated[
+            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Add multiple triangles using mesh-local vertex indices"""
+
+    @overload
+    def triangle(self, i0: int, i1: int, i2: int) -> None:
+        """Add a triangle using mesh-local vertex indices"""
+
+    def color(self, c: Sequence[float]) -> None:
+        """Set the current drawing color"""
 
 class BaseController:
     pass

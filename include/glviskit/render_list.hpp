@@ -6,6 +6,7 @@
 #include <memory>
 #include <span>
 
+#include "mesh.hpp"
 #include "path.hpp"
 #include "render_state.hpp"
 
@@ -48,6 +49,16 @@ class RenderList {
         return path;
     }
 
+    auto MeshBegin() -> std::shared_ptr<Mesh> {
+        auto idx = GetUnusedMesh();
+
+        auto mesh = std::make_shared<Mesh>(render_state_);
+        meshes_[idx] = mesh;
+        mesh->Color(state.color);
+
+        return mesh;
+    }
+
     void Point(glm::vec3 position) {
         auto &vbo = render_state_->point_buffer_.VBO();
         auto &ebo = render_state_->point_buffer_.EBO();
@@ -81,7 +92,7 @@ class RenderList {
         ebo.Append(index + 0);
     }
 
-    void Mesh(std::span<const glm::vec3> vertices,
+    void Triangles(std::span<const glm::vec3> vertices,
               std::span<const glm::uvec3> indices) {
         auto &vbo = render_state_->mesh_buffer_.VBO();
         auto &ebo = render_state_->mesh_buffer_.EBO();
@@ -139,6 +150,12 @@ class RenderList {
                 path->Save();
             }
         }
+
+        for (auto &i : meshes_) {
+            if (auto mesh = i.lock()) {
+                mesh->Save();
+            }
+        }
     }
 
     void Restore() {
@@ -154,6 +171,12 @@ class RenderList {
                 path->Restore();
             }
         }
+
+        for (auto &i : meshes_) {
+            if (auto mesh = i.lock()) {
+                mesh->Restore();
+            }
+        }
     }
 
     void Clear() {
@@ -167,6 +190,12 @@ class RenderList {
         for (auto &i : paths_) {
             if (auto path = i.lock()) {
                 path->Clear();
+            }
+        }
+
+        for (auto &i : meshes_) {
+            if (auto mesh = i.lock()) {
+                mesh->Clear();
             }
         }
     }
@@ -190,6 +219,7 @@ class RenderList {
 
     // hold weak reference to paths
     std::vector<std::weak_ptr<Path>> paths_;
+    std::vector<std::weak_ptr<Mesh>> meshes_;
 
     // current and saved drawing state
     State state{};
@@ -207,6 +237,17 @@ class RenderList {
         // create a new path slot
         paths_.emplace_back();
         return paths_.size() - 1;
+    }
+
+    auto GetUnusedMesh() -> size_t {
+        for (size_t i = 0; i < meshes_.size(); ++i) {
+            if (meshes_[i].expired()) {
+                return i;
+            }
+        }
+
+        meshes_.emplace_back();
+        return meshes_.size() - 1;
     }
 
     friend class WindowRenderer;
