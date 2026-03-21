@@ -40,6 +40,8 @@ Some details that matter for visualization workloads:
 - instancing is built in
 - paths are efficient enough to use for dynamic line strips and trajectories
 - render lists can save and restore drawing state and stored geometry without rebuilding buffers
+- paths keep their own state and geometry over time instead of being limited to a single frame
+- primitives can be interleaved without breaking rendering order because shared buffers are stitched together through index-buffer layout
 
 Because geometry stays on the GPU until you change it, the library remains practical for real-time visualization even with large amounts of geometry, including cases where scene updates are driven from Python.
 
@@ -221,3 +223,126 @@ Planned next steps:
 - solid geometry features built on top of triangle primitives
 - MSDF text rendering for 3D billboard text with distance-invariant sizing
 - a richer and more flexible API for the existing primitives
+
+## API Reference
+
+The intended C++ entry point is:
+
+```cpp
+#include <glviskit/glviskit.hpp>
+```
+
+In normal use, the library is driven through the top-level helper functions:
+
+- `glviskit::CreateWindow(...)`
+- `glviskit::CreateRenderList()`
+- `glviskit::GetTimeSeconds()`
+- `glviskit::Loop()`
+- `glviskit::Render()`
+
+Direct use of the SDL manager singleton is generally not part of normal application code. Direct construction of `Window`, `RenderList`, and `Camera` also is not the intended public workflow, even though those types are visible in the headers.
+
+### Typical flow
+
+A normal application looks like this:
+
+1. create one or more windows with `CreateWindow()`
+2. create one or more render lists with `CreateRenderList()`
+3. attach render lists to windows
+4. configure the window camera
+5. populate render lists with geometry
+6. run `Loop()` every frame
+
+### Window and camera
+
+A `Window` owns an OpenGL context and renders one or more `RenderList` objects.
+
+What you typically do with a window:
+
+- attach render lists with `AddRenderList(...)`
+- access or replace the current camera with `GetCamera()` and `SetCamera(...)`
+- access or replace the current controller with `GetController()` and `SetController(...)`
+- render manually with `Render()` if you are not using `Loop()`
+
+Each window starts with a `SphericalController` by default.
+
+The camera controls both view and projection:
+
+- `PerspectiveFov(...)` sets projection using horizontal and vertical field of view in degrees
+- `Perspective(...)` sets projection using focal-length style parameters
+- `SetPosition(...)` and `SetRotation(...)` control the camera center
+- `SetDistance(...)` adds spherical-camera style distance from that center
+- `SetPreserveAspectRatio(...)` controls aspect-ratio handling during resize
+- `CalculateTransform()` returns the final transform used for rendering
+
+In normal use, viewport size is managed by the window renderer.
+
+### Render lists
+
+`RenderList` is the main retained drawing container. It stores geometry and drawing state rather than acting like a true immediate-mode API.
+
+Primitive drawing:
+
+- `Line(start, end)`
+- `Point(position)`
+- `Circle(position)`
+- `PathBegin()`
+
+Drawing state:
+
+- `Color(rgba)`
+- `Size(value)`
+
+Instancing:
+
+- `AddInstance(transform)`
+- `AddInstance(position, rotation, scale)`
+
+State and geometry control:
+
+- `Save()` and `Restore()`
+- `Clear()`
+- `SaveInstances()` and `RestoreInstances()`
+- `ClearInstances()`
+- `SetEnabled(...)` and `IsEnabled()`
+
+`Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
+
+### Paths
+
+`Path` is used for connected line strips bound to a render list.
+
+Typical usage:
+
+- start with `PathBegin()`
+- append points with `LineTo(...)`
+- finish the strip with `LineEnd()`
+- optionally change path-local drawing state with `Color(...)` and `Size(...)`
+
+The first `LineTo()` stores the starting point. Each later `LineTo()` appends a connected segment.
+
+Paths are intentionally not frame-local helpers. A path is bound to a `RenderList`, but it still keeps its own drawing state and accumulated geometry. That means a path can outlive a single render cycle: you can keep a path object around, append another segment in a later frame, and continue building the same polyline over time.
+
+Path state is also separate from the parent render list state. Path-local `Color(...)` and `Size(...)` settings are preserved independently, and they participate in `RenderList::Save()` and `RenderList::Restore()` together with the rest of the retained geometry.
+
+Internally, line primitives and path segments share the same line vertex and index buffers. Interleaving different primitives does not break connectivity or ordering, because the geometry is stitched together through the index-buffer structure rather than by assuming a single contiguous submission pattern.
+
+### Controllers
+
+Controllers handle camera motion from input.
+
+Built-in controllers:
+
+- `NullController`: disables interactive motion
+- `FirstPersonController`: translation plus look rotation
+- `SphericalController`: orbit rotation plus distance control
+
+All controllers derive from `BaseController`, which defines update and input-event hooks. In typical usage you do not call those hooks directly. The window and event loop drive them for you.
+
+The built-in controllers expose sensitivity controls for keyboard, mouse, and wheel behavior through getters and setters.
+
+## Python API parity
+
+The Python bindings are intended to mirror the supported public C++ workflow closely. That includes window creation, render-list creation, camera access, path drawing, controller selection, state save and restore, instance management, and per-frame loop and render calls.
+
+On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, and `path.line_to()` using NumPy arrays shaped like `N x 3`.
