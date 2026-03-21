@@ -235,6 +235,34 @@ NB_MODULE(glviskit, m) {
             "vertices"_a.noconvert(),
             "Draw a closed polygonal outline through the given vertices")
         .def(
+            "polyline",
+            [](glviskit::RenderList &rb, const Points32 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                }
+                rb.Polyline(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Draw an open polyline through the given vertices")
+        .def(
+            "polyline",
+            [](glviskit::RenderList &rb, const Points64 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(static_cast<float>(v(i, 0)),
+                                    static_cast<float>(v(i, 1)),
+                                    static_cast<float>(v(i, 2)));
+                }
+                rb.Polyline(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Draw an open polyline through the given vertices")
+        .def(
             "fill_polygon",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();

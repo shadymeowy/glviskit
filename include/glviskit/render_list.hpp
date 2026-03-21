@@ -125,6 +125,21 @@ class RenderList {
         path.LineEnd();
     }
 
+    void Polyline(std::span<const glm::vec3> vertices) {
+        if (vertices.size() < 2) {
+            return;
+        }
+
+        Path path{render_state_};
+        path.Color(state.color);
+        path.Size(state.size);
+        path.LineEnd();
+        for (const auto &vertex : vertices) {
+            path.LineTo(vertex);
+        }
+        path.LineEnd();
+    }
+
     void FillPolygon(std::span<const glm::vec3> vertices) {
         if (vertices.size() < 3) {
             return;

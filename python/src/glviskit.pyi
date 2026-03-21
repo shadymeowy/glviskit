@@ -196,6 +196,22 @@ class RenderList:
         ],
     ) -> None: ...
     @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Draw an open polyline through the given vertices"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None: ...
+    @overload
     def fill_polygon(
         self,
         vertices: Annotated[
