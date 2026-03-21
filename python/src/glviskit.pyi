@@ -179,6 +179,38 @@ class RenderList:
     def circle(self, pos: Sequence[float]) -> None:
         """Draw an circle at position pos"""
 
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Draw a closed polygonal outline through the given vertices"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None: ...
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Fill a polygon using a triangle fan through the given vertices"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None: ...
     def color(self, c: Sequence[float]) -> None:
         """Set the current drawing color"""
 

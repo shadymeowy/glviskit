@@ -93,7 +93,7 @@ class RenderList {
     }
 
     void Triangles(std::span<const glm::vec3> vertices,
-              std::span<const glm::uvec3> indices) {
+                   std::span<const glm::uvec3> indices) {
         auto &vbo = render_state_->mesh_buffer_.VBO();
         auto &ebo = render_state_->mesh_buffer_.EBO();
         const size_t base = vbo.Size();
@@ -106,6 +106,38 @@ class RenderList {
             ebo.Append(static_cast<GLuint>(base + triangle.x));
             ebo.Append(static_cast<GLuint>(base + triangle.y));
             ebo.Append(static_cast<GLuint>(base + triangle.z));
+        }
+    }
+
+    void Polygon(std::span<const glm::vec3> vertices) {
+        if (vertices.size() < 2) {
+            return;
+        }
+
+        Path path{render_state_};
+        path.Color(state.color);
+        path.Size(state.size);
+        path.LineEnd();
+        for (const auto &vertex : vertices) {
+            path.LineTo(vertex);
+        }
+        path.LineTo(vertices.front());
+        path.LineEnd();
+    }
+
+    void FillPolygon(std::span<const glm::vec3> vertices) {
+        if (vertices.size() < 3) {
+            return;
+        }
+
+        Mesh mesh{render_state_};
+        mesh.Color(state.color);
+        for (const auto &vertex : vertices) {
+            mesh.Vertex(vertex);
+        }
+
+        for (size_t i = 1; i + 1 < vertices.size(); ++i) {
+            mesh.Triangle(0, i, i + 1);
         }
     }
 

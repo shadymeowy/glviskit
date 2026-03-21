@@ -207,6 +207,62 @@ NB_MODULE(glviskit, m) {
             },
             "pos"_a, "Draw an circle at position pos")
         .def(
+            "polygon",
+            [](glviskit::RenderList &rb, const Points32 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                }
+                rb.Polygon(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Draw a closed polygonal outline through the given vertices")
+        .def(
+            "polygon",
+            [](glviskit::RenderList &rb, const Points64 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(static_cast<float>(v(i, 0)),
+                                    static_cast<float>(v(i, 1)),
+                                    static_cast<float>(v(i, 2)));
+                }
+                rb.Polygon(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Draw a closed polygonal outline through the given vertices")
+        .def(
+            "fill_polygon",
+            [](glviskit::RenderList &rb, const Points32 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                }
+                rb.FillPolygon(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Fill a polygon using a triangle fan through the given vertices")
+        .def(
+            "fill_polygon",
+            [](glviskit::RenderList &rb, const Points64 &vertices) {
+                auto v = vertices.view();
+                std::vector<glm::vec3> vv;
+                vv.reserve(v.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(static_cast<float>(v(i, 0)),
+                                    static_cast<float>(v(i, 1)),
+                                    static_cast<float>(v(i, 2)));
+                }
+                rb.FillPolygon(vv);
+            },
+            "vertices"_a.noconvert(),
+            "Fill a polygon using a triangle fan through the given vertices")
+        .def(
             "color",
             [](glviskit::RenderList &rb, const std::array<float, 4> &c) {
                 rb.Color({c[0], c[1], c[2], c[3]});
@@ -377,10 +433,10 @@ NB_MODULE(glviskit, m) {
                 std::vector<size_t> indices;
                 indices.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    indices.push_back(mesh.Vertex(
-                        {static_cast<float>(v(i, 0)),
-                         static_cast<float>(v(i, 1)),
-                         static_cast<float>(v(i, 2))}));
+                    indices.push_back(
+                        mesh.Vertex({static_cast<float>(v(i, 0)),
+                                     static_cast<float>(v(i, 1)),
+                                     static_cast<float>(v(i, 2))}));
                 }
                 return indices;
             },
@@ -404,13 +460,8 @@ NB_MODULE(glviskit, m) {
             },
             "triangles"_a.noconvert(),
             "Add multiple triangles using mesh-local vertex indices")
-        .def(
-            "triangle",
-            &glviskit::Mesh::Triangle,
-            "i0"_a,
-            "i1"_a,
-            "i2"_a,
-            "Add a triangle using mesh-local vertex indices")
+        .def("triangle", &glviskit::Mesh::Triangle, "i0"_a, "i1"_a, "i2"_a,
+             "Add a triangle using mesh-local vertex indices")
         .def(
             "color",
             [](glviskit::Mesh &mesh, const std::array<float, 4> &c) {

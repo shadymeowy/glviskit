@@ -187,6 +187,8 @@ Supported drawing primitives:
 - `point`
 - `circle`
 - `triangles(vertices, indices)`
+- `polygon(vertices)`
+- `fill_polygon(vertices)`
 - `path_begin()` with `line_to()` and `line_end()`
 - `mesh_begin()` with `vertex()` and `triangle()`
 
@@ -197,6 +199,8 @@ Supported drawing primitives:
 - instance stack save and restore with `save_instances()` and `restore_instances()`
 
 Triangle geometry uses the same retained model as the rest of the API. A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
+
+`polygon(vertices)` and `fill_polygon(vertices)` are convenience helpers built on top of those retained builders. `polygon(...)` creates a closed outline, and `fill_polygon(...)` fills the shape with a simple triangle fan.
 
 This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 
@@ -292,6 +296,8 @@ Primitive drawing:
 - `Point(position)`
 - `Circle(position)`
 - `Triangles(vertices, indices)`
+- `Polygon(vertices)`
+- `FillPolygon(vertices)`
 - `PathBegin()`
 - `MeshBegin()`
 
@@ -316,6 +322,8 @@ State and geometry control:
 `Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
 
 `Triangles(vertices, indices)` adds indexed triangle geometry to the render list using the current color. Like the other primitives, the geometry stays there until you clear it or restore past it.
+
+`Polygon(vertices)` is a convenience wrapper that creates a closed outline using the current color and size. `FillPolygon(vertices)` fills a polygon using a triangle fan, so it is best suited to convex polygons or vertex orders that already match fan triangulation.
 
 `MeshBegin()` creates a retained mesh builder object, similar in spirit to `PathBegin()`. It is useful when triangle geometry is built incrementally over time. `Vertex(...)` returns a mesh-local index, and `Triangle(i0, i1, i2)` uses those local indices rather than raw global buffer indices.
 
