@@ -82,13 +82,21 @@ class SphericalController : public BaseController {
     }
 
     void SetMouseSensitivity(float s) { mouse_sensitivity_ = s; }
-    auto GetMouseSensitivity(float &s) const { s = mouse_sensitivity_; }
+    [[nodiscard]] auto GetMouseSensitivity() const -> float {
+        return mouse_sensitivity_;
+    }
     void SetWheelSensitivity(float s) { wheel_sensitivity_ = s; }
-    auto GetWheelSensitivity(float &s) const { s = wheel_sensitivity_; }
+    [[nodiscard]] auto GetWheelSensitivity() const -> float {
+        return wheel_sensitivity_;
+    }
     void SetKeyRotSensitivity(float s) { key_rot_sensitivity_ = s; }
-    auto GetKeyRotSensitivity(float &s) const { s = key_rot_sensitivity_; }
+    [[nodiscard]] auto GetKeyRotSensitivity() const -> float {
+        return key_rot_sensitivity_;
+    }
     void SetKeyMoveSensitivity(float s) { key_move_sensitivity_ = s; }
-    auto GetKeyMoveSensitivity(float &s) const { s = key_move_sensitivity_; }
+    [[nodiscard]] auto GetKeyMoveSensitivity() const -> float {
+        return key_move_sensitivity_;
+    }
 
    private:
     // mouse state
