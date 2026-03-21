@@ -121,8 +121,7 @@ class RenderList {
         for (const auto &vertex : vertices) {
             path.LineTo(vertex);
         }
-        path.LineTo(vertices.front());
-        path.LineEnd();
+        path.Close();
     }
 
     void Polyline(std::span<const glm::vec3> vertices) {

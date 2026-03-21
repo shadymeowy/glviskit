@@ -496,6 +496,7 @@ NB_MODULE(glviskit, m) {
                 rb.LineTo(glm::make_vec3(p.data()));
             },
             "p"_a, "Draw a line to position p")
+        .def("close", &glviskit::Path::Close, "Close the current line sequence")
         .def("line_end", &glviskit::Path::LineEnd,
              "End the current line sequence")
         .def(

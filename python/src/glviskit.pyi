@@ -330,6 +330,9 @@ class Path:
     def line_to(self, p: Sequence[float]) -> None:
         """Draw a line to position p"""
 
+    def close(self) -> None:
+        """Close the current line sequence"""
+
     def line_end(self) -> None:
         """End the current line sequence"""
 

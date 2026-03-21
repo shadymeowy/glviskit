@@ -16,22 +16,59 @@ class Path {
 
     // Efficient way to draw connected lines
     void LineTo(glm::vec3 position) {
-        auto &vbo = render_state->line_buffer_.VBO();
-        auto &ebo = render_state->line_buffer_.EBO();
-
-        size_t index_current = vbo.Size();
-
         if (state.line_counter == 0) {
-            // for first point just store and return
+            // first point just initializes the current contour state
             state.line_prev = position;
             state.color_prev = state.color;
             state.size_prev = state.size;
+            state.line_first = position;
+            state.color_first = state.color;
+            state.size_first = state.size;
             state.line_counter++;
             return;
         }
 
+        AppendSegment(position, state.color, state.size);
+    }
+
+    void LineEnd() {
+        // reset line drawing state
+        state.line_counter = 0;
+    }
+
+    void Close() {
+        if (state.line_counter < 2) {
+            LineEnd();
+            return;
+        }
+
+        const size_t index_current = AppendSegment(
+            state.line_first, state.color_first, state.size_first);
+
+        // connect the closing segment back to the first segment
+        auto &ebo = render_state->line_buffer_.EBO();
+        ebo.Append(index_current + 2);
+        ebo.Append(state.index_first + 0);
+        ebo.Append(index_current + 3);
+        ebo.Append(index_current + 3);
+        ebo.Append(state.index_first + 0);
+        ebo.Append(state.index_first + 1);
+
+        LineEnd();
+    }
+
+    void Color(const glm::vec4 &c) { state.color = c; }
+    void Size(float s) { state.size = s; }
+
+   private:
+    auto AppendSegment(glm::vec3 position, const glm::vec4 &color, float size)
+        -> size_t {
+        auto &vbo = render_state->line_buffer_.VBO();
+        auto &ebo = render_state->line_buffer_.EBO();
+
+        const size_t index_current = vbo.Size();
         auto direction = position - state.line_prev;
-        // vertices for new line segment
+
         vbo.Append({.position = state.line_prev,
                     .velocity = direction,
                     .color = state.color_prev,
@@ -42,14 +79,13 @@ class Path {
                     .size = -state.size_prev});
         vbo.Append({.position = position,
                     .velocity = direction,
-                    .color = state.color,
-                    .size = state.size});
+                    .color = color,
+                    .size = size});
         vbo.Append({.position = position,
                     .velocity = direction,
-                    .color = state.color,
-                    .size = -state.size});
+                    .color = color,
+                    .size = -size});
 
-        // new line segment
         ebo.Append(index_current + 0);
         ebo.Append(index_current + 2);
         ebo.Append(index_current + 1);
@@ -58,32 +94,25 @@ class Path {
         ebo.Append(index_current + 3);
 
         if (state.line_counter > 1) {
-            // connect previous segment
             ebo.Append(state.index_prev + 2);
             ebo.Append(index_current + 0);
             ebo.Append(state.index_prev + 3);
             ebo.Append(state.index_prev + 3);
             ebo.Append(index_current + 0);
             ebo.Append(index_current + 1);
+        } else {
+            state.index_first = index_current;
         }
 
-        // update previous points
         state.line_prev = position;
-        state.color_prev = state.color;
-        state.size_prev = state.size;
+        state.color_prev = color;
+        state.size_prev = size;
         state.line_counter++;
         state.index_prev = index_current;
+
+        return index_current;
     }
 
-    void LineEnd() {
-        // reset line drawing state
-        state.line_counter = 0;
-    }
-
-    void Color(const glm::vec4 &c) { state.color = c; }
-    void Size(float s) { state.size = s; }
-
-   private:
     struct State {
         // attributes for rendering
         glm::vec4 color{1.0F};
@@ -94,9 +123,13 @@ class Path {
         glm::vec3 line_prev{0.0F};
         glm::vec4 color_prev{1.0F};
         float size_prev = 1.0F;
+        glm::vec3 line_first{0.0F};
+        glm::vec4 color_first{1.0F};
+        float size_first = 1.0F;
 
         // previous ebo index
         size_t index_prev = 0;
+        size_t index_first = 0;
     };
 
     // associated render state
