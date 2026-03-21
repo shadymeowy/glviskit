@@ -31,6 +31,12 @@ set_target_properties(glviskit_lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # set cpp version
 target_compile_features(glviskit_lib PUBLIC cxx_std_20)
+# if this is the top-level project, set the C++ standard for the build
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    set(CMAKE_CXX_STANDARD 20)
+    set(CMAKE_CXX_STANDARD_REQUIRED ON)
+    set(CMAKE_CXX_EXTENSIONS OFF)
+endif()
 
 # include and link
 target_include_directories(glviskit_lib PUBLIC

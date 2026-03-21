@@ -6,7 +6,7 @@
 #include "../controller/spherical_controller.hpp"
 #include "../gl/gl.hpp"
 #include "../window_renderer.hpp"
-#include "glviskit/controller/base_controller.hpp"
+#include "../controller/base_controller.hpp"
 #include "sdl.hpp"
 
 namespace glviskit::sdl {
