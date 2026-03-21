@@ -92,6 +92,25 @@ class Camera:
     @distance.setter
     def distance(self, arg: float, /) -> None: ...
     @property
+    def axis_rotation(self) -> list[float]:
+        """Axis-convention quaternion rotation (w, x, y, z)"""
+
+    @axis_rotation.setter
+    def axis_rotation(self, arg: Sequence[float], /) -> None: ...
+    def set_axis_rotation(
+        self,
+        x: int,
+        y: int,
+        z: int,
+        inv_x: bool = False,
+        inv_y: bool = False,
+        inv_z: bool = False,
+    ) -> None:
+        """
+        Set axis-convention transform from an axis permutation with optional axis inversions
+        """
+
+    @property
     def viewport_size(self) -> list[float]:
         """Viewport size of the camera"""
 

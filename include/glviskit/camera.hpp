@@ -1,9 +1,12 @@
 #pragma once
 
+#include <array>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/matrix.hpp>
+#include <stdexcept>
 
 namespace glviskit {
 
@@ -21,24 +24,27 @@ class Camera {
 
     [[nodiscard]] auto CalculateTransform() const -> glm::mat4 {
         auto acc = glm::mat4(1.0F);
+        const auto ar = glm::mat4{axis_rot_};
 
         // translation inverse
-        auto trans = glm::mat4(1.0F);
-        trans = glm::translate(trans, -position);
-        acc = trans * acc;
+        auto t = glm::translate(glm::mat4{1.0F}, -position);
+        acc = t * acc;
+
+        // axis convention remap in world space
+        acc = ar * acc;
 
         // rotation inverse
-        auto rot = glm::mat4(1.0F);
+        auto ri = glm::mat4(1.0F);
         // roll/pitch/yaw hence z x y
-        rot = glm::rotate(rot, -rotation.z, glm::vec3(0, 0, 1));
-        rot = glm::rotate(rot, -rotation.x, glm::vec3(1, 0, 0));
-        rot = glm::rotate(rot, -rotation.y, glm::vec3(0, 1, 0));
-        acc = rot * acc;
+        ri = glm::rotate(ri, -rotation.z, glm::vec3(0, 0, 1));
+        ri = glm::rotate(ri, -rotation.x, glm::vec3(1, 0, 0));
+        ri = glm::rotate(ri, -rotation.y, glm::vec3(0, 1, 0));
+        acc = ri * acc;
 
         // translation for spherical camera
-        auto sph = glm::mat4(1.0F);
-        sph = glm::translate(sph, glm::vec3(0.0F, 0.0F, -distance));
-        acc = sph * acc;
+        auto s =
+            glm::translate(glm::mat4{1.0F}, glm::vec3(0.0F, 0.0F, -distance));
+        acc = s * acc;
 
         auto mi = m_intrinsic;
 
@@ -101,6 +107,38 @@ class Camera {
         return preserve_aspect_ratio;
     }
 
+    void SetAxisRotation(const glm::quat &rotation) {
+        const auto q = glm::normalize(rotation);
+        axis_rot_ = glm::mat3_cast(q);
+        axis_rot_inv_ = glm::transpose(axis_rot_);
+    }
+
+    [[nodiscard]] auto GetAxisRotation() const -> glm::quat {
+        return glm::quat_cast(axis_rot_);
+    }
+
+    void SetAxisRotation(int x, int y, int z, bool inv_x = false,
+                         bool inv_y = false, bool inv_z = false) {
+        const std::array<int, 3> perm{x, y, z};
+        std::array<bool, 3> used{false, false, false};
+        for (int i : perm) {
+            if (i < 0 || i > 2 || used[i]) {
+                throw std::invalid_argument(
+                    "SetAxisRotation(x, y, z, inv_x, inv_y, inv_z) requires "
+                    "a permutation of 0, 1, 2");
+            }
+            used[i] = true;
+        }
+
+        glm::mat3 rot{0.0F};
+        rot[x][0] = inv_x ? -1.0F : 1.0F;
+        rot[y][1] = inv_y ? -1.0F : 1.0F;
+        rot[z][2] = inv_z ? -1.0F : 1.0F;
+
+        axis_rot_ = rot;
+        axis_rot_inv_ = glm::transpose(axis_rot_);
+    }
+
     // for handling time-based updates
     void Update(float deltaTime);
 
@@ -117,6 +155,10 @@ class Camera {
 
     // spherical camera distance
     float distance{0.0F};
+
+    // axis-convention rotation and its inverse
+    glm::mat3 axis_rot_{1.0F};
+    glm::mat3 axis_rot_inv_{1.0F};
 
     // aspect ratio preservation
     bool preserve_aspect_ratio{true};

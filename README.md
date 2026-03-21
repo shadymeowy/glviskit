@@ -285,6 +285,8 @@ The camera controls both view and projection:
 - `SetPreserveAspectRatio(...)` controls aspect-ratio handling during resize
 - `CalculateTransform()` returns the final transform used for rendering
 
+The camera also supports an axis-convention rotation. This is useful when world data uses another axis convention such as Y-up, Z-up, ENU, or NED. The axis-convention transform is applied in world space before the camera's own Euler rotation, so it remaps the world axes without changing the meaning of the camera's roll, pitch, and yaw controls. Personally, this was a major pain point for me since different fields use different conventions.
+
 In normal use, viewport size is managed by the window renderer.
 
 ### Render lists

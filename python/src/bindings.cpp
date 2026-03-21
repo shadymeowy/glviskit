@@ -164,6 +164,27 @@ NB_MODULE(glviskit, m) {
         .def_prop_rw("distance", &glviskit::Camera::GetDistance,
                      &glviskit::Camera::SetDistance,
                      "Distance of the camera from its center")
+        .def_prop_rw(
+            "axis_rotation",
+            [](const glviskit::Camera &cam) {
+                glm::quat q = cam.GetAxisRotation();
+                return std::array<float, 4>{q.w, q.x, q.y, q.z};
+            },
+            [](glviskit::Camera &cam, const std::array<float, 4> &q) {
+                cam.SetAxisRotation(glm::quat{q[0], q[1], q[2], q[3]});
+            },
+            "Axis-convention quaternion rotation (w, x, y, z)")
+        .def(
+            "set_axis_rotation",
+            [](glviskit::Camera &cam, int x, int y, int z, bool inv_x,
+               bool inv_y, bool inv_z) {
+                cam.SetAxisRotation(x, y, z, inv_x, inv_y, inv_z);
+            },
+            "x"_a, "y"_a, "z"_a, "inv_x"_a = false, "inv_y"_a = false,
+            "inv_z"_a = false,
+            "Set axis-convention transform from an axis permutation with "
+            "optional "
+            "axis inversions")
         .def_prop_ro(
             "viewport_size",
             [](const glviskit::Camera &cam) {
@@ -550,13 +571,11 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const std::array<float, 3> &pos,
                const std::array<float, 4> &rot,
                const std::array<float, 3> &scale) {
-                rb.AddInstance(
-                    glm::make_vec3(pos.data()),
-                    glm::quat{rot[0], rot[1], rot[2], rot[3]},
-                    glm::make_vec3(scale.data()));
+                rb.AddInstance(glm::make_vec3(pos.data()),
+                               glm::quat{rot[0], rot[1], rot[2], rot[3]},
+                               glm::make_vec3(scale.data()));
             },
-            "pos"_a,
-            "rot"_a,
+            "pos"_a, "rot"_a,
             "scale"_a = std::array<float, 3>{1.0f, 1.0f, 1.0f},
             "Add an instance with position, quaternion rotation "
             "(w, x, y, z), and scale")
