@@ -1,0 +1,223 @@
+# glviskit
+
+`glviskit` is a small C++20 library for practical 3D geometry visualization with OpenGL and SDL3.
+
+It gives you:
+
+- a compact C++ API for windows, cameras, and drawing primitives
+- Python bindings built with `nanobind`
+- examples for native and WebAssembly targets
+
+The API is built around a few simple concepts:
+
+- `Window`: owns an OpenGL context and renders one or more render lists
+- `RenderList`: stores points, lines, circles, paths, and drawing state such as color and size
+- `Camera`: controls projection and view transforms
+- controllers: optional camera input handlers such as first-person and spherical controls
+
+## Why `glviskit`?
+
+`glviskit` exists to remove the usual OpenGL setup cost when all you want to do is visualize geometry.
+
+Typical OpenGL code makes simple tasks feel heavier than they should be. Drawing a few 3D lines, points, paths, or circles usually means writing window setup, context handling, shader setup, buffer management, and camera math before you can even inspect your data. This library is meant to cut through that.
+
+The intended use case is practical visualization: point clouds, trajectories, debug geometry, simulation output, and similar datasets where clarity matters more than scene-graph features.
+
+The API is intentionally close to a plotting or immediate-mode drawing style:
+
+- create a window
+- create a render list
+- push lines, points, circles, or paths into it
+- move the camera
+- render
+
+Under the hood it is not immediate mode. Geometry is retained in GPU buffers and is not re-uploaded unless you change it. In practice, that means you can upload geometry once, leave it alone, and avoid paying to upload it again every frame or update cycle. That keeps the API simple without giving up the performance benefits of a retained renderer.
+
+Some details that matter for visualization workloads:
+
+- line and point thickness are controlled explicitly rather than by distance to the camera
+- multiple windows can share the same `RenderList`
+- instancing is built in
+- paths are efficient enough to use for dynamic line strips and trajectories
+- render lists can save and restore drawing state and stored geometry without rebuilding buffers
+
+Because geometry stays on the GPU until you change it, the library remains practical for real-time visualization even with large amounts of geometry, including cases where scene updates are driven from Python.
+
+## Repository layout
+
+- `include/glviskit`: public C++ headers
+- `python`: Python extension module and stub file
+- `examples`: C++ and Python examples
+- `cmake`: dependency and backend setup
+
+## Build requirements
+
+For a native build you will need:
+
+- a C++20 compiler
+- CMake 3.15 or newer
+- Python 3.8 or newer if you want the Python package
+
+The CMake build fetches `SDL3` and `glm` automatically. Python builds use `scikit-build-core` and `nanobind`.
+
+WebAssembly builds with Emscripten are also supported. For that target, `glm` is still fetched by CMake and SDL3 comes from the Emscripten toolchain. See `examples/demo_wasm` for a working example.
+
+## Quick start
+
+If you only want to try the Python package:
+
+```bash
+pip install glviskit
+```
+
+If you want to build from source:
+
+```bash
+cmake -S . -B build
+cmake --build build
+python -m pip install .
+```
+
+## Build the C++ examples
+
+Configure and build:
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+This builds the core library and the example targets under `examples/`.
+
+By default, the build uses `glad` for OpenGL function loading. Native OpenGL and native OpenGL ES backends are also supported where available.
+
+OpenGL backend selection is controlled by `GLVISKIT_GL_TYPE`:
+
+- `AUTO` (default)
+- `GLAD_GL`
+- `GLAD_GLES2`
+- `NATIVE_GL`
+- `NATIVE_GLES2`
+
+Example:
+
+```bash
+cmake -S . -B build -DGLVISKIT_GL_TYPE=GLAD_GL
+cmake --build build
+```
+
+The Python package targets Python 3.8+ on Linux, macOS, and Windows.
+
+## Build the Python package
+
+From the repository root:
+
+```bash
+python -m pip install .
+```
+
+For editable development:
+
+```bash
+python -m pip install -e .
+```
+
+That builds the extension with scikit-build and installs the `glviskit` module.
+
+## Minimal C++ example
+
+```cpp
+#include <glviskit/glviskit.hpp>
+
+int main() {
+    auto window = glviskit::CreateWindow("glviskit", 800, 600);
+    auto render_list = glviskit::CreateRenderList();
+    window->AddRenderList(render_list);
+
+    render_list->Color({1.0F, 0.0F, 0.0F, 1.0F});
+    render_list->Size(4.0F);
+    render_list->Line({0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F});
+
+    auto camera = window->GetCamera();
+    camera->PerspectiveFov(60.0F, 60.0F);
+    camera->SetDistance(5.0F);
+
+    while (glviskit::Loop()) {
+    }
+
+    return 0;
+}
+```
+
+That is the full loop: create a window, create a render list, add geometry, configure the camera, and keep calling `glviskit::Loop()`.
+
+## Minimal Python example
+
+```python
+import glviskit
+
+window = glviskit.create_window("glviskit", 800, 600)
+render_list = glviskit.create_render_list()
+window.add_render_list(render_list)
+
+render_list.color([1.0, 0.0, 0.0, 1.0])
+render_list.size(4.0)
+render_list.line([0.0, 0.0, 0.0], [1.0, 0.0, 0.0])
+
+camera = window.camera
+camera.perspective_fov(60.0, 60.0)
+camera.distance = 5.0
+
+while glviskit.loop():
+    pass
+```
+
+The Python API mirrors the C++ API closely, so switching between them is mostly mechanical.
+
+## Drawing model
+
+`RenderList` is stateful. Calls such as `color()` and `size()` affect subsequent draw commands.
+
+Supported drawing primitives:
+
+- `line`
+- `point`
+- `circle`
+- `path_begin()` with `line_to()` and `line_end()`
+
+`RenderList` also supports:
+
+- instancing with `add_instance(...)`
+- state save and restore with `save()` and `restore()`
+- instance stack save and restore with `save_instances()` and `restore_instances()`
+
+This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
+
+## Examples
+
+Useful starting points:
+
+- `examples/demo/main.cpp`
+- `examples/example.py`
+- `examples/demo_wasm/main.cpp`
+
+## Current state
+
+This project is small and focused. The public API is already usable, but it is still a lightweight visualization library rather than a full engine or plotting framework.
+
+If you are looking for:
+
+- simple 3D geometry visualization
+- a small dependency surface at the API level
+- both C++ and Python entry points
+
+then this is probably a good fit.
+
+## Roadmap
+
+Planned next steps:
+
+- triangle rendering as a first-class primitive
+- solid geometry features built on top of triangle primitives
+- MSDF text rendering for 3D billboard text with distance-invariant sizing
+- a richer and more flexible API for the existing primitives
