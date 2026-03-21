@@ -13,6 +13,10 @@ using Points32 =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 using Points64 =
     nb::ndarray<double, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using Matrix44f =
+    nb::ndarray<float, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
+using Matrix44d =
+    nb::ndarray<double, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
 
 NB_MODULE(glviskit, m) {
     nb::set_leak_warnings(false);
@@ -204,6 +208,34 @@ NB_MODULE(glviskit, m) {
             "c"_a, "Set the current drawing color")
         .def("size", &glviskit::RenderList::Size, "size"_a,
              "Set the current drawing size")
+        .def(
+            "add_instance",
+            [](glviskit::RenderList &rb, const Matrix44f &transform) {
+                auto t = transform.view();
+                glm::mat4 mat{1.0F};
+                for (size_t row = 0; row < 4; ++row) {
+                    for (size_t col = 0; col < 4; ++col) {
+                        mat[col][row] = t(row, col);
+                    }
+                }
+                rb.AddInstance(mat);
+            },
+            "transform"_a.noconvert(),
+            "Add an instance using a 4x4 transform matrix")
+        .def(
+            "add_instance",
+            [](glviskit::RenderList &rb, const Matrix44d &transform) {
+                auto t = transform.view();
+                glm::mat4 mat{1.0F};
+                for (size_t row = 0; row < 4; ++row) {
+                    for (size_t col = 0; col < 4; ++col) {
+                        mat[col][row] = static_cast<float>(t(row, col));
+                    }
+                }
+                rb.AddInstance(mat);
+            },
+            "transform"_a.noconvert(),
+            "Add an instance using a 4x4 transform matrix")
         .def(
             "add_instance",
             [](glviskit::RenderList &rb, const std::array<float, 3> &pos,
