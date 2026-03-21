@@ -63,6 +63,14 @@ class Window {
         window_renderer_.SetCamera(cam);
     }
 
+    void SetBackgroundColor(const glm::vec4 &color) {
+        window_renderer_.SetBackgroundColor(color);
+    }
+
+    [[nodiscard]] auto GetBackgroundColor() const -> glm::vec4 {
+        return window_renderer_.GetBackgroundColor();
+    }
+
     auto GetController() -> std::shared_ptr<BaseController> {
         return camera_controller_;
     }

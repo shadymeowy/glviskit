@@ -99,6 +99,18 @@ NB_MODULE(glviskit, m) {
              "Add a RenderList to the window for rendering")
         .def_prop_rw("camera", &glviskit::sdl::Window::GetCamera,
                      &glviskit::sdl::Window::SetCamera, "Camera of the window")
+        .def_prop_rw(
+            "background_color",
+            [](const glviskit::sdl::Window &window) {
+                glm::vec4 color = window.GetBackgroundColor();
+                return std::array<float, 4>{color.r, color.g, color.b, color.a};
+            },
+            [](glviskit::sdl::Window &window,
+               const std::array<float, 4> &color) {
+                window.SetBackgroundColor(
+                    {color[0], color[1], color[2], color[3]});
+            },
+            "Background clear color of the window")
         .def_prop_rw("controller", &glviskit::sdl::Window::GetController,
                      &glviskit::sdl::Window::SetController,
                      "Camera controller of the window")

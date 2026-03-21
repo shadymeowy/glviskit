@@ -42,6 +42,8 @@ class WindowRenderer {
         glDepthMask(GL_TRUE);
 
         // clear buffers
+        glClearColor(background_color.r, background_color.g, background_color.b,
+                     background_color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // draw everything with alpha test 1
         RenderLists(ctx_id, width, height, mvp, 1);
@@ -59,6 +61,10 @@ class WindowRenderer {
 
     auto GetCamera() -> std::shared_ptr<Camera> { return camera; }
     void SetCamera(std::shared_ptr<Camera> cam) { camera = std::move(cam); }
+    void SetBackgroundColor(const glm::vec4 &color) { background_color = color; }
+    [[nodiscard]] auto GetBackgroundColor() const -> glm::vec4 {
+        return background_color;
+    }
 
    private:
     void InitializeContext() {
@@ -67,7 +73,6 @@ class WindowRenderer {
         program_circle = std::make_unique<circle::Program>();
         program_mesh = std::make_unique<mesh::Program>();
 
-        glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
         glDisable(GL_CULL_FACE);
 #ifdef GLVISKIT_GL33
         glEnable(GL_MULTISAMPLE);
@@ -137,6 +142,7 @@ class WindowRenderer {
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;
+    glm::vec4 background_color{0.0F, 0.0F, 0.0F, 1.0F};
     bool initialized_{false};
 
     std::vector<std::shared_ptr<RenderState>> buffers;

@@ -30,6 +30,12 @@ class Window:
     @camera.setter
     def camera(self, arg: Camera, /) -> None: ...
     @property
+    def background_color(self) -> list[float]:
+        """Background clear color of the window"""
+
+    @background_color.setter
+    def background_color(self, arg: Sequence[float], /) -> None: ...
+    @property
     def controller(self) -> BaseController:
         """Camera controller of the window"""
 
