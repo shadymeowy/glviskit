@@ -4,8 +4,10 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/vector.h>
 
+#include <cstdint>
 #include <glm/gtc/type_ptr.hpp>
 #include <glviskit/glviskit.hpp>
+#include <sstream>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -20,6 +22,57 @@ using Matrix44f =
     nb::ndarray<float, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
 using Matrix44d =
     nb::ndarray<double, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
+
+namespace {
+
+template <typename View>
+void RequireMatchingLineCount(const View &starts, const View &ends) {
+    if (starts.shape(0) != ends.shape(0)) {
+        throw nb::value_error(
+            "line(starts, ends) requires the same number of start and end "
+            "points");
+    }
+}
+
+template <typename View>
+void RequireAtLeastVertices(const View &vertices, size_t min_count,
+                            const char *name) {
+    if (vertices.shape(0) < min_count) {
+        std::ostringstream oss;
+        oss << name << " requires at least " << min_count << " vertices";
+        throw nb::value_error(oss.str().c_str());
+    }
+}
+
+template <typename IndexView>
+void RequireNonNegativeIndices(const IndexView &indices, const char *name) {
+    for (size_t i = 0; i < indices.shape(0); ++i) {
+        for (size_t j = 0; j < 3; ++j) {
+            if (indices(i, j) < 0) {
+                std::ostringstream oss;
+                oss << name << " does not allow negative indices";
+                throw nb::value_error(oss.str().c_str());
+            }
+        }
+    }
+}
+
+template <typename IndexView>
+void RequireIndicesInRange(const IndexView &indices, size_t vertex_count,
+                           const char *name) {
+    for (size_t i = 0; i < indices.shape(0); ++i) {
+        for (size_t j = 0; j < 3; ++j) {
+            if (static_cast<size_t>(indices(i, j)) >= vertex_count) {
+                std::ostringstream oss;
+                oss << name << " index out of range for vertex array of size "
+                    << vertex_count;
+                throw nb::index_error(oss.str().c_str());
+            }
+        }
+    }
+}
+
+}  // namespace
 
 NB_MODULE(glviskit, m) {
     nb::set_leak_warnings(false);
@@ -114,6 +167,7 @@ NB_MODULE(glviskit, m) {
                const Points32 &ends) {
                 auto s = starts.view();
                 auto e = ends.view();
+                RequireMatchingLineCount(s, e);
                 for (size_t i = 0; i < s.shape(0); ++i) {
                     rb.Line({s(i, 0), s(i, 1), s(i, 2)},
                             {e(i, 0), e(i, 1), e(i, 2)});
@@ -127,6 +181,7 @@ NB_MODULE(glviskit, m) {
                const Points64 &ends) {
                 auto s = starts.view();
                 auto e = ends.view();
+                RequireMatchingLineCount(s, e);
                 for (size_t i = 0; i < s.shape(0); ++i) {
                     rb.Line({static_cast<float>(s(i, 0)),
                              static_cast<float>(s(i, 1)),
@@ -210,6 +265,7 @@ NB_MODULE(glviskit, m) {
             "polygon",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 2, "polygon(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -223,6 +279,7 @@ NB_MODULE(glviskit, m) {
             "polygon",
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 2, "polygon(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -238,6 +295,7 @@ NB_MODULE(glviskit, m) {
             "polyline",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 2, "polyline(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -251,6 +309,7 @@ NB_MODULE(glviskit, m) {
             "polyline",
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 2, "polyline(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -266,6 +325,7 @@ NB_MODULE(glviskit, m) {
             "fill_polygon",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 3, "fill_polygon(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -279,6 +339,7 @@ NB_MODULE(glviskit, m) {
             "fill_polygon",
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
+                RequireAtLeastVertices(v, 3, "fill_polygon(vertices)");
                 std::vector<glm::vec3> vv;
                 vv.reserve(v.shape(0));
                 for (size_t i = 0; i < v.shape(0); ++i) {
@@ -304,6 +365,9 @@ NB_MODULE(glviskit, m) {
                const IndicesI32 &indices) {
                 auto v = vertices.view();
                 auto t = indices.view();
+                RequireNonNegativeIndices(t, "triangles(vertices, indices)");
+                RequireIndicesInRange(t, v.shape(0),
+                                      "triangles(vertices, indices)");
                 std::vector<glm::vec3> vv;
                 std::vector<glm::uvec3> ii;
                 vv.reserve(v.shape(0));
@@ -326,6 +390,9 @@ NB_MODULE(glviskit, m) {
                const IndicesI32 &indices) {
                 auto v = vertices.view();
                 auto t = indices.view();
+                RequireNonNegativeIndices(t, "triangles(vertices, indices)");
+                RequireIndicesInRange(t, v.shape(0),
+                                      "triangles(vertices, indices)");
                 std::vector<glm::vec3> vv;
                 std::vector<glm::uvec3> ii;
                 vv.reserve(v.shape(0));
@@ -480,6 +547,9 @@ NB_MODULE(glviskit, m) {
             "triangle",
             [](glviskit::Mesh &mesh, const IndicesI32 &triangles) {
                 auto t = triangles.view();
+                RequireNonNegativeIndices(t, "mesh.triangle(triangles)");
+                RequireIndicesInRange(t, mesh.VertexCount(),
+                                      "mesh.triangle(triangles)");
                 for (size_t i = 0; i < t.shape(0); ++i) {
                     mesh.Triangle(static_cast<size_t>(t(i, 0)),
                                   static_cast<size_t>(t(i, 1)),
