@@ -313,6 +313,8 @@ Instancing:
 - `AddInstance(transform)`
 - `AddInstance(position, rotation, scale)`
 
+For instancing, rotation can be supplied either as the existing axis-angle `vec3` form or as a quaternion.
+
 State and geometry control:
 
 - `Save()` and `Restore()`

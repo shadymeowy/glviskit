@@ -330,6 +330,17 @@ class RenderList:
     @overload
     def add_instance(
         self,
+        pos: Sequence[float],
+        rot: Sequence[float],
+        scale: Sequence[float] = [1.0, 1.0, 1.0],
+    ) -> None:
+        """
+        Add an instance with position, quaternion rotation (w, x, y, z), and scale
+        """
+
+    @overload
+    def add_instance(
+        self,
         pos: Sequence[float] = [0.0, 0.0, 0.0],
         rot: Sequence[float] = [0.0, 0.0, 0.0],
         scale: Sequence[float] = [1.0, 1.0, 1.0],

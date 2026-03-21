@@ -3,6 +3,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <memory>
 #include <span>
 
@@ -162,6 +163,14 @@ class RenderList {
     // instancing
     void AddInstance(const glm::mat4 &transform) {
         render_state_->vbo_inst.Append({transform});
+    }
+
+    void AddInstance(const glm::vec3 &position, const glm::quat &rotation,
+                     const glm::vec3 &scale = glm::vec3{1.0F}) {
+        auto t = glm::translate(glm::mat4{1.0F}, position);
+        auto r = glm::mat4_cast(rotation);
+        auto s = glm::scale(glm::mat4{1.0F}, scale);
+        AddInstance(t * r * s);
     }
 
     void AddInstance(const glm::vec3 &position,

@@ -548,6 +548,21 @@ NB_MODULE(glviskit, m) {
         .def(
             "add_instance",
             [](glviskit::RenderList &rb, const std::array<float, 3> &pos,
+               const std::array<float, 4> &rot,
+               const std::array<float, 3> &scale) {
+                rb.AddInstance(
+                    glm::make_vec3(pos.data()),
+                    glm::quat{rot[0], rot[1], rot[2], rot[3]},
+                    glm::make_vec3(scale.data()));
+            },
+            "pos"_a,
+            "rot"_a,
+            "scale"_a = std::array<float, 3>{1.0f, 1.0f, 1.0f},
+            "Add an instance with position, quaternion rotation "
+            "(w, x, y, z), and scale")
+        .def(
+            "add_instance",
+            [](glviskit::RenderList &rb, const std::array<float, 3> &pos,
                const std::array<float, 3> &rot,
                const std::array<float, 3> &scale) {
                 rb.AddInstance(glm::make_vec3(pos.data()),
