@@ -183,6 +183,28 @@ class RenderList:
     def polygon(
         self,
         vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """
+        Draw multiple closed polygonal outlines from an array of shape N x M x 3
+        """
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """
+        Draw multiple closed polygonal outlines from an array of shape N x M x 3
+        """
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
             NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
         ],
     ) -> None:
@@ -194,7 +216,9 @@ class RenderList:
         vertices: Annotated[
             NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
         ],
-    ) -> None: ...
+    ) -> None:
+        """Draw a closed polygonal outline through the given vertices"""
+
     @overload
     def polyline(
         self,
@@ -215,6 +239,28 @@ class RenderList:
     def fill_polygon(
         self,
         vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """
+        Fill multiple polygons from an array of shape N x M x 3 using triangle fans
+        """
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """
+        Fill multiple polygons from an array of shape N x M x 3 using triangle fans
+        """
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
             NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
         ],
     ) -> None:
@@ -226,7 +272,9 @@ class RenderList:
         vertices: Annotated[
             NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
         ],
-    ) -> None: ...
+    ) -> None:
+        """Fill a polygon using a triangle fan through the given vertices"""
+
     def color(self, c: Sequence[float]) -> None:
         """Set the current drawing color"""
 

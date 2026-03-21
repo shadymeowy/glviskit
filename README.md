@@ -201,7 +201,7 @@ Supported drawing primitives:
 
 Triangle geometry uses the same retained model as the rest of the API. A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
 
-`polyline(vertices)`, `polygon(vertices)`, and `fill_polygon(vertices)` are convenience helpers built on top of those retained builders. `polyline(...)` creates an open connected line strip, `polygon(...)` creates a closed outline, and `fill_polygon(...)` fills the shape with a simple triangle fan.
+`polyline(vertices)`, `polygon(vertices)`, and `fill_polygon(vertices)` are convenience helpers built on top of those retained builders. `polyline(...)` creates an open connected line strip, `polygon(...)` creates a closed outline, and `fill_polygon(...)` fills the shape with a simple triangle fan. In Python, `polygon(...)` and `fill_polygon(...)` also accept batched arrays shaped like `N x M x 3`.
 
 This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 

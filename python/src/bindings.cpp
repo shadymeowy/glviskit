@@ -16,6 +16,10 @@ using Points32 =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 using Points64 =
     nb::ndarray<double, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using Polygons32 =
+    nb::ndarray<float, nb::shape<-1, -1, 3>, nb::c_contig, nb::device::cpu>;
+using Polygons64 =
+    nb::ndarray<double, nb::shape<-1, -1, 3>, nb::c_contig, nb::device::cpu>;
 using IndicesI32 =
     nb::ndarray<int32_t, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 using Matrix44f =
@@ -263,6 +267,49 @@ NB_MODULE(glviskit, m) {
             "pos"_a, "Draw an circle at position pos")
         .def(
             "polygon",
+            [](glviskit::RenderList &rb, const Polygons32 &polygons) {
+                auto polys = polygons.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 2) {
+                        throw nb::value_error(
+                            "polygon(vertices) requires at least 2 vertices "
+                            "per polygon");
+                    }
+                    auto path = rb.PathBegin();
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        path->LineTo(
+                            {polys(i, j, 0), polys(i, j, 1), polys(i, j, 2)});
+                    }
+                    path->Close();
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Draw multiple closed polygonal outlines from an array of shape N "
+            "x M x 3")
+        .def(
+            "polygon",
+            [](glviskit::RenderList &rb, const Polygons64 &polygons) {
+                auto polys = polygons.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 2) {
+                        throw nb::value_error(
+                            "polygon(vertices) requires at least 2 vertices "
+                            "per polygon");
+                    }
+                    auto path = rb.PathBegin();
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        path->LineTo({static_cast<float>(polys(i, j, 0)),
+                                      static_cast<float>(polys(i, j, 1)),
+                                      static_cast<float>(polys(i, j, 2))});
+                    }
+                    path->Close();
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Draw multiple closed polygonal outlines from an array of shape N "
+            "x M x 3")
+        .def(
+            "polygon",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polygon(vertices)");
@@ -321,6 +368,53 @@ NB_MODULE(glviskit, m) {
             },
             "vertices"_a.noconvert(),
             "Draw an open polyline through the given vertices")
+        .def(
+            "fill_polygon",
+            [](glviskit::RenderList &rb, const Polygons32 &polygons) {
+                auto polys = polygons.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 3) {
+                        throw nb::value_error(
+                            "fill_polygon(vertices) requires at least 3 "
+                            "vertices per polygon");
+                    }
+                    auto mesh = rb.MeshBegin();
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        mesh->Vertex(
+                            {polys(i, j, 0), polys(i, j, 1), polys(i, j, 2)});
+                    }
+                    for (size_t j = 1; j + 1 < polys.shape(1); ++j) {
+                        mesh->Triangle(0, j, j + 1);
+                    }
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Fill multiple polygons from an array of shape N x M x 3 using "
+            "triangle fans")
+        .def(
+            "fill_polygon",
+            [](glviskit::RenderList &rb, const Polygons64 &polygons) {
+                auto polys = polygons.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 3) {
+                        throw nb::value_error(
+                            "fill_polygon(vertices) requires at least 3 "
+                            "vertices per polygon");
+                    }
+                    auto mesh = rb.MeshBegin();
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        mesh->Vertex({static_cast<float>(polys(i, j, 0)),
+                                      static_cast<float>(polys(i, j, 1)),
+                                      static_cast<float>(polys(i, j, 2))});
+                    }
+                    for (size_t j = 1; j + 1 < polys.shape(1); ++j) {
+                        mesh->Triangle(0, j, j + 1);
+                    }
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Fill multiple polygons from an array of shape N x M x 3 using "
+            "triangle fans")
         .def(
             "fill_polygon",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
