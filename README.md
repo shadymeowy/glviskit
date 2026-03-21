@@ -11,7 +11,7 @@ It gives you:
 The API is built around a few simple concepts:
 
 - `Window`: owns an OpenGL context and renders one or more render lists
-- `RenderList`: stores points, lines, circles, paths, and drawing state such as color and size
+- `RenderList`: stores points, lines, circles, triangle meshes, paths, and drawing state such as color and size
 - `Camera`: controls projection and view transforms
 - controllers: optional camera input handlers such as first-person and spherical controls
 
@@ -39,6 +39,7 @@ Some details that matter for visualization workloads:
 - multiple windows can share the same `RenderList`
 - instancing is built in
 - paths are efficient enough to use for dynamic line strips and trajectories
+- triangle meshes can be appended directly from vertex and index arrays
 - render lists can save and restore drawing state and stored geometry without rebuilding buffers
 - paths keep their own state and geometry over time instead of being limited to a single frame
 - primitives can be interleaved without breaking rendering order because shared buffers are stitched together through index-buffer layout
@@ -185,6 +186,7 @@ Supported drawing primitives:
 - `line`
 - `point`
 - `circle`
+- `mesh(vertices, indices)`
 - `path_begin()` with `line_to()` and `line_end()`
 
 `RenderList` also supports:
@@ -192,6 +194,8 @@ Supported drawing primitives:
 - instancing with `add_instance(...)`
 - state save and restore with `save()` and `restore()`
 - instance stack save and restore with `save_instances()` and `restore_instances()`
+
+Triangle meshes use the same retained model as the rest of the API. A mesh submission appends indexed triangle geometry into the render list using the current drawing color, and then remains part of the retained scene until you clear or restore past it.
 
 This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 
@@ -286,6 +290,7 @@ Primitive drawing:
 - `Line(start, end)`
 - `Point(position)`
 - `Circle(position)`
+- `Mesh(vertices, indices)`
 - `PathBegin()`
 
 Drawing state:
@@ -307,6 +312,8 @@ State and geometry control:
 - `SetEnabled(...)` and `IsEnabled()`
 
 `Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
+
+`Mesh(vertices, indices)` adds indexed triangle geometry to the render list using the current color. Like the other primitives, the geometry stays there until you clear it or restore past it.
 
 ### Paths
 
@@ -345,4 +352,4 @@ The built-in controllers expose sensitivity controls for keyboard, mouse, and wh
 
 The Python bindings are intended to mirror the supported public C++ workflow closely. That includes window creation, render-list creation, camera access, path drawing, controller selection, state save and restore, instance management, and per-frame loop and render calls.
 
-On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, and `path.line_to()` using NumPy arrays shaped like `N x 3`.
+On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, `mesh`, and `path.line_to()` using NumPy arrays. For meshes, the expected shape is `vertices: N x 3` and `indices: M x 3`.
