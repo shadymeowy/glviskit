@@ -51,7 +51,7 @@ class Camera:
         self,
         hfov: float,
         vfov: float,
-        near: float = 0.1,
+        near: float = 0.10000000149011612,
         far: float = 100.0,
     ) -> None:
         """Set perspective projection using horizontal and vertical FOV"""
@@ -62,7 +62,7 @@ class Camera:
         fyn: float,
         cx: float = 0.5,
         cy: float = 0.5,
-        near: float = 0.1,
+        near: float = 0.10000000149011612,
         far: float = 100.0,
     ) -> None:
         """Set perspective projection using focal lengths and principal point"""
@@ -180,6 +180,28 @@ class RenderList:
     def size(self, size: float) -> None:
         """Set the current drawing size"""
 
+    @overload
+    def mesh(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+        indices: Annotated[
+            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Draw a triangle mesh from vertices and triangle indices"""
+
+    @overload
+    def mesh(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+        indices: Annotated[
+            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
+        ],
+    ) -> None: ...
     @overload
     def add_instance(
         self,

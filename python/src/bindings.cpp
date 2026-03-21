@@ -13,6 +13,8 @@ using Points32 =
     nb::ndarray<float, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 using Points64 =
     nb::ndarray<double, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using IndicesI32 =
+    nb::ndarray<int32_t, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
 using Matrix44f =
     nb::ndarray<float, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
 using Matrix44d =
@@ -208,6 +210,52 @@ NB_MODULE(glviskit, m) {
             "c"_a, "Set the current drawing color")
         .def("size", &glviskit::RenderList::Size, "size"_a,
              "Set the current drawing size")
+        .def(
+            "mesh",
+            [](glviskit::RenderList &rb, const Points32 &vertices,
+               const IndicesI32 &indices) {
+                auto v = vertices.view();
+                auto t = indices.view();
+                std::vector<glm::vec3> vv;
+                std::vector<glm::uvec3> ii;
+                vv.reserve(v.shape(0));
+                ii.reserve(t.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                }
+                for (size_t i = 0; i < t.shape(0); ++i) {
+                    ii.emplace_back(static_cast<uint32_t>(t(i, 0)),
+                                    static_cast<uint32_t>(t(i, 1)),
+                                    static_cast<uint32_t>(t(i, 2)));
+                }
+                rb.Mesh(vv, ii);
+            },
+            "vertices"_a.noconvert(), "indices"_a.noconvert(),
+            "Draw a triangle mesh from vertices and triangle indices")
+        .def(
+            "mesh",
+            [](glviskit::RenderList &rb, const Points64 &vertices,
+               const IndicesI32 &indices) {
+                auto v = vertices.view();
+                auto t = indices.view();
+                std::vector<glm::vec3> vv;
+                std::vector<glm::uvec3> ii;
+                vv.reserve(v.shape(0));
+                ii.reserve(t.shape(0));
+                for (size_t i = 0; i < v.shape(0); ++i) {
+                    vv.emplace_back(static_cast<float>(v(i, 0)),
+                                    static_cast<float>(v(i, 1)),
+                                    static_cast<float>(v(i, 2)));
+                }
+                for (size_t i = 0; i < t.shape(0); ++i) {
+                    ii.emplace_back(static_cast<uint32_t>(t(i, 0)),
+                                    static_cast<uint32_t>(t(i, 1)),
+                                    static_cast<uint32_t>(t(i, 2)));
+                }
+                rb.Mesh(vv, ii);
+            },
+            "vertices"_a.noconvert(), "indices"_a.noconvert(),
+            "Draw a triangle mesh from vertices and triangle indices")
         .def(
             "add_instance",
             [](glviskit::RenderList &rb, const Matrix44f &transform) {
