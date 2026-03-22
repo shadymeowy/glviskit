@@ -1,12 +1,14 @@
 #pragma once
 
+#include <array>
 #include <iostream>
 #include <memory>
+#include <span>
 
+#include "../controller/base_controller.hpp"
 #include "../controller/spherical_controller.hpp"
 #include "../gl/gl.hpp"
 #include "../window_renderer.hpp"
-#include "../controller/base_controller.hpp"
 #include "sdl.hpp"
 
 namespace glviskit::sdl {
@@ -69,6 +71,19 @@ class Window {
 
     [[nodiscard]] auto GetBackgroundColor() const -> glm::vec4 {
         return window_renderer_.GetBackgroundColor();
+    }
+
+    [[nodiscard]] auto GetSizeInPixels() const -> std::array<int, 2> {
+        int width;
+        int height;
+        SDL_GetWindowSizeInPixels(window_.Get(), &width, &height);
+        return {width, height};
+    }
+
+    void CaptureRGBA(std::span<unsigned char> pixels) {
+        MakeCurrent();
+        auto [width, height] = GetSizeInPixels();
+        window_renderer_.CaptureRGBA(width, height, pixels);
     }
 
     auto GetController() -> std::shared_ptr<BaseController> {

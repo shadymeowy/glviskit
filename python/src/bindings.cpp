@@ -22,6 +22,8 @@ using Polygons64 =
     nb::ndarray<double, nb::shape<-1, -1, 3>, nb::c_contig, nb::device::cpu>;
 using IndicesI32 =
     nb::ndarray<int32_t, nb::shape<-1, 3>, nb::c_contig, nb::device::cpu>;
+using ImageRGBA8 =
+    nb::ndarray<uint8_t, nb::shape<-1, -1, 4>, nb::c_contig, nb::device::cpu>;
 using Matrix44f =
     nb::ndarray<float, nb::shape<4, 4>, nb::c_contig, nb::device::cpu>;
 using Matrix44d =
@@ -116,6 +118,23 @@ NB_MODULE(glviskit, m) {
                      "Camera controller of the window")
         .def("make_current", &glviskit::sdl::Window::MakeCurrent,
              "Make the window's OpenGL context current")
+        .def(
+            "capture_rgba",
+            [](glviskit::sdl::Window &window, const ImageRGBA8 &image) {
+                auto [width, height] = window.GetSizeInPixels();
+                if (image.shape(0) != static_cast<size_t>(height) ||
+                    image.shape(1) != static_cast<size_t>(width)) {
+                    throw nb::value_error(
+                        "capture_rgba(image) requires image.shape == "
+                        "(window_height, window_width, 4)");
+                }
+                auto view = image.view();
+                auto *ptr = &view(0, 0, 0);
+                window.CaptureRGBA(std::span<unsigned char>(
+                    ptr, static_cast<size_t>(width) * height * 4));
+            },
+            "image"_a.noconvert(),
+            "Capture the current window into a preallocated RGBA uint8 array")
         .def("render", &glviskit::sdl::Window::Render,
              "Render the window's contents");
 

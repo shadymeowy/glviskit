@@ -44,6 +44,14 @@ class Window:
     def make_current(self) -> None:
         """Make the window's OpenGL context current"""
 
+    def capture_rgba(
+        self,
+        image: Annotated[
+            NDArray[numpy.uint8], dict(shape=(None, None, 4), order="C", device="cpu")
+        ],
+    ) -> None:
+        """Capture the current window into a preallocated RGBA uint8 array"""
+
     def render(self) -> None:
         """Render the window's contents"""
 

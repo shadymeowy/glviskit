@@ -1,7 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <memory>
+#include <span>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -61,9 +64,32 @@ class WindowRenderer {
 
     auto GetCamera() -> std::shared_ptr<Camera> { return camera; }
     void SetCamera(std::shared_ptr<Camera> cam) { camera = std::move(cam); }
-    void SetBackgroundColor(const glm::vec4 &color) { background_color = color; }
+    void SetBackgroundColor(const glm::vec4 &color) {
+        background_color = color;
+    }
     [[nodiscard]] auto GetBackgroundColor() const -> glm::vec4 {
         return background_color;
+    }
+    static void CaptureRGBA(int width, int height,
+                            std::span<unsigned char> pixels) {
+        const size_t expected = static_cast<size_t>(width) * height * 4;
+        if (pixels.size() != expected) {
+            throw std::invalid_argument(
+                "CaptureRGBA buffer size must equal width * height * 4");
+        }
+
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+                     pixels.data());
+
+        const size_t stride = static_cast<size_t>(width) * 4;
+        std::vector<unsigned char> flipped(expected);
+        for (int y = 0; y < height; ++y) {
+            const size_t src = static_cast<size_t>(y) * stride;
+            const size_t dst = static_cast<size_t>(height - 1 - y) * stride;
+            std::copy_n(pixels.data() + src, stride, flipped.data() + dst);
+        }
+        std::ranges::copy(flipped, pixels.begin());
     }
 
    private:
