@@ -73,26 +73,18 @@ If you only want to try the Python package:
 pip install glviskit
 ```
 
-If you want to build from source:
-
-```bash
-cmake -S . -B build
-cmake --build build
-python -m pip install .
-```
-
 ## Build the C++ examples
 
-Configure and build:
+Configure and build the library:
 
 ```bash
 cmake -S . -B build
 cmake --build build
 ```
 
-This builds the core library and the example targets under `examples/`.
+For building examples, invoke `cmake` similarly in the respective directory.
 
-By default, the build uses `glad` for OpenGL function loading. Native OpenGL and native OpenGL ES backends are also supported where available.
+By default, the build uses bundled `glad` for OpenGL function loading. Native OpenGL and native OpenGL ES backends are also supported where available.
 
 OpenGL backend selection is controlled by `GLVISKIT_GL_TYPE`:
 
@@ -229,10 +221,10 @@ then this is probably a good fit.
 
 Planned next steps:
 
-- triangle rendering as a first-class primitive
-- solid geometry features built on top of triangle primitives
-- MSDF text rendering for 3D billboard text with distance-invariant sizing
-- a richer and more flexible API for the existing primitives
+- [x] triangle rendering as a first-class primitive
+- [x] solid geometry features built on top of triangle primitives
+- [ ] MSDF text rendering for 3D billboard text with distance-invariant sizing
+- [ ] a richer and more flexible API for the existing primitives
 
 ## API Reference
 
@@ -285,7 +277,7 @@ The camera controls both view and projection:
 - `SetPreserveAspectRatio(...)` controls aspect-ratio handling during resize
 - `CalculateTransform()` returns the final transform used for rendering
 
-The camera also supports an axis-convention rotation. This is useful when world data uses another axis convention such as Y-up, Z-up, ENU, or NED. The axis-convention transform is applied in world space before the camera's own Euler rotation, so it remaps the world axes without changing the meaning of the camera's roll, pitch, and yaw controls. Personally, this was a major pain point for me since different fields use different conventions.
+The camera also supports an axis-convention rotation. This is useful when world data uses another axis convention such as Y-up, Z-up, ENU, or NED. The axis-convention transform is applied in world space before the camera's own Euler rotation, so it remaps the world axes without changing the meaning of the camera's roll, pitch, and yaw controls. Personally, this was a major pain point of 3D visualization since different fields use different conventions.
 
 In normal use, viewport size is managed by the window renderer.
 
@@ -315,7 +307,7 @@ Instancing:
 - `AddInstance(transform)`
 - `AddInstance(position, rotation, scale)`
 
-For instancing, rotation can be supplied either as the existing axis-angle `vec3` form or as a quaternion.
+For instancing, rotation can be supplied either as the existing axis-angle `vec3` form or as a quaternion wxyz.
 
 State and geometry control:
 
@@ -386,3 +378,5 @@ The built-in controllers expose sensitivity controls for keyboard, mouse, and wh
 The Python bindings are intended to mirror the supported public C++ workflow closely. That includes window creation, render-list creation, camera access, path drawing, controller selection, state save and restore, instance management, and per-frame loop and render calls.
 
 On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, `triangles`, and `path.line_to()` using NumPy arrays. For triangle geometry, the expected shape is `vertices: N x 3` and `indices: M x 3`. Python also exposes `mesh_begin()`, `vertex()`, and `triangle()` for incremental mesh building.
+
+Additionally, `nanobind` generated stubs are generated and shipped with docstrings.
