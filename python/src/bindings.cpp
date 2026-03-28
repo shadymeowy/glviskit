@@ -392,6 +392,49 @@ NB_MODULE(glviskit, m) {
             "Draw a closed polygonal outline through the given vertices")
         .def(
             "polyline",
+            [](glviskit::RenderList &rb, const Polygons32 &polylines) {
+                auto polys = polylines.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 2) {
+                        throw nb::value_error(
+                            "polyline(vertices) requires at least 2 vertices "
+                            "per polyline");
+                    }
+                    std::vector<glm::vec3> vv;
+                    vv.reserve(polys.shape(1));
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        vv.emplace_back(polys(i, j, 0), polys(i, j, 1),
+                                        polys(i, j, 2));
+                    }
+                    rb.Polyline(vv);
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Draw multiple open polylines from an array of shape N x M x 3")
+        .def(
+            "polyline",
+            [](glviskit::RenderList &rb, const Polygons64 &polylines) {
+                auto polys = polylines.view();
+                for (size_t i = 0; i < polys.shape(0); ++i) {
+                    if (polys.shape(1) < 2) {
+                        throw nb::value_error(
+                            "polyline(vertices) requires at least 2 vertices "
+                            "per polyline");
+                    }
+                    std::vector<glm::vec3> vv;
+                    vv.reserve(polys.shape(1));
+                    for (size_t j = 0; j < polys.shape(1); ++j) {
+                        vv.emplace_back(static_cast<float>(polys(i, j, 0)),
+                                        static_cast<float>(polys(i, j, 1)),
+                                        static_cast<float>(polys(i, j, 2)));
+                    }
+                    rb.Polyline(vv);
+                }
+            },
+            "vertices"_a.noconvert(),
+            "Draw multiple open polylines from an array of shape N x M x 3")
+        .def(
+            "polyline",
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polyline(vertices)");
