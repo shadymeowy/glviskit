@@ -41,11 +41,21 @@ class Mesh {
 
     std::shared_ptr<RenderState> render_state;
     State state{};
-    State state_saved{};
+    glm::vec4 color_saved_{1.0F};
+    size_t saved_size_ = 0;
 
-    void Save() { state_saved = state; }
-    void Restore() { state = state_saved; }
-    void Clear() { state = State{}; }
+    void Save() {
+        color_saved_ = state.color;
+        saved_size_ = state.vertex_mapping.size();
+    }
+    void Restore() {
+        state.color = color_saved_;
+        state.vertex_mapping.resize(saved_size_);
+    }
+    void Clear() {
+        state.color = glm::vec4{1.0F};
+        state.vertex_mapping.clear();
+    }
 
     friend class RenderList;
 };
