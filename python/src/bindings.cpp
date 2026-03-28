@@ -225,8 +225,10 @@ NB_MODULE(glviskit, m) {
                 auto e = ends.view();
                 RequireMatchingLineCount(s, e);
                 for (size_t i = 0; i < s.shape(0); ++i) {
-                    rb.Line({s(i, 0), s(i, 1), s(i, 2)},
-                            {e(i, 0), e(i, 1), e(i, 2)});
+                    auto path = rb.PathBegin();
+                    path->LineTo({s(i, 0), s(i, 1), s(i, 2)});
+                    path->LineTo({e(i, 0), e(i, 1), e(i, 2)});
+                    path->LineEnd();
                 }
             },
             "starts"_a.noconvert(), "ends"_a.noconvert(),
@@ -239,12 +241,14 @@ NB_MODULE(glviskit, m) {
                 auto e = ends.view();
                 RequireMatchingLineCount(s, e);
                 for (size_t i = 0; i < s.shape(0); ++i) {
-                    rb.Line({static_cast<float>(s(i, 0)),
-                             static_cast<float>(s(i, 1)),
-                             static_cast<float>(s(i, 2))},
-                            {static_cast<float>(e(i, 0)),
-                             static_cast<float>(e(i, 1)),
-                             static_cast<float>(e(i, 2))});
+                    auto path = rb.PathBegin();
+                    path->LineTo({static_cast<float>(s(i, 0)),
+                                  static_cast<float>(s(i, 1)),
+                                  static_cast<float>(s(i, 2))});
+                    path->LineTo({static_cast<float>(e(i, 0)),
+                                  static_cast<float>(e(i, 1)),
+                                  static_cast<float>(e(i, 2))});
+                    path->LineEnd();
                 }
             },
             "starts"_a.noconvert(), "ends"_a.noconvert(),
@@ -253,8 +257,10 @@ NB_MODULE(glviskit, m) {
             "line",
             [](glviskit::RenderList &rb, const std::array<float, 3> &start,
                const std::array<float, 3> &end) {
-                rb.Line(glm::make_vec3(start.data()),
-                        glm::make_vec3(end.data()));
+                auto path = rb.PathBegin();
+                path->LineTo(glm::make_vec3(start.data()));
+                path->LineTo(glm::make_vec3(end.data()));
+                path->LineEnd();
             },
             "start"_a, "end"_a, "Draw a line from start to end")
         .def(
@@ -365,12 +371,11 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polygon(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto path = rb.PathBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                    path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
                 }
-                rb.Polygon(vv);
+                path->Close();
             },
             "vertices"_a.noconvert(),
             "Draw a closed polygonal outline through the given vertices")
@@ -379,14 +384,13 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polygon(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto path = rb.PathBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(static_cast<float>(v(i, 0)),
-                                    static_cast<float>(v(i, 1)),
-                                    static_cast<float>(v(i, 2)));
+                    path->LineTo({static_cast<float>(v(i, 0)),
+                                  static_cast<float>(v(i, 1)),
+                                  static_cast<float>(v(i, 2))});
                 }
-                rb.Polygon(vv);
+                path->Close();
             },
             "vertices"_a.noconvert(),
             "Draw a closed polygonal outline through the given vertices")
@@ -400,13 +404,12 @@ NB_MODULE(glviskit, m) {
                             "polyline(vertices) requires at least 2 vertices "
                             "per polyline");
                     }
-                    std::vector<glm::vec3> vv;
-                    vv.reserve(polys.shape(1));
+                    auto path = rb.PathBegin();
                     for (size_t j = 0; j < polys.shape(1); ++j) {
-                        vv.emplace_back(polys(i, j, 0), polys(i, j, 1),
-                                        polys(i, j, 2));
+                        path->LineTo(
+                            {polys(i, j, 0), polys(i, j, 1), polys(i, j, 2)});
                     }
-                    rb.Polyline(vv);
+                    path->LineEnd();
                 }
             },
             "vertices"_a.noconvert(),
@@ -421,14 +424,13 @@ NB_MODULE(glviskit, m) {
                             "polyline(vertices) requires at least 2 vertices "
                             "per polyline");
                     }
-                    std::vector<glm::vec3> vv;
-                    vv.reserve(polys.shape(1));
+                    auto path = rb.PathBegin();
                     for (size_t j = 0; j < polys.shape(1); ++j) {
-                        vv.emplace_back(static_cast<float>(polys(i, j, 0)),
-                                        static_cast<float>(polys(i, j, 1)),
-                                        static_cast<float>(polys(i, j, 2)));
+                        path->LineTo({static_cast<float>(polys(i, j, 0)),
+                                      static_cast<float>(polys(i, j, 1)),
+                                      static_cast<float>(polys(i, j, 2))});
                     }
-                    rb.Polyline(vv);
+                    path->LineEnd();
                 }
             },
             "vertices"_a.noconvert(),
@@ -438,12 +440,11 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polyline(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto path = rb.PathBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                    path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
                 }
-                rb.Polyline(vv);
+                path->LineEnd();
             },
             "vertices"_a.noconvert(),
             "Draw an open polyline through the given vertices")
@@ -452,14 +453,13 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 2, "polyline(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto path = rb.PathBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(static_cast<float>(v(i, 0)),
-                                    static_cast<float>(v(i, 1)),
-                                    static_cast<float>(v(i, 2)));
+                    path->LineTo({static_cast<float>(v(i, 0)),
+                                  static_cast<float>(v(i, 1)),
+                                  static_cast<float>(v(i, 2))});
                 }
-                rb.Polyline(vv);
+                path->LineEnd();
             },
             "vertices"_a.noconvert(),
             "Draw an open polyline through the given vertices")
@@ -515,12 +515,13 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points32 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 3, "fill_polygon(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto mesh = rb.MeshBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(v(i, 0), v(i, 1), v(i, 2));
+                    mesh->Vertex({v(i, 0), v(i, 1), v(i, 2)});
                 }
-                rb.FillPolygon(vv);
+                for (size_t i = 1; i + 1 < v.shape(0); ++i) {
+                    mesh->Triangle(0, i, i + 1);
+                }
             },
             "vertices"_a.noconvert(),
             "Fill a polygon using a triangle fan through the given vertices")
@@ -529,14 +530,15 @@ NB_MODULE(glviskit, m) {
             [](glviskit::RenderList &rb, const Points64 &vertices) {
                 auto v = vertices.view();
                 RequireAtLeastVertices(v, 3, "fill_polygon(vertices)");
-                std::vector<glm::vec3> vv;
-                vv.reserve(v.shape(0));
+                auto mesh = rb.MeshBegin();
                 for (size_t i = 0; i < v.shape(0); ++i) {
-                    vv.emplace_back(static_cast<float>(v(i, 0)),
-                                    static_cast<float>(v(i, 1)),
-                                    static_cast<float>(v(i, 2)));
+                    mesh->Vertex({static_cast<float>(v(i, 0)),
+                                  static_cast<float>(v(i, 1)),
+                                  static_cast<float>(v(i, 2))});
                 }
-                rb.FillPolygon(vv);
+                for (size_t i = 1; i + 1 < v.shape(0); ++i) {
+                    mesh->Triangle(0, i, i + 1);
+                }
             },
             "vertices"_a.noconvert(),
             "Fill a polygon using a triangle fan through the given vertices")
