@@ -133,52 +133,1118 @@ class RenderList:
     @overload
     def line(
         self,
-        starts: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-        ends: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        starts: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        ends: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Draw multiple lines from starts to ends"""
 
     @overload
     def line(
         self,
-        starts: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-        ends: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        starts: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        ends: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Draw multiple lines from starts to ends"""
 
     @overload
     def line(self, start: Sequence[float], end: Sequence[float]) -> None:
-        """Draw a line from start to end"""
+        """Draw a line from starts to ends"""
 
     @overload
     def point(
         self,
-        points: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Draw multiple points at given positions"""
 
     @overload
     def point(
         self,
-        points: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Draw multiple points at given positions"""
 
     @overload
-    def point(self, p: Sequence[float]) -> None:
-        """Draw a point at position p"""
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple points at given positions with given colors and sizes"""
+
+    @overload
+    def point(self, point: Sequence[float]) -> None:
+        """Draw a point at given position"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw multiple circles at given positions with given colors and sizes"""
+
+    @overload
+    def circle(self, point: Sequence[float]) -> None:
+        """Draw a circle at given position"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polygons with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a polygon with given vertices"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a polygon with given vertices"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices and colors"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polygon with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+        sizes: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple polylines with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a polyline with given vertices"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a polyline with given vertices"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices and colors"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def polyline(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """Draw a polyline with given vertices, colors and sizes"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 3), device="cpu")
+        ],
+        colors: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, None, 4), device="cpu")
+        ],
+    ) -> None:
+        """Draw multiple filled polygons with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a filled polygon with given vertices"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+    ) -> None:
+        """Draw a filled polygon with given vertices"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a filled polygon with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a filled polygon with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a filled polygon with given vertices and colors"""
+
+    @overload
+    def fill_polygon(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw a filled polygon with given vertices and colors"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices and indices"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices and indices"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices, indices and colors"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices, indices and colors"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices, indices and colors"""
+
+    @overload
+    def triangles(
+        self,
+        vertices: Annotated[
+            NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")
+        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Draw multiple triangles with given vertices, indices and colors"""
 
     def path_begin(self) -> Path:
         """
@@ -190,124 +1256,6 @@ class RenderList:
         Create a Mesh object for incrementally building triangle geometry which is save/restore aware
         """
 
-    @overload
-    def circle(
-        self,
-        points: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw multiple circle at given positions"""
-
-    @overload
-    def circle(
-        self,
-        points: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw multiple circle at given positions"""
-
-    @overload
-    def circle(self, pos: Sequence[float]) -> None:
-        """Draw an circle at position pos"""
-
-    @overload
-    def polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """
-        Draw multiple closed polygonal outlines from an array of shape N x M x 3
-        """
-
-    @overload
-    def polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """
-        Draw multiple closed polygonal outlines from an array of shape N x M x 3
-        """
-
-    @overload
-    def polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw a closed polygonal outline through the given vertices"""
-
-    @overload
-    def polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw a closed polygonal outline through the given vertices"""
-
-    @overload
-    def polyline(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw an open polyline through the given vertices"""
-
-    @overload
-    def polyline(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None: ...
-    @overload
-    def fill_polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """
-        Fill multiple polygons from an array of shape N x M x 3 using triangle fans
-        """
-
-    @overload
-    def fill_polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """
-        Fill multiple polygons from an array of shape N x M x 3 using triangle fans
-        """
-
-    @overload
-    def fill_polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Fill a polygon using a triangle fan through the given vertices"""
-
-    @overload
-    def fill_polygon(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Fill a polygon using a triangle fan through the given vertices"""
-
     def color(self, c: Sequence[float]) -> None:
         """Set the current drawing color"""
 
@@ -315,42 +1263,16 @@ class RenderList:
         """Set the current drawing size"""
 
     @overload
-    def triangles(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-        indices: Annotated[
-            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None:
-        """Draw a triangle mesh from vertices and triangle indices"""
-
-    @overload
-    def triangles(
-        self,
-        vertices: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-        indices: Annotated[
-            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
-    ) -> None: ...
-    @overload
     def add_instance(
         self,
-        transform: Annotated[
-            NDArray[numpy.float32], dict(shape=(4, 4), order="C", device="cpu")
-        ],
+        transform: Annotated[NDArray[numpy.float32], dict(shape=(4, 4), device="cpu")],
     ) -> None:
         """Add an instance using a 4x4 transform matrix"""
 
     @overload
     def add_instance(
         self,
-        transform: Annotated[
-            NDArray[numpy.float64], dict(shape=(4, 4), order="C", device="cpu")
-        ],
+        transform: Annotated[NDArray[numpy.float64], dict(shape=(4, 4), device="cpu")],
     ) -> None:
         """Add an instance using a 4x4 transform matrix"""
 
@@ -403,24 +1325,140 @@ class Path:
     @overload
     def line_to(
         self,
-        points: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Call line_to for multiple points consecutively"""
 
     @overload
     def line_to(
         self,
-        points: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Call line_to for multiple points consecutively"""
 
     @overload
-    def line_to(self, p: Sequence[float]) -> None:
-        """Draw a line to position p"""
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Call line_to for multiple points consecutively with given colors"""
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Call line_to for multiple points consecutively with given colors"""
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Call line_to for multiple points consecutively with given colors"""
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> None:
+        """Call line_to for multiple points consecutively with given colors"""
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float64], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+        sizes: Annotated[NDArray[numpy.float32], dict(shape=(None,), device="cpu")],
+    ) -> None:
+        """
+        Call line_to for multiple points consecutively with given colors and sizes
+        """
+
+    @overload
+    def line_to(self, point: Sequence[float]) -> None:
+        """Call line_to for a single point"""
 
     def close(self) -> None:
         """Close the current line sequence"""
@@ -438,31 +1476,65 @@ class Mesh:
     @overload
     def vertex(
         self,
-        points: Annotated[
-            NDArray[numpy.float32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
     ) -> list[int]:
         """Add multiple vertices and return their mesh-local indices"""
 
     @overload
     def vertex(
         self,
-        points: Annotated[
-            NDArray[numpy.float64], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
     ) -> list[int]:
         """Add multiple vertices and return their mesh-local indices"""
 
     @overload
-    def vertex(self, p: Sequence[float]) -> int:
+    def vertex(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> list[int]:
+        """
+        Add multiple vertices with given colors and return their mesh-local indices
+        """
+
+    @overload
+    def vertex(
+        self,
+        points: Annotated[NDArray[numpy.float64], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> list[int]:
+        """
+        Add multiple vertices with given colors and return their mesh-local indices
+        """
+
+    @overload
+    def vertex(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float64], dict(shape=(None, 4), device="cpu")],
+    ) -> list[int]:
+        """
+        Add multiple vertices with given colors and return their mesh-local indices
+        """
+
+    @overload
+    def vertex(
+        self,
+        points: Annotated[NDArray[numpy.float32], dict(shape=(None, 3), device="cpu")],
+        colors: Annotated[NDArray[numpy.float32], dict(shape=(None, 4), device="cpu")],
+    ) -> list[int]:
+        """
+        Add multiple vertices with given colors and return their mesh-local indices
+        """
+
+    @overload
+    def vertex(self, point: Sequence[float]) -> int:
         """Add a vertex and return its mesh-local index"""
 
     @overload
     def triangle(
         self,
-        triangles: Annotated[
-            NDArray[numpy.int32], dict(shape=(None, 3), order="C", device="cpu")
-        ],
+        indices: Annotated[NDArray[numpy.int32], dict(shape=(None, 3), device="cpu")],
     ) -> None:
         """Add multiple triangles using mesh-local vertex indices"""
 
