@@ -2,13 +2,13 @@
 
 `glviskit` is a retained-mode 3D drawing toolkit for C++ and Python, built for practical real-time geometry visualization with OpenGL and SDL3.
 
-It gives you:
+It provides:
 
 - a compact C++ API for windows, cameras, and drawing primitives
 - Python bindings built with `nanobind`
 - examples for native and WebAssembly targets
 
-The API is built around a few simple concepts:
+The API is organized around a few core concepts:
 
 - `Window`: owns an OpenGL context and renders one or more render lists
 - `RenderList`: stores points, lines, circles, triangle meshes, paths, and drawing state such as color and size
@@ -19,11 +19,9 @@ The API is built around a few simple concepts:
 
 `glviskit` exists to remove the usual OpenGL setup cost when all you want to do is visualize geometry.
 
-Typical OpenGL code makes simple tasks feel heavier than they should be. Drawing a few 3D lines, points, paths, or circles usually means writing window setup, context handling, shader setup, buffer management, and camera math before you can even inspect your data. This library is meant to cut through that.
+In typical OpenGL code, drawing a few 3D lines, points, paths, or circles often means setting up windows, contexts, shaders, buffers, and camera math before you can inspect any data. `glviskit` is meant to cut through that for practical visualization workloads such as point clouds, trajectories, debug geometry, simulation output, and similar datasets where clarity matters more than scene-graph features.
 
-The intended use case is practical visualization: point clouds, trajectories, debug geometry, simulation output, and similar datasets where clarity matters more than scene-graph features.
-
-The API is intentionally close to a plotting or immediate-mode drawing style:
+The API is intentionally close to a plotting-style or immediate-mode drawing workflow:
 
 - create a window
 - create a render list
@@ -31,20 +29,20 @@ The API is intentionally close to a plotting or immediate-mode drawing style:
 - move the camera
 - render
 
-Under the hood it is not immediate mode. Geometry is retained in GPU buffers and is not re-uploaded unless you change it. In practice, that means you can upload geometry once, leave it alone, and avoid paying to upload it again every frame or update cycle. That keeps the API simple without giving up the performance benefits of a retained renderer.
+The renderer is retained rather than immediate: geometry stays in GPU buffers and is only re-uploaded when it changes. That keeps the API simple without giving up the performance benefits of a retained renderer.
 
-Some details that matter for visualization workloads:
+A few details that matter for visualization workloads:
 
 - line and point thickness are controlled explicitly rather than by distance to the camera
 - multiple windows can share the same `RenderList`
 - instancing is built in
-- paths are efficient enough to use for dynamic line strips and trajectories
+- paths are efficient enough for dynamic line strips and trajectories
 - triangle meshes can be appended directly from vertex and index arrays
 - render lists can save and restore drawing state and stored geometry without rebuilding buffers
 - paths keep their own state and geometry over time instead of being limited to a single frame
 - primitives can be interleaved without breaking rendering order because shared buffers are stitched together through index-buffer layout
 
-Because geometry stays on the GPU until you change it, the library remains practical for real-time visualization even with large amounts of geometry, including cases where scene updates are driven from Python.
+Because geometry remains on the GPU until you change it, the library stays practical for real-time visualization even with large amounts of geometry, including cases where scene updates are driven from Python.
 
 ## Repository layout
 
@@ -167,7 +165,7 @@ while glviskit.loop():
     pass
 ```
 
-The Python API follows the same retained drawing model, but adds NumPy-friendly batched overloads and a few convenience helpers where they make Python usage noticeably better.
+The Python API follows the same retained drawing model, while adding NumPy-friendly batched overloads and a few convenience helpers where they make Python usage noticeably better.
 
 ## Drawing model
 
@@ -181,17 +179,18 @@ At the core, the API is built around:
 - indexed triangles
 - persistent `Path` builders for line geometry
 - persistent `Mesh` builders for triangle geometry
+
 `RenderList` also supports:
 
 - instancing with `add_instance(...)`
 - state save and restore with `save()` and `restore()`
 - instance stack save and restore with `save_instances()` and `restore_instances()`
 
-Triangle geometry uses the same retained model as the rest of the API. A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
+A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
 
 This makes it practical to build a stable base scene, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding what you kept. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 
-Paths and meshes are also retained objects, not frame-local helpers. A `Path` can be extended across frames, closed later, and restored back to an earlier state. A `Mesh` can likewise keep its local vertex mapping and triangle data across frames and continue growing later.
+Paths and meshes are also retained objects rather than frame-local helpers. A `Path` can be extended across frames, closed later, and restored back to an earlier state. A `Mesh` can keep its local vertex mapping and triangle data across frames and continue growing later.
 
 ## Examples
 
@@ -238,7 +237,7 @@ In normal use, the library is driven through the top-level helper functions:
 - `glviskit::Loop()`
 - `glviskit::Render()`
 
-Direct use of the SDL manager singleton is generally not part of normal application code. Direct construction of `Window`, `RenderList`, and `Camera` also is not the intended public workflow, even though those types are visible in the headers.
+Direct use of the SDL manager singleton is generally not part of normal application code. Direct construction of `Window`, `RenderList`, and `Camera` is also not the intended public workflow, even though those types are visible in the headers.
 
 ### Typical flow
 
@@ -255,25 +254,25 @@ A normal application looks like this:
 
 A `Window` owns an OpenGL context and renders one or more `RenderList` objects.
 
-What you typically do with a window:
+Typical window operations include:
 
-- attach render lists with `AddRenderList(...)`
-- access or replace the current camera with `GetCamera()` and `SetCamera(...)`
-- access or replace the current controller with `GetController()` and `SetController(...)`
-- render manually with `Render()` if you are not using `Loop()`
+- attaching render lists with `AddRenderList(...)`
+- accessing or replacing the current camera with `GetCamera()` and `SetCamera(...)`
+- accessing or replacing the current controller with `GetController()` and `SetController(...)`
+- rendering manually with `Render()` if you are not using `Loop()`
 
 Each window starts with a `SphericalController` by default.
 
 The camera controls both view and projection:
 
 - `PerspectiveFov(...)` sets projection using horizontal and vertical field of view in degrees
-- `Perspective(...)` sets projection using focal-length style parameters
+- `Perspective(...)` sets projection using focal-length-style parameters
 - `SetPosition(...)` and `SetRotation(...)` control the camera center
-- `SetDistance(...)` adds spherical-camera style distance from that center
+- `SetDistance(...)` adds spherical-camera-style distance from that center
 - `SetPreserveAspectRatio(...)` controls aspect-ratio handling during resize
 - `CalculateTransform()` returns the final transform used for rendering
 
-The camera also supports an axis-convention rotation. This is useful when world data uses another axis convention such as Y-up, Z-up, ENU, or NED. The axis-convention transform is applied in world space before the camera's own Euler rotation, so it remaps the world axes without changing the meaning of the camera's roll, pitch, and yaw controls. Personally, this was a major pain point of 3D visualization since different fields use different conventions.
+The camera also supports an axis-convention rotation. This is useful when world data uses another axis convention such as Y-up, Z-up, ENU, or NED. The axis-convention transform is applied in world space before the camera’s own Euler rotation, so it remaps the world axes without changing the meaning of the camera’s roll, pitch, and yaw controls.
 
 In normal use, viewport size is managed by the window renderer.
 
@@ -300,7 +299,7 @@ Instancing:
 - `AddInstance(transform)`
 - `AddInstance(position, rotation, scale)`
 
-For instancing, rotation can be supplied either as the existing axis-angle `vec3` form or as a quaternion wxyz.
+For instancing, rotation can be supplied either as the existing axis-angle `vec3` form or as a quaternion `wxyz`.
 
 State and geometry control:
 
@@ -310,7 +309,7 @@ State and geometry control:
 - `ClearInstances()`
 - `SetEnabled(...)` and `IsEnabled()`
 
-Triangle geometry uses the same retained model as the rest of the API through `triangles(vertices, indices)` and `Triangles(vertices, indices, colors)`. Also `Mesh` is obtained through the `mesh_begin()` object which lets you build the same kind of geometry incrementally with mesh-local vertex indices.
+Triangle geometry uses the same retained model as the rest of the API through `Triangles(vertices, indices)` and `Triangles(vertices, indices, colors)`. `Mesh` is obtained through the `MeshBegin()` builder, which lets you construct the same kind of geometry incrementally with mesh-local vertex indices.
 
 `Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
 
@@ -324,7 +323,7 @@ The Python bindings keep the same retained model and the same main objects:
 - `Path`
 - `Mesh`
 
-The difference is that Python adds NumPy-friendly batching and a few helper entry points so common workflows do not turn into Python loops.
+Compared with C++, the Python API adds NumPy-friendly batching and a few helper entry points so common workflows do not turn into Python loops.
 
 Python also exposes the same retained instancing model through `add_instance(...)`, including both full `4 x 4` transform matrices and position/rotation/scale forms.
 
@@ -339,7 +338,7 @@ Core Python geometry calls accept arrays directly:
 - `triangles(vertices, indices)`
 - `triangles(vertices, indices, colors)`
 
-For line-strip style geometry, Python also exposes higher-level helpers built on top of `Path`:
+For line-strip-style geometry, Python also exposes higher-level helpers built on top of `Path`:
 
 - `polyline(vertices)`
 - `polyline(vertices, colors)`
@@ -366,7 +365,7 @@ For lower-level incremental building, Python exposes the same builder objects as
 
 `Path.line_to(...)` accepts batched point arrays, optional matching color arrays, and optional size arrays. `Mesh.vertex(...)` accepts batched point arrays and optional matching color arrays. `Mesh.triangle(...)` accepts either an `N x 3` index array or a single `(i0, i1, i2)` triangle.
 
-In practice, the C++ API stays smaller and more explicit, while the Python API adds batching and convenience where it actually avoids Python-side loops. The package also ships generated type stubs and docstrings.
+The C++ API stays smaller and more explicit, while the Python API adds batching and convenience where it actually avoids Python-side loops. The package also ships generated type stubs and docstrings.
 
 ### Paths
 
@@ -381,9 +380,9 @@ Typical usage:
 
 The first `LineTo()` stores the starting point. Each later `LineTo()` appends a connected segment.
 
-Paths are intentionally not frame-local helpers. A path is bound to a `RenderList`, but it still keeps its own drawing state and accumulated geometry. That means a path can outlive a single render cycle: you can keep a path object around, append another segment in a later frame, and continue building the same polyline over time.
+Paths are not frame-local helpers. A path is bound to a `RenderList`, but it keeps its own drawing state and accumulated geometry. That means a path can outlive a single render cycle: you can keep a path object around, append another segment in a later frame, and continue building the same polyline over time.
 
-Path state is also separate from the parent render list state. Path-local `Color(...)` and `Size(...)` settings are preserved independently, and they participate in `RenderList::Save()` and `RenderList::Restore()` together with the rest of the retained geometry.
+Path state is also separate from the parent render-list state. Path-local `Color(...)` and `Size(...)` settings are preserved independently, and they participate in `RenderList::Save()` and `RenderList::Restore()` together with the rest of the retained geometry.
 
 Internally, line primitives and path segments share the same line vertex and index buffers. Interleaving different primitives does not break connectivity or ordering, because the geometry is stitched together through the index-buffer structure rather than by assuming a single contiguous submission pattern.
 
