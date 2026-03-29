@@ -11,9 +11,7 @@ render_list.clear_instances()
 
 for i in range(1, 5):
     s = 1 if i % 2 == 0 else -1
-    render_list.add_instance(
-        [3.0 * (i - 0.5), 0, 0], [0.5 * s, 0, 0], [1.0, 1.0, 1.0]
-    )
+    render_list.add_instance([3.0 * (i - 0.5), 0, 0], [0.5 * s, 0, 0], [1.0, 1.0, 1.0])
     render_list.add_instance(
         [-3.0 * (i - 0.5), 0, 0], [-0.5 * s, 0, 0], [1.0, 1.0, 1.0]
     )
@@ -63,29 +61,31 @@ while glviskit.loop():
     camera.rotation = [-0.5, angle, 0.0]
     camera2.rotation = [-0.5, -angle, 0.0]
 
-    render_list.line
-
-    for _ in range(10):
-        render_list.size(np.random.uniform(1.0, 2.0))
-        render_list.color(np.random.uniform(0.0, 1.0, size=4))
-        render_list.point(np.random.uniform(-1.0, 1.0, size=3))
+    render_list.point(
+        np.random.uniform(-1.0, 1.0, size=(10, 3)),
+        np.random.uniform(0.0, 1.0, size=(10, 4)),
+        np.random.uniform(1.0, 2.0, size=10),
+    )
 
     if frame_index % 10 == 0:
-        render_list.color(np.random.uniform(0.0, 1.0, size=4))
-        render_list.size(np.random.uniform(0.0, 4.0))
-        render_list.line(
-            np.random.uniform(-1.0, 1.0, size=3),
-            np.random.uniform(-1.0, 1.0, size=3),
+        render_list.polyline(
+            np.random.uniform(-1.0, 1.0, size=(10, 2, 3)),
+            np.random.uniform(0.0, 1.0, size=(1, 2, 4)).repeat(10, axis=0),
+            np.random.uniform(1.0, 4.0, size=(1, 2)).repeat(10, axis=0),
         )
 
     render_list_sine.restore()
     path = render_list_sine.path_begin()
-    path.color([1.0, 0.0, 0.0, 1.0])
-    path.size(4.0)
-    for ix in range(-1000, 1001):
-        x = ix / 1000.0
-        y = np.sin((50.0 * x) + (10 * curr_time))
-        z = np.cos((50.0 * x) + (10 * curr_time))
 
-        path.color([(x * 0.5) + 0.5, (y * 0.5) + 0.5, 0.5, 1.0])
-        path.line_to([20.0 * x, 1.5 * y, 1.5 * z])
+    path.size(4.0)
+    ix = np.linspace(-1.0, 1.0, 2000)
+    points = np.zeros((2000, 3))
+    points[:, 0] = ix * 20.0
+    points[:, 1] = 1.5 * np.sin((50.0 * ix) + (10 * curr_time))
+    points[:, 2] = 1.5 * np.cos((50.0 * ix) + (10 * curr_time))
+    colors = np.zeros((2000, 4))
+    colors[:, 0] = (points[:, 0] * 0.5) + 0.5
+    colors[:, 1] = (points[:, 1] * 0.5) + 0.5
+    colors[:, 2] = 0.5
+    colors[:, 3] = 1.0
+    path.line_to(points, colors)
