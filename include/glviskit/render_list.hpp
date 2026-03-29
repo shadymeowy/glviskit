@@ -110,6 +110,24 @@ class RenderList {
         }
     }
 
+    void Triangles(std::span<const glm::vec3> vertices,
+                   std::span<const glm::uvec3> indices,
+                   std::span<const glm::vec4> colors) {
+        auto &vbo = render_state_->mesh_buffer_.VBO();
+        auto &ebo = render_state_->mesh_buffer_.EBO();
+        const size_t base = vbo.Size();
+
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            vbo.Append({.position = vertices[i], .color = colors[i]});
+        }
+
+        for (const auto &triangle : indices) {
+            ebo.Append(static_cast<GLuint>(base + triangle.x));
+            ebo.Append(static_cast<GLuint>(base + triangle.y));
+            ebo.Append(static_cast<GLuint>(base + triangle.z));
+        }
+    }
+
     // attributes for subsequent drawing
     void Color(const glm::vec4 &c) { state.color = c; }
     void Size(float s) { state.size = s; }
