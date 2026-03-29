@@ -1,6 +1,6 @@
 # glviskit
 
-`glviskit` is a small C++20 library for practical 3D geometry visualization with OpenGL and SDL3.
+`glviskit` is a retained-mode 3D drawing toolkit for C++ and Python, built for practical real-time geometry visualization with OpenGL and SDL3.
 
 It gives you:
 
@@ -167,24 +167,20 @@ while glviskit.loop():
     pass
 ```
 
-The Python API mirrors the C++ API closely, so switching between them is mostly mechanical.
+The Python API follows the same retained drawing model, but adds NumPy-friendly batched overloads and a few convenience helpers where they make Python usage noticeably better.
 
 ## Drawing model
 
-`RenderList` is stateful. Calls such as `color()` and `size()` affect subsequent draw commands.
+`RenderList` is a retained drawing buffer. Calls such as `color()` and `size()` affect subsequent draw commands, and submitted geometry stays on the GPU until you change it, clear it, or restore past it.
 
-Supported drawing primitives:
+At the core, the API is built around:
 
-- `line`
-- `polyline(vertices)`
-- `point`
-- `circle`
-- `triangles(vertices, indices)`
-- `polygon(vertices)`
-- `fill_polygon(vertices)`
-- `path_begin()` with `line_to()` and `line_end()`
-- `mesh_begin()` with `vertex()` and `triangle()`
-
+- points
+- lines
+- circles
+- indexed triangles
+- persistent `Path` builders for line geometry
+- persistent `Mesh` builders for triangle geometry
 `RenderList` also supports:
 
 - instancing with `add_instance(...)`
@@ -193,9 +189,9 @@ Supported drawing primitives:
 
 Triangle geometry uses the same retained model as the rest of the API. A `triangles(vertices, indices)` call appends indexed triangle geometry using the current drawing color, and a `mesh_begin()` object lets you build the same kind of geometry incrementally with mesh-local vertex indices.
 
-`polyline(vertices)`, `polygon(vertices)`, and `fill_polygon(vertices)` are convenience helpers built on top of those retained builders. `polyline(...)` creates an open connected line strip, `polygon(...)` creates a closed outline, and `fill_polygon(...)` fills the shape with a simple triangle fan. In Python, `polygon(...)` and `fill_polygon(...)` also accept batched arrays shaped like `N x M x 3`.
+This makes it practical to build a stable base scene, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding what you kept. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
 
-This makes it practical to treat a render list as a retained drawing buffer. You can build geometry once, save the current state, append temporary or dynamic geometry, and restore back to the saved state later without rebuilding the preserved data. In normal use, changing camera parameters, restoring saved render-list state, or restoring saved instance state does not require re-uploading unchanged geometry.
+Paths and meshes are also retained objects, not frame-local helpers. A `Path` can be extended across frames, closed later, and restored back to an earlier state. A `Mesh` can likewise keep its local vertex mapping and triangle data across frames and continue growing later.
 
 ## Examples
 
@@ -288,12 +284,9 @@ In normal use, viewport size is managed by the window renderer.
 Primitive drawing:
 
 - `Line(start, end)`
-- `Polyline(vertices)`
 - `Point(position)`
 - `Circle(position)`
 - `Triangles(vertices, indices)`
-- `Polygon(vertices)`
-- `FillPolygon(vertices)`
 - `PathBegin()`
 - `MeshBegin()`
 
@@ -317,13 +310,63 @@ State and geometry control:
 - `ClearInstances()`
 - `SetEnabled(...)` and `IsEnabled()`
 
+Triangle geometry uses the same retained model as the rest of the API through `triangles(vertices, indices)` and `Triangles(vertices, indices, colors)`. Also `Mesh` is obtained through the `mesh_begin()` object which lets you build the same kind of geometry incrementally with mesh-local vertex indices.
+
 `Save()` and `Restore()` preserve both drawing state and stored geometry. That makes it practical to keep a stable base scene, append temporary geometry, and then restore back to the saved state without rebuilding what you kept.
 
-`Triangles(vertices, indices)` adds indexed triangle geometry to the render list using the current color. Like the other primitives, the geometry stays there until you clear it or restore past it.
+### Python API
 
-`Polyline(vertices)` is a convenience wrapper that creates an open connected line strip using the current color and size. `Polygon(vertices)` creates a closed outline, and `FillPolygon(vertices)` fills a polygon using a triangle fan, so it is best suited to convex polygons or vertex orders that already match fan triangulation.
+The Python bindings keep the same retained model and the same main objects:
 
-`MeshBegin()` creates a retained mesh builder object, similar in spirit to `PathBegin()`. It is useful when triangle geometry is built incrementally over time. `Vertex(...)` returns a mesh-local index, and `Triangle(i0, i1, i2)` uses those local indices rather than raw global buffer indices.
+- `Window`
+- `Camera`
+- `RenderList`
+- `Path`
+- `Mesh`
+
+The difference is that Python adds NumPy-friendly batching and a few helper entry points so common workflows do not turn into Python loops.
+
+Python also exposes the same retained instancing model through `add_instance(...)`, including both full `4 x 4` transform matrices and position/rotation/scale forms.
+
+Core Python geometry calls accept arrays directly:
+
+- `point(points)`
+- `point(points, colors)`
+- `point(points, colors, sizes)`
+- `circle(points)`
+- `circle(points, colors)`
+- `circle(points, colors, sizes)`
+- `triangles(vertices, indices)`
+- `triangles(vertices, indices, colors)`
+
+For line-strip style geometry, Python also exposes higher-level helpers built on top of `Path`:
+
+- `polyline(vertices)`
+- `polyline(vertices, colors)`
+- `polyline(vertices, colors, sizes)`
+- `polygon(vertices)`
+- `polygon(vertices, colors)`
+- `polygon(vertices, colors, sizes)`
+
+These accept either a single `M x 3` vertex array or a batched `N x M x 3` array.
+
+For filled polygons, Python provides:
+
+- `fill_polygon(vertices)`
+- `fill_polygon(vertices, colors)`
+
+These also accept either a single `M x 3` polygon or a batched `N x M x 3` array.
+
+`polyline(vertices)` creates an open connected line strip, `polygon(vertices)` creates a closed outline, and `fill_polygon(vertices)` fills a polygon using a triangle fan, so it is best suited to convex polygons or vertex orders that already match fan triangulation.
+
+For lower-level incremental building, Python exposes the same builder objects as C++:
+
+- `path_begin()` with `line_to(...)`, `line_end()`, and `close()`
+- `mesh_begin()` with `vertex(...)` and `triangle(...)`
+
+`Path.line_to(...)` accepts batched point arrays, optional matching color arrays, and optional size arrays. `Mesh.vertex(...)` accepts batched point arrays and optional matching color arrays. `Mesh.triangle(...)` accepts either an `N x 3` index array or a single `(i0, i1, i2)` triangle.
+
+In practice, the C++ API stays smaller and more explicit, while the Python API adds batching and convenience where it actually avoids Python-side loops. The package also ships generated type stubs and docstrings.
 
 ### Paths
 
@@ -372,11 +415,3 @@ Built-in controllers:
 All controllers derive from `BaseController`, which defines update and input-event hooks. In typical usage you do not call those hooks directly. The window and event loop drive them for you.
 
 The built-in controllers expose sensitivity controls for keyboard, mouse, and wheel behavior through getters and setters.
-
-## Python API parity
-
-The Python bindings are intended to mirror the supported public C++ workflow closely. That includes window creation, render-list creation, camera access, path drawing, controller selection, state save and restore, instance management, and per-frame loop and render calls.
-
-On top of the C++ surface, Python also adds convenient batch overloads for `line`, `point`, `circle`, `triangles`, and `path.line_to()` using NumPy arrays. For triangle geometry, the expected shape is `vertices: N x 3` and `indices: M x 3`. Python also exposes `mesh_begin()`, `vertex()`, and `triangle()` for incremental mesh building.
-
-Additionally, `nanobind` generated stubs are generated and shipped with docstrings.
