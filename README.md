@@ -57,7 +57,7 @@ For a native build you will need:
 
 - a C++20 compiler
 - CMake 3.15 or newer
-- Python 3.8 or newer if you want the Python package
+- Python 3.9 or newer if you want the Python package
 
 The CMake build fetches `SDL3` and `glm` automatically. Python builds use `scikit-build-core` and `nanobind`.
 
