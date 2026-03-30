@@ -15,20 +15,28 @@ class Path {
         : render_state{std::move(render_state)} {}
 
     // Efficient way to draw connected lines
-    void LineTo(glm::vec3 position) {
+    void LineTo(glm::vec3 position, glm::vec4 color, float size) {
         if (state.line_counter == 0) {
             // first point just initializes the current contour state
             state.line_prev = position;
-            state.color_prev = state.color;
-            state.size_prev = state.size;
+            state.color_prev = color;
+            state.size_prev = size;
             state.line_first = position;
-            state.color_first = state.color;
-            state.size_first = state.size;
+            state.color_first = color;
+            state.size_first = size;
             state.line_counter++;
             return;
         }
 
-        AppendSegment(position, state.color, state.size);
+        AppendSegment(position, color, size);
+    }
+
+    void LineTo(glm::vec3 position, glm::vec4 color) {
+        LineTo(position, color, state.size);
+    }
+
+    void LineTo(glm::vec3 position) {
+        LineTo(position, state.color, state.size);
     }
 
     void LineEnd() {

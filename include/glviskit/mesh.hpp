@@ -13,12 +13,16 @@ class Mesh {
     explicit Mesh(std::shared_ptr<RenderState> render_state)
         : render_state{std::move(render_state)} {}
 
-    auto Vertex(glm::vec3 position) -> size_t {
+    auto Vertex(glm::vec3 position, glm::vec4 color) -> size_t {
         auto &vbo = render_state->mesh_buffer_.VBO();
         const size_t index = vbo.Size();
-        vbo.Append({.position = position, .color = state.color});
+        vbo.Append({.position = position, .color = color});
         state.vertex_mapping.push_back(static_cast<GLuint>(index));
         return state.vertex_mapping.size() - 1;
+    }
+
+    auto Vertex(glm::vec3 position) -> size_t {
+        return Vertex(position, state.color);
     }
 
     void Triangle(size_t i0, size_t i1, size_t i2) {

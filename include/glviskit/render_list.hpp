@@ -20,16 +20,22 @@ class RenderList {
         AddInstance(glm::mat4{1.0F});
     }
 
-    void Line(glm::vec3 start, glm::vec3 end) {
-        // if there is an ongoing line, end it first
-        // otherwise, this is noop
+    void Line(glm::vec3 start, glm::vec3 end, glm::vec4 color, float size) {
         Path path{render_state_};
-        path.Color(state.color);
-        path.Size(state.size);
+        path.Color(color);
+        path.Size(size);
         path.LineEnd();
         path.LineTo(start);
         path.LineTo(end);
         path.LineEnd();
+    }
+
+    void Line(glm::vec3 start, glm::vec3 end, glm::vec4 color) {
+        Line(start, end, color, state.size);
+    }
+
+    void Line(glm::vec3 start, glm::vec3 end) {
+        Line(start, end, state.color, state.size);
     }
 
     auto PathBegin() -> std::shared_ptr<Path> {
@@ -60,30 +66,31 @@ class RenderList {
         return mesh;
     }
 
-    void Point(glm::vec3 position) {
+    void Point(glm::vec3 position, glm::vec4 color, float size) {
         auto &vbo = render_state_->point_buffer_.VBO();
         auto &ebo = render_state_->point_buffer_.EBO();
 
         size_t index = vbo.Size();
-        vbo.Append(
-            {.position = position, .color = state.color, .size = state.size});
+        vbo.Append({.position = position, .color = color, .size = size});
         ebo.Append(index);
     }
 
-    void Circle(glm::vec3 circle) {
+    void Point(glm::vec3 position, glm::vec4 color) {
+        Point(position, color, state.size);
+    }
+
+    void Point(glm::vec3 position) { Point(position, state.color, state.size); }
+
+    void Circle(glm::vec3 circle, glm::vec4 color, float size) {
         auto &vbo = render_state_->circle_buffer_.VBO();
         auto &ebo = render_state_->circle_buffer_.EBO();
         size_t index = vbo.Size();
-        auto s = state.size;
+        auto s = size;
         // four vertices
-        vbo.Append(
-            {.circle = circle, .position = {-s, -s, 0}, .color = state.color});
-        vbo.Append(
-            {.circle = circle, .position = {s, -s, 0}, .color = state.color});
-        vbo.Append(
-            {.circle = circle, .position = {s, s, 0}, .color = state.color});
-        vbo.Append(
-            {.circle = circle, .position = {-s, s, 0}, .color = state.color});
+        vbo.Append({.circle = circle, .position = {-s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, -s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {s, s, 0}, .color = color});
+        vbo.Append({.circle = circle, .position = {-s, s, 0}, .color = color});
         // two triangles
         ebo.Append(index + 0);
         ebo.Append(index + 1);
@@ -92,6 +99,12 @@ class RenderList {
         ebo.Append(index + 3);
         ebo.Append(index + 0);
     }
+
+    void Circle(glm::vec3 circle, glm::vec4 color) {
+        Circle(circle, color, state.size);
+    }
+
+    void Circle(glm::vec3 circle) { Circle(circle, state.color, state.size); }
 
     void Triangles(std::span<const glm::vec3> vertices,
                    std::span<const glm::uvec3> indices) {
