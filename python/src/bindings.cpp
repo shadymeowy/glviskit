@@ -53,12 +53,58 @@ void Line1(glviskit::RenderList &rb, const Points1<T> &starts,
             "line(starts, ends) requires starts.shape[0] == ends.shape[0]");
     }
 
+    auto path = rb.PathBegin();
     for (size_t i = 0; i < s.shape(0); ++i) {
-        auto path = rb.PathBegin();
-        path->LineTo({static_cast<float>(s(i, 0)), static_cast<float>(s(i, 1)),
-                      static_cast<float>(s(i, 2))});
-        path->LineTo({static_cast<float>(e(i, 0)), static_cast<float>(e(i, 1)),
-                      static_cast<float>(e(i, 2))});
+        path->LineTo({s(i, 0), s(i, 1), s(i, 2)});
+        path->LineTo({e(i, 0), e(i, 1), e(i, 2)});
+        path->LineEnd();
+    }
+}
+
+template <typename T1, typename T2>
+void LineC1(glviskit::RenderList &rb, const Points1<T1> &starts,
+            const Points1<T1> &ends, const Colors1<T2> &colors) {
+    auto s = starts.view();
+    auto e = ends.view();
+    auto c = colors.view();
+
+    if (s.shape(0) != e.shape(0) || s.shape(0) != c.shape(0)) {
+        throw nb::value_error(
+            "line(starts, ends, colors) requires starts.shape[0] == "
+            "ends.shape[0] == colors.shape[0]");
+    }
+
+    auto path = rb.PathBegin();
+    for (size_t i = 0; i < s.shape(0); ++i) {
+        path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
+        path->LineTo({s(i, 0), s(i, 1), s(i, 2)});
+        path->LineTo({e(i, 0), e(i, 1), e(i, 2)});
+        path->LineEnd();
+    }
+}
+
+template <typename T1, typename T2, typename T3>
+void LineCS1(glviskit::RenderList &rb, const Points1<T1> &starts,
+             const Points1<T1> &ends, const Colors1<T2> &colors,
+             const Sizes1<T3> &sizes) {
+    auto s = starts.view();
+    auto e = ends.view();
+    auto c = colors.view();
+    auto sz = sizes.view();
+
+    if (s.shape(0) != e.shape(0) || s.shape(0) != c.shape(0) ||
+        s.shape(0) != sz.shape(0)) {
+        throw nb::value_error(
+            "line(starts, ends, colors, sizes) requires starts.shape[0] == "
+            "ends.shape[0] == colors.shape[0] == sizes.shape[0]");
+    }
+
+    auto path = rb.PathBegin();
+    for (size_t i = 0; i < s.shape(0); ++i) {
+        path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
+        path->Size(sz(i));
+        path->LineTo({s(i, 0), s(i, 1), s(i, 2)});
+        path->LineTo({e(i, 0), e(i, 1), e(i, 2)});
         path->LineEnd();
     }
 }
@@ -67,10 +113,30 @@ template <typename T>
 void Line0(glviskit::RenderList &rb, const std::array<T, 3> &start,
            const std::array<T, 3> &end) {
     auto path = rb.PathBegin();
-    path->LineTo({static_cast<float>(start[0]), static_cast<float>(start[1]),
-                  static_cast<float>(start[2])});
-    path->LineTo({static_cast<float>(end[0]), static_cast<float>(end[1]),
-                  static_cast<float>(end[2])});
+    path->LineTo({start[0], start[1], start[2]});
+    path->LineTo({end[0], end[1], end[2]});
+    path->LineEnd();
+}
+
+template <typename T1, typename T2>
+void LineC0(glviskit::RenderList &rb, const std::array<T1, 3> &start,
+            const std::array<T1, 3> &end, const std::array<T2, 4> &color) {
+    auto path = rb.PathBegin();
+    path->Color({color[0], color[1], color[2], color[3]});
+    path->LineTo({start[0], start[1], start[2]});
+    path->LineTo({end[0], end[1], end[2]});
+    path->LineEnd();
+}
+
+template <typename T1, typename T2, typename T3>
+void LineCS0(glviskit::RenderList &rb, const std::array<T1, 3> &start,
+             const std::array<T1, 3> &end, const std::array<T2, 4> &color,
+             T3 size) {
+    auto path = rb.PathBegin();
+    path->Color({color[0], color[1], color[2], color[3]});
+    path->Size(size);
+    path->LineTo({start[0], start[1], start[2]});
+    path->LineTo({end[0], end[1], end[2]});
     path->LineEnd();
 }
 
@@ -79,8 +145,7 @@ template <typename T>
 void Point1(glviskit::RenderList &rb, const Points1<T> &points) {
     auto v = points.view();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Point({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                  static_cast<float>(v(i, 2))});
+        rb.Point({v(i, 0), v(i, 1), v(i, 2)});
     }
 }
 
@@ -95,9 +160,8 @@ void PointC1(glviskit::RenderList &rb, const Points1<T1> &points,
             "colors.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.Point({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                  static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        rb.Point({v(i, 0), v(i, 1), v(i, 2)}, color);
     }
 }
 
@@ -113,17 +177,29 @@ void PointCS1(glviskit::RenderList &rb, const Points1<T1> &points,
             "colors.shape[0] == sizes.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.Size(static_cast<float>(s(i)));
-        rb.Point({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                  static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        float size = s(i);
+        rb.Point({v(i, 0), v(i, 1), v(i, 2)}, color, size);
     }
 }
 
 template <typename T>
 void Point0(glviskit::RenderList &rb, const std::array<T, 3> &point) {
-    rb.Point({static_cast<float>(point[0]), static_cast<float>(point[1]),
-              static_cast<float>(point[2])});
+    rb.Point({point[0], point[1], point[2]});
+}
+
+template <typename T1, typename T2>
+void PointC0(glviskit::RenderList &rb, const std::array<T1, 3> &point,
+             const std::array<T2, 4> &color) {
+    rb.Point({point[0], point[1], point[2]},
+             {color[0], color[1], color[2], color[3]});
+}
+
+template <typename T1, typename T2, typename T3>
+void PointCS0(glviskit::RenderList &rb, const std::array<T1, 3> &point,
+              const std::array<T2, 4> &color, T3 size) {
+    rb.Point({point[0], point[1], point[2]},
+             {color[0], color[1], color[2], color[3]}, size);
 }
 
 // RenderList.circle
@@ -131,8 +207,7 @@ template <typename T>
 void Circle1(glviskit::RenderList &rb, const Points1<T> &points) {
     auto v = points.view();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Circle({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        rb.Circle({v(i, 0), v(i, 1), v(i, 2)});
     }
 }
 
@@ -147,9 +222,8 @@ void CircleC1(glviskit::RenderList &rb, const Points1<T1> &points,
             "colors.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.Circle({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        rb.Circle({v(i, 0), v(i, 1), v(i, 2)}, color);
     }
 }
 
@@ -165,17 +239,29 @@ void CircleCS1(glviskit::RenderList &rb, const Points1<T1> &points,
             "colors.shape[0] == sizes.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.Size(static_cast<float>(s(i)));
-        rb.Circle({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        float size = s(i);
+        rb.Circle({v(i, 0), v(i, 1), v(i, 2)}, color, size);
     }
 }
 
 template <typename T>
 void Circle0(glviskit::RenderList &rb, const std::array<T, 3> &point) {
-    rb.Circle({static_cast<float>(point[0]), static_cast<float>(point[1]),
-               static_cast<float>(point[2])});
+    rb.Circle({point[0], point[1], point[2]});
+}
+
+template <typename T1, typename T2>
+void CircleC0(glviskit::RenderList &rb, const std::array<T1, 3> &point,
+              const std::array<T2, 4> &color) {
+    rb.Circle({point[0], point[1], point[2]},
+              {color[0], color[1], color[2], color[3]});
+}
+
+template <typename T1, typename T2, typename T3>
+void CircleCS0(glviskit::RenderList &rb, const std::array<T1, 3> &point,
+               const std::array<T2, 4> &color, T3 size) {
+    rb.Circle({point[0], point[1], point[2]},
+              {color[0], color[1], color[2], color[3]}, size);
 }
 
 // RenderList.polygon
@@ -189,9 +275,7 @@ void Polygon2(glviskit::RenderList &rb, const Points2<T> &vertices) {
         }
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->Close();
     }
@@ -216,9 +300,7 @@ void PolygonC2(glviskit::RenderList &rb, const Points2<T1> &vertices,
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
             path->Color({c(i, j, 0), c(i, j, 1), c(i, j, 2), c(i, j, 3)});
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->Close();
     }
@@ -245,10 +327,8 @@ void PolygonCS2(glviskit::RenderList &rb, const Points2<T1> &vertices,
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
             path->Color({c(i, j, 0), c(i, j, 1), c(i, j, 2), c(i, j, 3)});
-            path->Size(static_cast<float>(s(i, j)));
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->Size(s(i, j));
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->Close();
     }
@@ -262,8 +342,7 @@ void Polygon1(glviskit::RenderList &rb, const Points1<T> &vertices) {
     }
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->Close();
 }
@@ -285,8 +364,7 @@ void PolygonC1(glviskit::RenderList &rb, const Points1<T1> &vertices,
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
         path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->Close();
 }
@@ -309,9 +387,8 @@ void PolygonCS1(glviskit::RenderList &rb, const Points1<T1> &vertices,
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
         path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        path->Size(static_cast<float>(s(i)));
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->Size(s(i));
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->Close();
 }
@@ -327,9 +404,7 @@ void Polyline2(glviskit::RenderList &rb, const Points2<T> &vertices) {
         }
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->LineEnd();
     }
@@ -354,9 +429,7 @@ void PolylineC2(glviskit::RenderList &rb, const Points2<T1> &vertices,
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
             path->Color({c(i, j, 0), c(i, j, 1), c(i, j, 2), c(i, j, 3)});
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->LineEnd();
     }
@@ -383,10 +456,8 @@ void PolylineCS2(glviskit::RenderList &rb, const Points2<T1> &vertices,
         auto path = rb.PathBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
             path->Color({c(i, j, 0), c(i, j, 1), c(i, j, 2), c(i, j, 3)});
-            path->Size(static_cast<float>(s(i, j)));
-            path->LineTo({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            path->Size(s(i, j));
+            path->LineTo({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         path->LineEnd();
     }
@@ -401,8 +472,7 @@ void Polyline1(glviskit::RenderList &rb, const Points1<T> &vertices) {
     }
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->LineEnd();
 }
@@ -424,8 +494,7 @@ void PolylineC1(glviskit::RenderList &rb, const Points1<T1> &vertices,
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
         path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->LineEnd();
 }
@@ -448,9 +517,8 @@ void PolylineCS1(glviskit::RenderList &rb, const Points1<T1> &vertices,
     auto path = rb.PathBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
         path->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        path->Size(static_cast<float>(s(i)));
-        path->LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        path->Size(s(i));
+        path->LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
     path->LineEnd();
 }
@@ -467,9 +535,7 @@ void FillPolygon2(glviskit::RenderList &rb, const Points2<T> &vertices) {
         }
         auto mesh = rb.MeshBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
-            mesh->Vertex({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            mesh->Vertex({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         for (size_t j = 1; j + 1 < v.shape(1); ++j) {
             mesh->Triangle(0, j, j + 1);
@@ -496,9 +562,7 @@ void FillPolygonC2(glviskit::RenderList &rb, const Points2<T1> &vertices,
         auto mesh = rb.MeshBegin();
         for (size_t j = 0; j < v.shape(1); ++j) {
             mesh->Color({c(i, j, 0), c(i, j, 1), c(i, j, 2), c(i, j, 3)});
-            mesh->Vertex({static_cast<float>(v(i, j, 0)),
-                          static_cast<float>(v(i, j, 1)),
-                          static_cast<float>(v(i, j, 2))});
+            mesh->Vertex({v(i, j, 0), v(i, j, 1), v(i, j, 2)});
         }
         for (size_t j = 1; j + 1 < v.shape(1); ++j) {
             mesh->Triangle(0, j, j + 1);
@@ -515,8 +579,7 @@ void FillPolygon1(glviskit::RenderList &rb, const Points1<T> &vertices) {
     }
     auto mesh = rb.MeshBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        mesh->Vertex({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        mesh->Vertex({v(i, 0), v(i, 1), v(i, 2)});
     }
     for (size_t i = 1; i + 1 < v.shape(0); ++i) {
         mesh->Triangle(0, i, i + 1);
@@ -540,8 +603,7 @@ void FillPolygonC1(glviskit::RenderList &rb, const Points1<T1> &vertices,
     auto mesh = rb.MeshBegin();
     for (size_t i = 0; i < v.shape(0); ++i) {
         mesh->Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        mesh->Vertex({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                      static_cast<float>(v(i, 2))});
+        mesh->Vertex({v(i, 0), v(i, 1), v(i, 2)});
     }
     for (size_t i = 1; i + 1 < v.shape(0); ++i) {
         mesh->Triangle(0, i, i + 1);
@@ -629,8 +691,7 @@ template <typename T>
 void PathLineTo1(glviskit::Path &rb, const Points1<T> &points) {
     auto v = points.view();
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        rb.LineTo({v(i, 0), v(i, 1), v(i, 2)});
     }
 }
 
@@ -645,9 +706,8 @@ void PathLineToC1(glviskit::Path &rb, const Points1<T1> &points,
             "colors.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        rb.LineTo({v(i, 0), v(i, 1), v(i, 2)}, color);
     }
 }
 
@@ -663,17 +723,29 @@ void PathLineToCS1(glviskit::Path &rb, const Points1<T1> &points,
             "colors.shape[0] == sizes.shape[0]");
     }
     for (size_t i = 0; i < v.shape(0); ++i) {
-        rb.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        rb.Size(s(i));
-        rb.LineTo({static_cast<float>(v(i, 0)), static_cast<float>(v(i, 1)),
-                   static_cast<float>(v(i, 2))});
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        float size = s(i);
+        rb.LineTo({v(i, 0), v(i, 1), v(i, 2)}, color, size);
     }
 }
 
 template <typename T>
 void PathLineTo0(glviskit::Path &rb, const std::array<T, 3> &point) {
-    rb.LineTo({static_cast<float>(point[0]), static_cast<float>(point[1]),
-               static_cast<float>(point[2])});
+    rb.LineTo({point[0], point[1], point[2]});
+}
+
+template <typename T1, typename T2>
+void PathLineToC0(glviskit::Path &rb, const std::array<T1, 3> &point,
+                  const std::array<T2, 4> &color) {
+    rb.LineTo({point[0], point[1], point[2]},
+              {color[0], color[1], color[2], color[3]});
+}
+
+template <typename T1, typename T2, typename T3>
+void PathLineToCS0(glviskit::Path &rb, const std::array<T1, 3> &point,
+                   const std::array<T2, 4> &color, T3 size) {
+    rb.LineTo({point[0], point[1], point[2]},
+              {color[0], color[1], color[2], color[3]}, size);
 }
 
 // mesh
@@ -684,9 +756,7 @@ auto MeshVertex1(glviskit::Mesh &mesh, const Points1<T> &points)
     std::vector<size_t> indices;
     indices.reserve(v.shape(0));
     for (size_t i = 0; i < v.shape(0); ++i) {
-        indices.push_back(mesh.Vertex({static_cast<float>(v(i, 0)),
-                                       static_cast<float>(v(i, 1)),
-                                       static_cast<float>(v(i, 2))}));
+        indices.push_back(mesh.Vertex({v(i, 0), v(i, 1), v(i, 2)}));
     }
     return indices;
 }
@@ -704,10 +774,8 @@ auto MeshVertexC1(glviskit::Mesh &mesh, const Points1<T1> &points,
     std::vector<size_t> indices;
     indices.reserve(v.shape(0));
     for (size_t i = 0; i < v.shape(0); ++i) {
-        mesh.Color({c(i, 0), c(i, 1), c(i, 2), c(i, 3)});
-        indices.push_back(mesh.Vertex({static_cast<float>(v(i, 0)),
-                                       static_cast<float>(v(i, 1)),
-                                       static_cast<float>(v(i, 2))}));
+        glm::vec4 color{c(i, 0), c(i, 1), c(i, 2), c(i, 3)};
+        indices.push_back(mesh.Vertex({v(i, 0), v(i, 1), v(i, 2)}, color));
     }
     return indices;
 }
@@ -715,9 +783,14 @@ auto MeshVertexC1(glviskit::Mesh &mesh, const Points1<T1> &points,
 template <typename T>
 auto MeshVertex0(glviskit::Mesh &mesh, const std::array<T, 3> &point)
     -> size_t {
-    return mesh.Vertex({static_cast<float>(point[0]),
-                        static_cast<float>(point[1]),
-                        static_cast<float>(point[2])});
+    return mesh.Vertex({point[0], point[1], point[2]});
+}
+
+template <typename T1, typename T2>
+auto MeshVertexC0(glviskit::Mesh &mesh, const std::array<T1, 3> &point,
+                  const std::array<T2, 4> &color) -> size_t {
+    return mesh.Vertex({point[0], point[1], point[2]},
+                       {color[0], color[1], color[2], color[3]});
 }
 
 void MeshTriangle1(glviskit::Mesh &mesh, const Indices<int32_t> &indices) {
@@ -888,8 +961,66 @@ NB_MODULE(glviskit, m) {
              "ends"_a.noconvert(), "Draw multiple lines from starts to ends")
         .def("line", Helpers::Line1<float>, "starts"_a.noconvert(),
              "ends"_a.noconvert(), "Draw multiple lines from starts to ends")
+        .def("line", Helpers::LineC1<double, double>, "starts"_a.noconvert(),
+             "ends"_a.noconvert(), "colors"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors")
+        .def("line", Helpers::LineC1<double, float>, "starts"_a.noconvert(),
+             "ends"_a.noconvert(), "colors"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors")
+        .def("line", Helpers::LineC1<float, double>, "starts"_a.noconvert(),
+             "ends"_a.noconvert(), "colors"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors")
+        .def("line", Helpers::LineC1<float, float>, "starts"_a.noconvert(),
+             "ends"_a.noconvert(), "colors"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors")
+        .def("line", Helpers::LineCS1<double, double, double>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<double, double, float>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<double, float, double>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<double, float, float>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<float, double, double>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<float, double, float>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<float, float, double>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
+        .def("line", Helpers::LineCS1<float, float, float>,
+             "starts"_a.noconvert(), "ends"_a.noconvert(),
+             "colors"_a.noconvert(), "sizes"_a.noconvert(),
+             "Draw multiple lines from starts to ends with given colors and "
+             "sizes")
         .def("line", Helpers::Line0<float>, "start"_a, "end"_a,
              "Draw a line from start to end")
+        .def("line", Helpers::LineC0<float, float>, "start"_a, "end"_a,
+             "color"_a, "Draw a line from start to end with given color")
+
+        .def("line", Helpers::LineCS0<float, float, float>, "start"_a, "end"_a,
+             "color"_a, "size"_a,
+             "Draw a line from start to end with given color and size")
         // point
         .def("point", Helpers::Point1<double>, "points"_a.noconvert(),
              "Draw multiple points at given positions")
@@ -949,6 +1080,12 @@ NB_MODULE(glviskit, m) {
              "sizes")
         .def("point", Helpers::Point0<float>, "point"_a,
              "Draw a point at given position")
+        .def("point", Helpers::PointC0<float, float>, "point"_a, "color"_a,
+             "Draw a point at given position with given color")
+
+        .def("point", Helpers::PointCS0<float, float, float>, "point"_a,
+             "color"_a, "size"_a,
+             "Draw a point at given position with given color and size")
         // circle
         .def("circle", Helpers::Circle1<double>, "points"_a.noconvert(),
              "Draw multiple circles at given positions")
@@ -1008,6 +1145,11 @@ NB_MODULE(glviskit, m) {
              "sizes")
         .def("circle", Helpers::Circle0<float>, "point"_a,
              "Draw a circle at given position")
+        .def("circle", Helpers::CircleC0<float, float>, "point"_a, "color"_a,
+             "Draw a circle at given position with given color")
+        .def("circle", Helpers::CircleCS0<float, float, float>, "point"_a,
+             "color"_a, "size"_a,
+             "Draw a circle at given position with given color and size")
         // polygon
         .def("polygon", Helpers::Polygon2<double>, "vertices"_a.noconvert(),
              "Draw multiple polygons with given vertices")
@@ -1298,7 +1440,7 @@ NB_MODULE(glviskit, m) {
                 glm::mat4 mat{1.0F};
                 for (size_t row = 0; row < 4; ++row) {
                     for (size_t col = 0; col < 4; ++col) {
-                        mat[col][row] = static_cast<float>(t(row, col));
+                        mat[col][row] = t(row, col);
                     }
                 }
                 rb.AddInstance(mat);
@@ -1405,6 +1547,11 @@ NB_MODULE(glviskit, m) {
              "and sizes")
         .def("line_to", Helpers::PathLineTo0<float>, "point"_a,
              "Call line_to for a single point")
+        .def("line_to", Helpers::PathLineToC0<float, float>, "point"_a,
+             "color"_a, "Call line_to for a single point with given color")
+        .def("line_to", Helpers::PathLineToCS0<float, float, float>, "point"_a,
+             "color"_a, "size"_a,
+             "Call line_to for a single point with given color and size")
         .def("close", &glviskit::Path::Close, "Close the current line sequence")
         .def("line_end", &glviskit::Path::LineEnd,
              "End the current line sequence")
@@ -1438,8 +1585,11 @@ NB_MODULE(glviskit, m) {
              "points"_a.noconvert(), "colors"_a.noconvert(),
              "Add multiple vertices with given colors and return their "
              "mesh-local indices")
-        .def("vertex", Helpers::MeshVertex0<double>, "point"_a,
+        .def("vertex", Helpers::MeshVertex0<float>, "point"_a,
              "Add a vertex and return its mesh-local index")
+        .def("vertex", Helpers::MeshVertexC0<float, float>, "point"_a,
+             "color"_a,
+             "Add a vertex with given color and return its mesh-local index")
         .def("triangle", Helpers::MeshTriangle1, "indices"_a.noconvert(),
              "Add multiple triangles using mesh-local vertex indices")
         .def("triangle", Helpers::MeshTriangle0, "i0"_a, "i1"_a, "i2"_a,
