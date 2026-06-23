@@ -2,6 +2,14 @@ name: Build Wheels Windows
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach wheels to (empty = run artifacts only)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
 
 jobs:
   build-wheels:
@@ -34,3 +42,10 @@ jobs:
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
+      - name: Attach to release
+        if: inputs.tag != ''
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: ./wheelhouse/*.whl
