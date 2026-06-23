@@ -1,9 +1,5 @@
 name: Build Libraries Linux
 
-# Manual. Builds glviskit_c for the Linux targets the Julia package serves.
-# Provide a release tag to attach the tarballs (where Artifacts.toml points);
-# otherwise they are only uploaded as run artifacts. Run gen_artifacts.jl after.
-
 on:
   workflow_dispatch:
     inputs:
@@ -19,9 +15,6 @@ jobs:
   build:
     name: ${{ matrix.triplet }}
     runs-on: ${{ matrix.os }}
-    # musl targets build inside Alpine; node:alpine carries the Node that GitHub
-    # actions require, and the build itself needs no Julia.
-    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,16 +28,14 @@ jobs:
           - os: ubuntu-22.04
             triplet: x86_64-linux-musl
             libc: musl
-            container: node:20-alpine
           - os: ubuntu-22.04-arm
             triplet: aarch64-linux-musl
             libc: musl
-            container: node:20-alpine
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Linux (apt) build dependencies
+      - name: Install build dependencies (apt)
         if: matrix.libc == 'gnu'
         run: |
           sudo apt-get update
@@ -55,25 +46,28 @@ jobs:
             libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev \
             libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev
 
-      # NOTE: validate this apk list on the first musl CI run; package names
+      - name: Build (glibc)
+        if: matrix.libc == 'gnu'
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON
+          cmake --build build --config Release --target glviskit_c -j
+
+      # NOTE: validate this apk list on the first musl run; package names
       # occasionally differ from the Debian set above.
-      - name: Install Alpine (apk) build dependencies
+      - name: Build (musl, Alpine via docker)
         if: matrix.libc == 'musl'
         run: |
-          apk add --no-cache \
-            bash build-base cmake git linux-headers \
-            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
-            libxfixes-dev libxkbcommon-dev wayland-dev wayland-protocols \
-            mesa-dev libdrm-dev eudev-dev alsa-lib-dev pulseaudio-dev
-
-      - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON
-
-      - name: Build
-        run: cmake --build build --config Release --target glviskit_c -j
+          docker run --rm -v "$PWD":/src -w /src alpine:3.21 sh -c '
+            git config --global --add safe.directory "*" &&
+            apk add --no-cache \
+              build-base cmake git linux-headers \
+              libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+              libxfixes-dev libxkbcommon-dev wayland-dev wayland-protocols \
+              mesa-dev libdrm-dev eudev-dev alsa-lib-dev pulseaudio-dev &&
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON &&
+            cmake --build build --config Release --target glviskit_c -j'
 
       - name: Package
-        shell: bash
         run: tar -C build -czf "glviskit_c-${{ matrix.triplet }}.tar.gz" libglviskit_c.so
 
       - name: Upload run artifact
