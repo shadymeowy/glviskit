@@ -1,0 +1,90 @@
+name: Build Libraries Linux
+
+# Manual. Builds glviskit_c for the Linux targets the Julia package serves.
+# Provide a release tag to attach the tarballs (where Artifacts.toml points);
+# otherwise they are only uploaded as run artifacts. Run gen_artifacts.jl after.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach binaries to (empty = run artifacts only)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.triplet }}
+    runs-on: ${{ matrix.os }}
+    # musl targets build inside Alpine; node:alpine carries the Node that GitHub
+    # actions require, and the build itself needs no Julia.
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            triplet: x86_64-linux-gnu
+            libc: gnu
+          - os: ubuntu-22.04-arm
+            triplet: aarch64-linux-gnu
+            libc: gnu
+          - os: ubuntu-22.04
+            triplet: x86_64-linux-musl
+            libc: musl
+            container: node:20-alpine
+          - os: ubuntu-22.04-arm
+            triplet: aarch64-linux-musl
+            libc: musl
+            container: node:20-alpine
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux (apt) build dependencies
+        if: matrix.libc == 'gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxkbcommon-dev libwayland-dev wayland-protocols \
+            libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev \
+            libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev
+
+      # NOTE: validate this apk list on the first musl CI run; package names
+      # occasionally differ from the Debian set above.
+      - name: Install Alpine (apk) build dependencies
+        if: matrix.libc == 'musl'
+        run: |
+          apk add --no-cache \
+            bash build-base cmake git linux-headers \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxkbcommon-dev wayland-dev wayland-protocols \
+            mesa-dev libdrm-dev eudev-dev alsa-lib-dev pulseaudio-dev
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON
+
+      - name: Build
+        run: cmake --build build --config Release --target glviskit_c -j
+
+      - name: Package
+        shell: bash
+        run: tar -C build -czf "glviskit_c-${{ matrix.triplet }}.tar.gz" libglviskit_c.so
+
+      - name: Upload run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glviskit_c-${{ matrix.triplet }}
+          path: glviskit_c-${{ matrix.triplet }}.tar.gz
+
+      - name: Attach to release
+        if: inputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: glviskit_c-${{ matrix.triplet }}.tar.gz

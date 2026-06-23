@@ -1,0 +1,18 @@
+name = "GLViskit"
+uuid = "1e7b471d-d6c7-423b-9651-50963641f8da"
+authors = ["shadymeowy"]
+version = "0.0.8"
+
+[deps]
+Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
+Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[compat]
+julia = "1.9"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

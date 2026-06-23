@@ -1,0 +1,37 @@
+name: Test Julia Linux
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: julia
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build + headless GL dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build xvfb \
+            libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxkbcommon-dev libwayland-dev wayland-protocols \
+            libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dri \
+            libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+
+      - name: Instantiate
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
+
+      - name: Build glviskit_c
+        run: julia --project=. build_local.jl
+
+      - name: Test
+        run: xvfb-run -a julia --project=. test/runtests.jl

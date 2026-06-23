@@ -1,0 +1,27 @@
+name: Test Julia Windows
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: julia
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: "1"
+
+      - name: Instantiate
+        run: julia --project=. -e 'using Pkg; Pkg.instantiate()'
+
+      - name: Build glviskit_c
+        run: julia --project=. build_local.jl
+
+      - name: Test
+        run: julia --project=. test/runtests.jl

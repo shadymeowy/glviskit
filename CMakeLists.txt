@@ -17,6 +17,12 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # possible gl backends
 set(GLVISKIT_GL_TYPE "AUTO" CACHE STRING "Type of OpenGL backend to use (AUTO, GLAD_GL, GLAD_GLES2, NATIVE_GL, NATIVE_GLES2, NONE)")
 
+# statically link the C/C++ runtime into glviskit_c for redistributable binaries
+option(GLVISKIT_STATIC_RUNTIME "Statically link the C/C++ runtime into glviskit_c" OFF)
+if(GLVISKIT_STATIC_RUNTIME AND MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
+
 # enable clang-tidy if available
 find_program(CLANG_TIDY_EXE NAMES "clang-tidy")
 # if(CLANG_TIDY_EXE)
@@ -76,6 +82,20 @@ set_target_properties(glviskit_c PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
 )
+
+# export only the glv_* C API; localize statically linked SDL3/glviskit_lib
+# symbols so they do not leak from the shared library
+if(APPLE)
+    target_link_options(glviskit_c PRIVATE
+        "LINKER:-exported_symbols_list,${CMAKE_CURRENT_SOURCE_DIR}/cmake/glviskit_c.exports")
+elseif(UNIX)
+    target_link_options(glviskit_c PRIVATE "LINKER:--exclude-libs,ALL")
+endif()
+
+# optionally fold the C/C++ runtime into the library for redistribution
+if(GLVISKIT_STATIC_RUNTIME AND NOT MSVC AND NOT APPLE)
+    target_link_options(glviskit_c PRIVATE -static-libstdc++ -static-libgcc)
+endif()
 
 # if skbuild is available, build python bindings
 if(SKBUILD)

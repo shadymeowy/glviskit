@@ -1,0 +1,54 @@
+name: Build Libraries macOS
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attach binaries to (empty = run artifacts only)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.triplet }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-13
+            triplet: x86_64-apple-darwin
+            osx_target: "10.13"
+          - os: macos-14
+            triplet: aarch64-apple-darwin
+            osx_target: "11.0"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ matrix.osx_target }}
+
+      - name: Build
+        run: cmake --build build --config Release --target glviskit_c -j
+
+      - name: Package
+        run: tar -C build -czf "glviskit_c-${{ matrix.triplet }}.tar.gz" libglviskit_c.dylib
+
+      - name: Upload run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: glviskit_c-${{ matrix.triplet }}
+          path: glviskit_c-${{ matrix.triplet }}.tar.gz
+
+      - name: Attach to release
+        if: inputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: glviskit_c-${{ matrix.triplet }}.tar.gz
