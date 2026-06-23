@@ -13,15 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install build + headless GL dependencies
+      - name: Install build + software GL dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            cmake ninja-build xvfb \
+            cmake ninja-build \
             libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
             libxfixes-dev libxkbcommon-dev libwayland-dev wayland-protocols \
-            libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dri \
-            libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev
+            libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev \
+            libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev \
+            libgl1-mesa-dri libegl-mesa0 libegl1 libgles2 libglx-mesa0
 
       - uses: julia-actions/setup-julia@v3
         with:
@@ -34,4 +35,7 @@ jobs:
         run: julia --project=. build_local.jl
 
       - name: Test
-        run: xvfb-run -a julia --project=. test/runtests.jl
+        env:
+          SDL_VIDEODRIVER: offscreen
+          LIBGL_ALWAYS_SOFTWARE: "1"
+        run: julia --project=. test/runtests.jl
