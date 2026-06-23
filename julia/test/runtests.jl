@@ -9,11 +9,16 @@ end
     @test GLViskit.lib isa AbstractString
     @test get_time_seconds() isa Real
 
-    win = try
-        create_window("test", 64, 64)
-    catch err
-        @warn "no GL context available; skipping rendering tests" err
+    win = if get(ENV, "GLVISKIT_TEST_GL", "1") == "0"
+        @info "GLVISKIT_TEST_GL=0; skipping rendering tests"
         nothing
+    else
+        try
+            create_window("test", 64, 64)
+        catch err
+            @warn "no GL context available; skipping rendering tests" err
+            nothing
+        end
     end
 
     if win !== nothing
