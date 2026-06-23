@@ -1,10 +1,3 @@
-# Regenerates Artifacts.toml from the binaries attached to a GitHub release.
-# Run AFTER the build-libraries CI workflow has published the release assets:
-#
-#     julia gen_artifacts.jl v0.0.8
-#
-# It downloads each tarball, records its content hash + sha256, and writes the
-# per-platform entries. Commit the resulting Artifacts.toml.
 using Pkg
 Pkg.activate(; temp=true)
 Pkg.add("ArtifactUtils")
