@@ -576,17 +576,17 @@ int glv_render_list_triangles(glv_render_list *render_list, const float *xyz,
     GLV_OK_TRY(
         if (vertex_count > 0) { Require(xyz, "xyz"); } if (triangle_count > 0) {
             Require(indices, "indices");
-        } auto &mesh = *RenderList(render_list).MeshBegin();
+        } auto mesh = RenderList(render_list).MeshBegin();
         for (size_t i = 0; i < vertex_count; ++i) {
             if (rgba == nullptr) {
-                mesh.Vertex(At3(xyz, i));
+                mesh->Vertex(At3(xyz, i));
             } else {
-                mesh.Vertex(At3(xyz, i), At4(rgba, i));
+                mesh->Vertex(At3(xyz, i), At4(rgba, i));
             }
         } for (size_t t = 0; t < triangle_count; ++t) {
-            mesh.Triangle(static_cast<size_t>(indices[(t * 3) + 0]),
-                          static_cast<size_t>(indices[(t * 3) + 1]),
-                          static_cast<size_t>(indices[(t * 3) + 2]));
+            mesh->Triangle(static_cast<size_t>(indices[(t * 3) + 0]),
+                           static_cast<size_t>(indices[(t * 3) + 1]),
+                           static_cast<size_t>(indices[(t * 3) + 2]));
         });
 }
 
