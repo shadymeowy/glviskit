@@ -9,7 +9,7 @@
 #else
 #define GLVISKIT_C_API __declspec(dllimport)
 #endif
-#elif defined(__GNUC__) || defined(__clang__)
+#elif (defined(__GNUC__) || defined(__clang__)) && !defined(GLVISKIT_C_STATIC)
 #define GLVISKIT_C_API __attribute__((visibility("default")))
 #else
 #define GLVISKIT_C_API
@@ -146,10 +146,7 @@ GLVISKIT_C_API int glv_render_list_circle_color(glv_render_list *render_list,
 GLVISKIT_C_API int glv_render_list_circle_color_size(
     glv_render_list *render_list, float x, float y, float z, float r, float g,
     float b, float a, float size);
-/* Batched drawing. Arrays are packed, contiguous float32: xyz/starts/ends are
- * (count, 3), rgba is (count, 4), sizes is (count,). Pass NULL for rgba and/or
- * sizes to keep the render list's current color/size. Polygon-family arrays are
- * grouped as (groups, count, *), one polygon/polyline per group. */
+
 GLVISKIT_C_API int glv_render_list_points(glv_render_list *render_list,
                                           const float *xyz, const float *rgba,
                                           const float *sizes, size_t count);
