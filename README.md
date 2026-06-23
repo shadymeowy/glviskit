@@ -5,7 +5,7 @@
 It provides:
 
 - a compact C++ API for windows, cameras, and drawing primitives
-- Python bindings built with `nanobind`
+- Python bindings built with Cython on top of the C API
 - examples for native and WebAssembly targets
 
 The API is organized around a few core concepts:
@@ -59,7 +59,7 @@ For a native build you will need:
 - CMake 3.15 or newer
 - Python 3.9 or newer if you want the Python package
 
-The CMake build fetches `SDL3` and `glm` automatically. Python builds use `scikit-build-core` and `nanobind`.
+The CMake build fetches `SDL3` and `glm` automatically. Python builds use `scikit-build-core` and Cython.
 
 WebAssembly builds with Emscripten are also supported. For that target, `glm` is still fetched by CMake and SDL3 comes from the Emscripten toolchain. See `examples/demo_wasm` for a working example.
 
