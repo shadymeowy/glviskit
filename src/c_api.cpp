@@ -438,6 +438,158 @@ int glv_render_list_circle_color_size(glv_render_list *render_list, float x,
         RenderList(render_list).Circle(Vec3(x, y, z), Vec4(r, g, b, a), size););
 }
 
+namespace {
+
+auto At3(const float *xyz, size_t i) -> glm::vec3 {
+    return {xyz[(i * 3) + 0], xyz[(i * 3) + 1], xyz[(i * 3) + 2]};
+}
+
+auto At4(const float *rgba, size_t i) -> glm::vec4 {
+    return {rgba[(i * 4) + 0], rgba[(i * 4) + 1], rgba[(i * 4) + 2],
+            rgba[(i * 4) + 3]};
+}
+
+}  // namespace
+
+int glv_render_list_points(glv_render_list *render_list, const float *xyz,
+                           const float *rgba, const float *sizes,
+                           size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) { Require(xyz, "xyz"); } auto &rl =
+            RenderList(render_list);
+        for (size_t i = 0; i < count; ++i) {
+            if (rgba == nullptr) {
+                rl.Point(At3(xyz, i));
+            } else if (sizes == nullptr) {
+                rl.Point(At3(xyz, i), At4(rgba, i));
+            } else {
+                rl.Point(At3(xyz, i), At4(rgba, i), sizes[i]);
+            }
+        });
+}
+
+int glv_render_list_circles(glv_render_list *render_list, const float *xyz,
+                            const float *rgba, const float *sizes,
+                            size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) { Require(xyz, "xyz"); } auto &rl =
+            RenderList(render_list);
+        for (size_t i = 0; i < count; ++i) {
+            if (rgba == nullptr) {
+                rl.Circle(At3(xyz, i));
+            } else if (sizes == nullptr) {
+                rl.Circle(At3(xyz, i), At4(rgba, i));
+            } else {
+                rl.Circle(At3(xyz, i), At4(rgba, i), sizes[i]);
+            }
+        });
+}
+
+int glv_render_list_lines(glv_render_list *render_list, const float *starts,
+                          const float *ends, const float *rgba,
+                          const float *sizes, size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) {
+            Require(starts, "starts");
+            Require(ends, "ends");
+        } auto &rl = RenderList(render_list);
+        for (size_t i = 0; i < count; ++i) {
+            if (rgba == nullptr) {
+                rl.Line(At3(starts, i), At3(ends, i));
+            } else if (sizes == nullptr) {
+                rl.Line(At3(starts, i), At3(ends, i), At4(rgba, i));
+            } else {
+                rl.Line(At3(starts, i), At3(ends, i), At4(rgba, i), sizes[i]);
+            }
+        });
+}
+
+int glv_render_list_polygons(glv_render_list *render_list, const float *xyz,
+                             const float *rgba, const float *sizes,
+                             size_t groups, size_t count) {
+    GLV_OK_TRY(
+        if (groups > 0 && count > 0) { Require(xyz, "xyz"); } auto &rl =
+            RenderList(render_list);
+        for (size_t g = 0; g < groups; ++g) {
+            auto path = rl.PathBegin();
+            for (size_t i = 0; i < count; ++i) {
+                size_t o = (g * count) + i;
+                if (rgba != nullptr) {
+                    path->Color(At4(rgba, o));
+                    if (sizes != nullptr) {
+                        path->Size(sizes[o]);
+                    }
+                }
+                path->LineTo(At3(xyz, o));
+            }
+            path->Close();
+        });
+}
+
+int glv_render_list_polylines(glv_render_list *render_list, const float *xyz,
+                              const float *rgba, const float *sizes,
+                              size_t groups, size_t count) {
+    GLV_OK_TRY(
+        if (groups > 0 && count > 0) { Require(xyz, "xyz"); } auto &rl =
+            RenderList(render_list);
+        for (size_t g = 0; g < groups; ++g) {
+            auto path = rl.PathBegin();
+            for (size_t i = 0; i < count; ++i) {
+                size_t o = (g * count) + i;
+                if (rgba != nullptr) {
+                    path->Color(At4(rgba, o));
+                    if (sizes != nullptr) {
+                        path->Size(sizes[o]);
+                    }
+                }
+                path->LineTo(At3(xyz, o));
+            }
+            path->LineEnd();
+        });
+}
+
+int glv_render_list_fill_polygons(glv_render_list *render_list,
+                                  const float *xyz, const float *rgba,
+                                  size_t groups, size_t count) {
+    GLV_OK_TRY(
+        if (groups > 0 && count > 0) { Require(xyz, "xyz"); } auto &rl =
+            RenderList(render_list);
+        for (size_t g = 0; g < groups; ++g) {
+            auto mesh = rl.MeshBegin();
+            for (size_t i = 0; i < count; ++i) {
+                size_t o = (g * count) + i;
+                if (rgba == nullptr) {
+                    mesh->Vertex(At3(xyz, o));
+                } else {
+                    mesh->Vertex(At3(xyz, o), At4(rgba, o));
+                }
+            }
+            for (size_t i = 1; i + 1 < count; ++i) {
+                mesh->Triangle(0, i, i + 1);
+            }
+        });
+}
+
+int glv_render_list_triangles(glv_render_list *render_list, const float *xyz,
+                              const float *rgba, size_t vertex_count,
+                              const int32_t *indices, size_t triangle_count) {
+    GLV_OK_TRY(
+        if (vertex_count > 0) { Require(xyz, "xyz"); } if (triangle_count > 0) {
+            Require(indices, "indices");
+        } auto &mesh = *RenderList(render_list).MeshBegin();
+        for (size_t i = 0; i < vertex_count; ++i) {
+            if (rgba == nullptr) {
+                mesh.Vertex(At3(xyz, i));
+            } else {
+                mesh.Vertex(At3(xyz, i), At4(rgba, i));
+            }
+        } for (size_t t = 0; t < triangle_count; ++t) {
+            mesh.Triangle(static_cast<size_t>(indices[(t * 3) + 0]),
+                          static_cast<size_t>(indices[(t * 3) + 1]),
+                          static_cast<size_t>(indices[(t * 3) + 2]));
+        });
+}
+
 glv_path *glv_render_list_path_begin(glv_render_list *render_list) {
     GLV_TRY(nullptr, return new glv_path(RenderList(render_list).PathBegin()););
 }
@@ -461,6 +613,17 @@ int glv_render_list_add_instance_quat(glv_render_list *render_list, float x,
     GLV_OK_TRY(RenderList(render_list)
                    .AddInstance(Vec3(x, y, z), glm::quat{rw, rx, ry, rz},
                                 Vec3(sx, sy, sz)););
+}
+
+int glv_render_list_add_instance_matrix(glv_render_list *render_list,
+                                        const float row_major_16[16]) {
+    GLV_OK_TRY(Require(row_major_16, "row_major_16"); glm::mat4 matrix{1.0F};
+               for (int row = 0; row < 4; ++row) {
+                   for (int col = 0; col < 4; ++col) {
+                       matrix[col][row] = row_major_16[(row * 4) + col];
+                   }
+               } RenderList(render_list)
+                   .AddInstance(matrix););
 }
 
 int glv_render_list_save(glv_render_list *render_list) {
@@ -524,6 +687,21 @@ int glv_path_size(glv_path *path, float size) {
     GLV_OK_TRY(Path(path).Size(size););
 }
 
+int glv_path_line_to_many(glv_path *path, const float *xyz, const float *rgba,
+                          const float *sizes, size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) { Require(xyz, "xyz"); } auto &p = Path(path);
+        for (size_t i = 0; i < count; ++i) {
+            if (rgba == nullptr) {
+                p.LineTo(At3(xyz, i));
+            } else if (sizes == nullptr) {
+                p.LineTo(At3(xyz, i), At4(rgba, i));
+            } else {
+                p.LineTo(At3(xyz, i), At4(rgba, i), sizes[i]);
+            }
+        });
+}
+
 int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
                     size_t *out_index) {
     GLV_OK_TRY(Require(out_index, "out_index");
@@ -548,6 +726,30 @@ int glv_mesh_color(glv_mesh *mesh, float r, float g, float b, float a) {
 int glv_mesh_vertex_count(glv_mesh *mesh, size_t *out_vertex_count) {
     GLV_OK_TRY(Require(out_vertex_count, "out_vertex_count");
                *out_vertex_count = Mesh(mesh).VertexCount(););
+}
+
+int glv_mesh_vertices(glv_mesh *mesh, const float *xyz, const float *rgba,
+                      size_t *out_indices, size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) {
+            Require(xyz, "xyz");
+            Require(out_indices, "out_indices");
+        } auto &m = Mesh(mesh);
+        for (size_t i = 0; i < count; ++i) {
+            out_indices[i] = rgba == nullptr
+                                 ? m.Vertex(At3(xyz, i))
+                                 : m.Vertex(At3(xyz, i), At4(rgba, i));
+        });
+}
+
+int glv_mesh_triangles(glv_mesh *mesh, const int32_t *indices, size_t count) {
+    GLV_OK_TRY(
+        if (count > 0) { Require(indices, "indices"); } auto &m = Mesh(mesh);
+        for (size_t t = 0; t < count; ++t) {
+            m.Triangle(static_cast<size_t>(indices[(t * 3) + 0]),
+                       static_cast<size_t>(indices[(t * 3) + 1]),
+                       static_cast<size_t>(indices[(t * 3) + 2]));
+        });
 }
 
 glv_controller *glv_create_null_controller(void) {

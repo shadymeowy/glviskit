@@ -146,6 +146,39 @@ GLVISKIT_C_API int glv_render_list_circle_color(glv_render_list *render_list,
 GLVISKIT_C_API int glv_render_list_circle_color_size(
     glv_render_list *render_list, float x, float y, float z, float r, float g,
     float b, float a, float size);
+/* Batched drawing. Arrays are packed, contiguous float32: xyz/starts/ends are
+ * (count, 3), rgba is (count, 4), sizes is (count,). Pass NULL for rgba and/or
+ * sizes to keep the render list's current color/size. Polygon-family arrays are
+ * grouped as (groups, count, *), one polygon/polyline per group. */
+GLVISKIT_C_API int glv_render_list_points(glv_render_list *render_list,
+                                          const float *xyz, const float *rgba,
+                                          const float *sizes, size_t count);
+GLVISKIT_C_API int glv_render_list_circles(glv_render_list *render_list,
+                                           const float *xyz, const float *rgba,
+                                           const float *sizes, size_t count);
+GLVISKIT_C_API int glv_render_list_lines(glv_render_list *render_list,
+                                         const float *starts, const float *ends,
+                                         const float *rgba, const float *sizes,
+                                         size_t count);
+GLVISKIT_C_API int glv_render_list_polygons(glv_render_list *render_list,
+                                            const float *xyz, const float *rgba,
+                                            const float *sizes, size_t groups,
+                                            size_t count);
+GLVISKIT_C_API int glv_render_list_polylines(glv_render_list *render_list,
+                                             const float *xyz,
+                                             const float *rgba,
+                                             const float *sizes, size_t groups,
+                                             size_t count);
+GLVISKIT_C_API int glv_render_list_fill_polygons(glv_render_list *render_list,
+                                                 const float *xyz,
+                                                 const float *rgba,
+                                                 size_t groups, size_t count);
+GLVISKIT_C_API int glv_render_list_triangles(glv_render_list *render_list,
+                                             const float *xyz,
+                                             const float *rgba,
+                                             size_t vertex_count,
+                                             const int32_t *indices,
+                                             size_t triangle_count);
 GLVISKIT_C_API glv_path *glv_render_list_path_begin(
     glv_render_list *render_list);
 GLVISKIT_C_API glv_mesh *glv_render_list_mesh_begin(
@@ -157,6 +190,8 @@ GLVISKIT_C_API int glv_render_list_add_instance(glv_render_list *render_list,
 GLVISKIT_C_API int glv_render_list_add_instance_quat(
     glv_render_list *render_list, float x, float y, float z, float rw, float rx,
     float ry, float rz, float sx, float sy, float sz);
+GLVISKIT_C_API int glv_render_list_add_instance_matrix(
+    glv_render_list *render_list, const float row_major_16[16]);
 GLVISKIT_C_API int glv_render_list_save(glv_render_list *render_list);
 GLVISKIT_C_API int glv_render_list_restore(glv_render_list *render_list);
 GLVISKIT_C_API int glv_render_list_clear(glv_render_list *render_list);
@@ -182,6 +217,9 @@ GLVISKIT_C_API int glv_path_line_end(glv_path *path);
 GLVISKIT_C_API int glv_path_color(glv_path *path, float r, float g, float b,
                                   float a);
 GLVISKIT_C_API int glv_path_size(glv_path *path, float size);
+GLVISKIT_C_API int glv_path_line_to_many(glv_path *path, const float *xyz,
+                                         const float *rgba, const float *sizes,
+                                         size_t count);
 
 GLVISKIT_C_API int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
                                    size_t *out_index);
@@ -194,6 +232,14 @@ GLVISKIT_C_API int glv_mesh_color(glv_mesh *mesh, float r, float g, float b,
                                   float a);
 GLVISKIT_C_API int glv_mesh_vertex_count(glv_mesh *mesh,
                                          size_t *out_vertex_count);
+/* Batched mesh building. xyz is (count, 3), rgba is (count, 4) or NULL.
+ * glv_mesh_vertices writes the count mesh-local indices to out_indices.
+ * glv_mesh_triangles reads (count, 3) packed int32 vertex indices. */
+GLVISKIT_C_API int glv_mesh_vertices(glv_mesh *mesh, const float *xyz,
+                                     const float *rgba, size_t *out_indices,
+                                     size_t count);
+GLVISKIT_C_API int glv_mesh_triangles(glv_mesh *mesh, const int32_t *indices,
+                                      size_t count);
 
 GLVISKIT_C_API glv_controller *glv_create_null_controller(void);
 GLVISKIT_C_API glv_controller *glv_create_first_person_controller(void);
