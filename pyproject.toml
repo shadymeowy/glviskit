@@ -9,7 +9,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "glviskit"
-version = "0.0.7"
+version = "0.0.8"
 requires-python = ">=3.9"
 dependencies = [
     "numpy",
