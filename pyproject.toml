@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     "scikit-build-core>=0.11.6",
-    "nanobind>=2.10.2",
+    "Cython>=3.0",
     "cibuildwheel",
     "wheel",
 ]
@@ -11,6 +11,9 @@ build-backend = "scikit_build_core.build"
 name = "glviskit"
 version = "0.0.7"
 requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+]
 
 [tool.scikit-build]
 minimum-version = "0.4"
