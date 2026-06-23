@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON
@@ -30,14 +30,14 @@ jobs:
         run: tar -C build/Release -czf "glviskit_c-x86_64-w64-mingw32.tar.gz" glviskit_c.dll
 
       - name: Upload run artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: glviskit_c-x86_64-w64-mingw32
           path: glviskit_c-x86_64-w64-mingw32.tar.gz
 
       - name: Attach to release
         if: inputs.tag != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag }}
           files: glviskit_c-x86_64-w64-mingw32.tar.gz

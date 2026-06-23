@@ -11,7 +11,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install build + headless GL dependencies
         run: |
@@ -23,7 +23,7 @@ jobs:
             libgl1-mesa-dev libegl1-mesa-dev libgles2-mesa-dev libgl1-mesa-dri \
             libdrm-dev libgbm-dev libudev-dev libasound2-dev libpulse-dev
 
-      - uses: julia-actions/setup-julia@v2
+      - uses: julia-actions/setup-julia@v3
         with:
           version: "1"
 

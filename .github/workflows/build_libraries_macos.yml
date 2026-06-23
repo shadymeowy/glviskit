@@ -27,7 +27,7 @@ jobs:
             osx_target: "11.0"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Configure
         run: >
@@ -41,14 +41,14 @@ jobs:
         run: tar -C build -czf "glviskit_c-${{ matrix.triplet }}.tar.gz" libglviskit_c.dylib
 
       - name: Upload run artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: glviskit_c-${{ matrix.triplet }}
           path: glviskit_c-${{ matrix.triplet }}.tar.gz
 
       - name: Attach to release
         if: inputs.tag != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag }}
           files: glviskit_c-${{ matrix.triplet }}.tar.gz

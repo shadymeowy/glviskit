@@ -33,7 +33,7 @@ jobs:
             libc: musl
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Install build dependencies (apt)
         if: matrix.libc == 'gnu'
@@ -71,14 +71,14 @@ jobs:
         run: tar -C build -czf "glviskit_c-${{ matrix.triplet }}.tar.gz" libglviskit_c.so
 
       - name: Upload run artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: glviskit_c-${{ matrix.triplet }}
           path: glviskit_c-${{ matrix.triplet }}.tar.gz
 
       - name: Attach to release
         if: inputs.tag != ''
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ inputs.tag }}
           files: glviskit_c-${{ matrix.triplet }}.tar.gz
