@@ -58,12 +58,12 @@ jobs:
         if: matrix.libc == 'musl'
         run: |
           docker run --rm -v "$PWD":/src -w /src alpine:3.21 sh -c '
-            git config --global --add safe.directory "*" &&
             apk add --no-cache \
               build-base cmake git linux-headers \
               libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev \
               libxfixes-dev libxkbcommon-dev wayland-dev wayland-protocols \
               mesa-dev libdrm-dev eudev-dev alsa-lib-dev pulseaudio-dev &&
+            git config --global --add safe.directory "*" &&
             cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DGLVISKIT_STATIC_RUNTIME=ON &&
             cmake --build build --config Release --target glviskit_c -j'
 
