@@ -24,6 +24,4 @@ jobs:
         run: julia --project=. build_local.jl
 
       - name: Test
-        env:
-          GLVISKIT_TEST_GL: "0"
         run: julia --project=. test/runtests.jl

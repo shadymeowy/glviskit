@@ -158,15 +158,30 @@ class Manager {
     // load glad after context creation
     static void LoadGLAD() {
 #if defined(GLVISKIT_USE_GLAD_GL)
-        int ret = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
-#elif defined(GLVISKIT_USE_GLAD_GLES2)
-        int ret = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
-#else
-        int ret = 1;
-#endif
-        if (ret == 0) {
-            throw std::runtime_error("Failed to initialize GLAD");
+        int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+        if (version == 0) {
+            throw std::runtime_error("Failed to load OpenGL via GLAD");
         }
+        if (GLAD_VERSION_MAJOR(version) < 3 ||
+            (GLAD_VERSION_MAJOR(version) == 3 &&
+             GLAD_VERSION_MINOR(version) < 3)) {
+            throw std::runtime_error(
+                "OpenGL 3.3 or newer is required, but the driver provided " +
+                std::to_string(GLAD_VERSION_MAJOR(version)) + "." +
+                std::to_string(GLAD_VERSION_MINOR(version)));
+        }
+#elif defined(GLVISKIT_USE_GLAD_GLES2)
+        int version = gladLoadGLES2((GLADloadfunc)SDL_GL_GetProcAddress);
+        if (version == 0) {
+            throw std::runtime_error("Failed to load OpenGL ES via GLAD");
+        }
+        if (GLAD_VERSION_MAJOR(version) < 3) {
+            throw std::runtime_error(
+                "OpenGL ES 3.0 or newer is required, but the driver provided " +
+                std::to_string(GLAD_VERSION_MAJOR(version)) + "." +
+                std::to_string(GLAD_VERSION_MINOR(version)));
+        }
+#endif
     }
 };
 
