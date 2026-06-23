@@ -9,9 +9,10 @@ project(glviskit
 # set cmake options if this is the top-level project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-    # this is used for python bindings
-    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
+
+# need position independent code for shared libraries
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # possible gl backends
 set(GLVISKIT_GL_TYPE "AUTO" CACHE STRING "Type of OpenGL backend to use (AUTO, GLAD_GL, GLAD_GLES2, NATIVE_GL, NATIVE_GLES2, NONE)")
@@ -52,6 +53,29 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/SDL3.cmake)
 
 # handle GL source files and autodetect GL type
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GL.cmake)
+
+# create the C ABI shared library target
+add_library(glviskit_c SHARED
+    src/c_api.cpp
+)
+add_library(glviskit::c_api ALIAS glviskit_c)
+
+target_link_libraries(glviskit_c PRIVATE
+    glviskit::glviskit
+)
+
+target_compile_features(glviskit_c PRIVATE cxx_std_20)
+target_compile_definitions(glviskit_c PRIVATE GLVISKIT_C_BUILD=1)
+target_include_directories(glviskit_c PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+set_target_properties(glviskit_c PROPERTIES
+    OUTPUT_NAME "glviskit_c"
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
 
 # if skbuild is available, build python bindings
 if(SKBUILD)
