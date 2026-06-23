@@ -3,6 +3,8 @@
 #include <array>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 #include "../gl/gl.hpp"
 
@@ -33,9 +35,9 @@ class Program {
         if (success == 0) {
             std::array<GLchar, 512> info_log{};
             glGetShaderInfoLog(s_vertex, 512, nullptr, info_log.data());
-            std::cerr << "Error compiling vertex shader: " << info_log.data()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Error compiling vertex shader: "} +
+                info_log.data());
         }
 
         GLuint s_frag = glCreateShader(GL_FRAGMENT_SHADER);
@@ -48,15 +50,14 @@ class Program {
         if (success == 0) {
             std::array<GLchar, 512> info_log{};
             glGetShaderInfoLog(s_frag, 512, nullptr, info_log.data());
-            std::cerr << "Error compiling fragment shader: " << info_log.data()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Error compiling fragment shader: "} +
+                info_log.data());
         }
 
         program = glCreateProgram();
         if (program == 0) {
-            std::cerr << "Error creating shader program" << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error("Error creating shader program");
         }
 
         glAttachShader(program, s_vertex);

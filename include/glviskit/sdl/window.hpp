@@ -4,6 +4,8 @@
 #include <iostream>
 #include <memory>
 #include <span>
+#include <stdexcept>
+#include <string>
 
 #include "../controller/base_controller.hpp"
 #include "../controller/spherical_controller.hpp"
@@ -29,25 +31,18 @@ class Window {
                              SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE |
                                  SDL_WINDOW_HIGH_PIXEL_DENSITY);
         if (handle == nullptr) {
-            std::cerr << "Failed to create SDL window: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Failed to create SDL window: "} + SDL_GetError());
         }
 
         window_ = SDLWindowPtr(handle);
-        if (window_.Get() == nullptr) {
-            std::cerr << "Failed to create SDL window: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
-        }
         window_id_ = SDL_GetWindowID(window_.Get());
 
         context_ = SDLGLContextPtr(SDL_GL_CreateContext(window_.Get()));
-
         if (context_.Get() == nullptr) {
-            std::cerr << "Failed to create SDL GL context: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Failed to create SDL GL context: "} +
+                SDL_GetError());
         }
 
         MakeCurrent();
@@ -107,9 +102,9 @@ class Window {
         // renderer expects the context to be current
         bool ret = SDL_GL_MakeCurrent(window_.Get(), context_.Get());
         if (!ret) {
-            std::cerr << "Failed to make context current: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Failed to make context current: "} +
+                SDL_GetError());
         }
 
         // update screen size
@@ -126,8 +121,8 @@ class Window {
 
         GLenum error2 = glGetError();
         if (error2 != GL_NO_ERROR) {
-            std::cerr << "OpenGL error in window 2: " << error2 << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error("OpenGL error in window 2: " +
+                                     std::to_string(error2));
         }
     }
 

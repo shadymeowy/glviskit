@@ -2,6 +2,8 @@
 
 #include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
 #include "../gl/gl.hpp"
 #include "../render_list.hpp"
@@ -115,13 +117,12 @@ class Manager {
 
     Manager() {
         if (!SDL_Init(SDL_INIT_VIDEO)) {
-            std::cerr << "Failed to initialize SDL: " << SDL_GetError() << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(std::string{"Failed to initialize SDL: "} +
+                                     SDL_GetError());
         }
         if (!SDL_GL_LoadLibrary(nullptr)) {
-            std::cerr << "Failed to load SDL GL library: " << SDL_GetError()
-                      << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error(
+                std::string{"Failed to load SDL GL library: "} + SDL_GetError());
         }
 
 #if defined(GLVISKIT_GL33)
@@ -164,8 +165,7 @@ class Manager {
         int ret = 1;
 #endif
         if (ret == 0) {
-            std::cerr << "Failed to initialize GLAD" << '\n';
-            exit(EXIT_FAILURE);
+            throw std::runtime_error("Failed to initialize GLAD");
         }
     }
 };
