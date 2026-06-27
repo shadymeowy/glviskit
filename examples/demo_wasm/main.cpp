@@ -12,6 +12,8 @@ std::shared_ptr<glviskit::RenderList> render_list_axes{nullptr};
 std::shared_ptr<glviskit::sdl::Window> window1{nullptr};
 // std::shared_ptr<glviskit::sdl::Window> window2{nullptr};
 int frame_index = 0;
+bool add_lines = true;
+bool add_points = true;
 
 auto rnf() -> float {
     std::random_device rd;
@@ -88,35 +90,47 @@ auto SDL_AppIterate(void * /*appstate*/) -> SDL_AppResult {
     frame_index++;
     // camera->SetRotation({-0.5F, angle, 0.0F});
 
-    for (int i = 0; i < 10; i++) {
-        render_list->Size((rnf() * 1.0F) + 1.0F);
-        render_list->Color({
-            rnf(),
-            rnf(),
-            rnf(),
-            rnf(),
-        });
-        render_list->Point({
-            (rnf() * 2.0F) - 1.0F,
-            (rnf() * 2.0F) - 1.0F,
-            (rnf() * 2.0F) - 1.0F,
-        });
-    }
+    glviskit::UiBegin();
 
-    if (frame_index % 10 == 0) {
-        render_list->Color({rnf(), rnf(), rnf(), rnf()});
-        render_list->Size(rnf() * 4.0F);
-        render_list->Line(
-            {
-                (rnf() * 2.0F) - 1.0F,
-                (rnf() * 2.0F) - 1.0F,
-                (rnf() * 2.0F) - 1.0F,
-            },
-            {
+    auto &ui = window1->Ui();
+    ui.Begin("Controls");
+    ui.Checkbox("add_lines", add_lines);
+    ui.Checkbox("add_points", add_points);
+    ui.End();
+
+    if (add_points) {
+        for (int i = 0; i < 10; i++) {
+            render_list->Size((rnf() * 1.0F) + 1.0F);
+            render_list->Color({
+                rnf(),
+                rnf(),
+                rnf(),
+                rnf(),
+            });
+            render_list->Point({
                 (rnf() * 2.0F) - 1.0F,
                 (rnf() * 2.0F) - 1.0F,
                 (rnf() * 2.0F) - 1.0F,
             });
+        }
+    }
+
+    if (add_lines) {
+        if (frame_index % 10 == 0) {
+            render_list->Color({rnf(), rnf(), rnf(), rnf()});
+            render_list->Size(rnf() * 4.0F);
+            render_list->Line(
+                {
+                    (rnf() * 2.0F) - 1.0F,
+                    (rnf() * 2.0F) - 1.0F,
+                    (rnf() * 2.0F) - 1.0F,
+                },
+                {
+                    (rnf() * 2.0F) - 1.0F,
+                    (rnf() * 2.0F) - 1.0F,
+                    (rnf() * 2.0F) - 1.0F,
+                });
+        }
     }
 
     render_list_sine->Restore();

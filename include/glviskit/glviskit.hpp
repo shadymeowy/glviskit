@@ -31,5 +31,6 @@ static auto GetTimeSeconds() -> float { return Manager::GetTimeSeconds(); }
 
 static auto Loop() -> bool { return Manager::GetInstance().Loop(); }
 static void Render() { Manager::GetInstance().Render(); }
+static void UiBegin() { Manager::GetInstance().UiBegin(); }
 
 }  // namespace glviskit

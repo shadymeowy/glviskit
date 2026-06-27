@@ -58,16 +58,20 @@ class Manager {
             }
         }
 
-        // open a fresh ui frame for each window
-        for (auto &[id, window] : windows_) {
-            window->BeginUiFrame();
-        }
+        UiBegin();
         return true;
     }
 
     void Render() {
         for (auto &[id, window] : windows_) {
             window->Render();
+        }
+    }
+
+    // open a fresh ui frame for each window
+    void UiBegin() {
+        for (auto &[id, window] : windows_) {
+            window->BeginUiFrame();
         }
     }
 
