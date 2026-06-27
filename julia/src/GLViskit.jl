@@ -8,6 +8,7 @@ function _resolve_library()
         path = include(deps)
         path isa AbstractString && isfile(path) && return path
     end
+
     toml = joinpath(dirname(@__DIR__), "Artifacts.toml")
     if isfile(toml)
         hash = artifact_hash("glviskit_c", toml)
@@ -19,6 +20,7 @@ function _resolve_library()
             end
         end
     end
+
     error("GLViskit: no native library found. Published installs provide it via " *
           "Artifacts.toml; for a source build run `julia --project build_local.jl`.")
 end
@@ -42,7 +44,11 @@ export ui_want_capture_mouse, ui_want_capture_keyboard
 # --- error handling -------------------------------------------------------
 
 glverror() = unsafe_string(ccall((:glv_error, lib), Cstring, ()))
+
+# raise on the C error code; nothing on success
 @inline check(rc::Cint) = rc == 0 ? nothing : error(glverror())
+
+# raise on -1; otherwise return the widget's changed/clicked flag as Bool
 @inline check_ui(rc::Cint) = rc == -1 ? error(glverror()) : rc != 0
 
 # --- handle types ---------------------------------------------------------
@@ -73,6 +79,39 @@ for (T, destroy) in ((:Window, :glv_window_destroy),
     end
 end
 
+"""
+    Window
+
+A window owning an OpenGL context. Read/write properties: `background_color`
+(`(r, g, b, a)`), `camera`, `controller`.
+"""
+Window
+
+"""
+    Camera
+
+Projection and view transform. Read/write properties: `position`, `rotation`
+(`(roll, pitch, yaw)`), `axis_rotation` (quaternion, read-only), `distance`,
+`viewport_size` (read-only), `preserve_aspect_ratio`.
+"""
+Camera
+
+"""
+    RenderList
+
+A retained drawing buffer. Property `enabled` toggles whether it is rendered.
+"""
+RenderList
+
+"A persistent line-strip builder created with [`path_begin`](@ref)."
+Path
+
+"A persistent triangle-mesh builder created with [`mesh_begin`](@ref)."
+Mesh
+
+"Camera input handler; see [`NullController`](@ref), [`FirstPersonController`](@ref), [`SphericalController`](@ref)."
+BaseController
+
 # --- array coercion -------------------------------------------------------
 
 asf32(A::AbstractArray) = convert(Array{F32}, A)
@@ -84,33 +123,54 @@ _ptr(A::Array) = A
 
 # --- top level ------------------------------------------------------------
 
+"""
+    create_window(title="GLViskit Window", width=800, height=600) -> Window
+
+Create a window owning an OpenGL context.
+"""
 create_window(title::AbstractString="GLViskit Window", width::Integer=800, height::Integer=600) =
     Window(ccall((:glv_create_window, lib), Ptr{Cvoid}, (Cstring, Cint, Cint), title, width, height))
 
+"""
+    create_render_list() -> RenderList
+
+Create a new render list.
+"""
 create_render_list() = RenderList(ccall((:glv_create_render_list, lib), Ptr{Cvoid}, ()))
 
+"Current time in seconds since the program started."
 get_time_seconds() = ccall((:glv_get_time_seconds, lib), Cfloat, ())
 
+"""
+    loop() -> Bool
+
+Run one iteration of the event loop and render every window. Returns `false`
+once the application should quit (also opens a fresh UI frame for each window).
+"""
 function loop()
     rc = ccall((:glv_loop, lib), Cint, ())
     rc == -1 && error(glverror())
     return rc != 0
 end
 
+"Render every window without processing events."
 render() = check(ccall((:glv_render, lib), Cint, ()))
 
 # --- window ---------------------------------------------------------------
 
+"Add a render list to the window for rendering."
 add_render_list!(w::Window, rl::RenderList) =
     check(ccall((:glv_window_add_render_list, lib), Cint, (Ptr{Cvoid}, Ptr{Cvoid}), w, rl))
 
+"Make the window's OpenGL context current on this thread."
 make_current!(w::Window) = check(ccall((:glv_window_make_current, lib), Cint, (Ptr{Cvoid},), w))
 
+"Render this window's contents."
 render(w::Window) = check(ccall((:glv_window_render, lib), Cint, (Ptr{Cvoid},), w))
 
 "Capture the window into a fresh `4 × W × H` `UInt8` RGBA array."
 function capture_rgba(w::Window)
-    width = Ref{Cint}();
+    width = Ref{Cint}()
     height = Ref{Cint}()
     check(ccall((:glv_window_get_size_in_pixels, lib), Cint,
         (Ptr{Cvoid}, Ptr{Cint}, Ptr{Cint}), w, width, height))
@@ -123,9 +183,9 @@ end
 function Base.getproperty(w::Window, s::Symbol)
     s === :ptr && return getfield(w, :ptr)
     if s === :background_color
-        r = Ref{F32}();
-        g = Ref{F32}();
-        b = Ref{F32}();
+        r = Ref{F32}()
+        g = Ref{F32}()
+        b = Ref{F32}()
         a = Ref{F32}()
         check(ccall((:glv_window_get_background_color, lib), Cint,
             (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), w, r, g, b, a))
@@ -155,14 +215,29 @@ end
 
 # --- camera ---------------------------------------------------------------
 
+"""
+    perspective_fov!(camera, hfov, vfov; near=0.1, far=100.0)
+
+Set a perspective projection from horizontal/vertical field of view (degrees).
+"""
 perspective_fov!(c::Camera, hfov, vfov; near=0.1, far=100.0) =
     check(ccall((:glv_camera_perspective_fov, lib), Cint, (Ptr{Cvoid}, F32, F32, F32, F32),
         c, hfov, vfov, near, far))
 
+"""
+    perspective!(camera, fxn, fyn; cx=0.5, cy=0.5, near=0.1, far=100.0)
+
+Set a perspective projection from normalized focal lengths and principal point.
+"""
 perspective!(c::Camera, fxn, fyn; cx=0.5, cy=0.5, near=0.1, far=100.0) =
     check(ccall((:glv_camera_perspective, lib), Cint, (Ptr{Cvoid}, F32, F32, F32, F32, F32, F32),
         c, fxn, fyn, cx, cy, near, far))
 
+"""
+    set_axis_rotation!(camera, x, y, z; inv_x=false, inv_y=false, inv_z=false)
+
+Remap which world axes the camera's roll/pitch/yaw rotate about.
+"""
 set_axis_rotation!(c::Camera, x::Integer, y::Integer, z::Integer;
     inv_x=false, inv_y=false, inv_z=false) =
     check(ccall((:glv_camera_set_axis_rotation_axes, lib), Cint,
@@ -178,23 +253,23 @@ end
 function Base.getproperty(c::Camera, s::Symbol)
     s === :ptr && return getfield(c, :ptr)
     if s === :position
-        x = Ref{F32}();
-        y = Ref{F32}();
+        x = Ref{F32}()
+        y = Ref{F32}()
         z = Ref{F32}()
         check(ccall((:glv_camera_get_position, lib), Cint,
             (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}), c, x, y, z))
         return (x[], y[], z[])
     elseif s === :rotation
-        a = Ref{F32}();
-        b = Ref{F32}();
+        a = Ref{F32}()
+        b = Ref{F32}()
         d = Ref{F32}()
         check(ccall((:glv_camera_get_rotation, lib), Cint,
             (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}), c, a, b, d))
         return (a[], b[], d[])
     elseif s === :axis_rotation
-        w = Ref{F32}();
-        x = Ref{F32}();
-        y = Ref{F32}();
+        w = Ref{F32}()
+        x = Ref{F32}()
+        y = Ref{F32}()
         z = Ref{F32}()
         check(ccall((:glv_camera_get_axis_rotation, lib), Cint,
             (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), c, w, x, y, z))
@@ -204,7 +279,7 @@ function Base.getproperty(c::Camera, s::Symbol)
         check(ccall((:glv_camera_get_distance, lib), Cint, (Ptr{Cvoid}, Ptr{F32}), c, d))
         return d[]
     elseif s === :viewport_size
-        w = Ref{F32}();
+        w = Ref{F32}()
         h = Ref{F32}()
         check(ccall((:glv_camera_get_viewport_size, lib), Cint,
             (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}), c, w, h))
@@ -238,9 +313,12 @@ end
 
 # --- render list: state ---------------------------------------------------
 
+"Set the current draw color `(r, g, b, a)` for subsequent geometry."
 color!(rl::RenderList, c) =
     check(ccall((:glv_render_list_color, lib), Cint, (Ptr{Cvoid}, F32, F32, F32, F32),
         rl, c[1], c[2], c[3], c[4]))
+
+"Set the current point/line size for subsequent geometry."
 size!(rl::RenderList, s) = check(ccall((:glv_render_list_size, lib), Cint, (Ptr{Cvoid}, F32), rl, s))
 
 for (jl, c) in ((:save!, :glv_render_list_save), (:restore!, :glv_render_list_restore),
@@ -249,6 +327,24 @@ for (jl, c) in ((:save!, :glv_render_list_save), (:restore!, :glv_render_list_re
     (:clear_instances!, :glv_render_list_clear_instances))
     @eval $jl(rl::RenderList) = check(ccall(($(QuoteNode(c)), lib), Cint, (Ptr{Cvoid},), rl))
 end
+
+"Save the current drawing state (color, size) and geometry mark."
+save!
+
+"Restore the drawing state and geometry to the last [`save!`](@ref)."
+restore!
+
+"Clear all stored geometry from the render list."
+clear!
+
+"Save the current instance stack."
+save_instances!
+
+"Restore the instance stack to the last [`save_instances!`](@ref)."
+restore_instances!
+
+"Clear all instances from the render list."
+clear_instances!
 
 function Base.getproperty(rl::RenderList, s::Symbol)
     s === :ptr && return getfield(rl, :ptr)
@@ -265,7 +361,10 @@ function Base.setproperty!(rl::RenderList, s::Symbol, v)
     return v
 end
 
+"Begin a persistent [`Path`](@ref) line-strip builder on the render list."
 path_begin(rl::RenderList) = Path(ccall((:glv_render_list_path_begin, lib), Ptr{Cvoid}, (Ptr{Cvoid},), rl))
+
+"Begin a persistent [`Mesh`](@ref) builder on the render list."
 mesh_begin(rl::RenderList) = Mesh(ccall((:glv_render_list_mesh_begin, lib), Ptr{Cvoid}, (Ptr{Cvoid},), rl))
 
 # --- render list: batched drawing -----------------------------------------
@@ -295,6 +394,30 @@ for (jl, c) in ((:point!, :glv_render_list_points), (:circle!, :glv_render_list_
     end
 end
 
+"""
+    point!(rl, pts; colors=nothing, sizes=nothing)
+    point!(rl, p; color=nothing, size=nothing)
+
+Add points from a `3 × N` matrix (optionally `4 × N` colors and length-`N`
+sizes), or a single `3`-vector. Returns `rl`.
+"""
+point!
+
+"""
+    circle!(rl, pts; colors=nothing, sizes=nothing)
+    circle!(rl, p; color=nothing, size=nothing)
+
+Add screen-facing circles from a `3 × N` matrix or a single `3`-vector. Returns `rl`.
+"""
+circle!
+
+"""
+    line!(rl, starts, ends; colors=nothing, sizes=nothing)
+    line!(rl, s, e; color=nothing, size=nothing)
+
+Add line segments from matching `3 × N` start/end matrices, or a single
+start/end `3`-vector pair. Returns `rl`.
+"""
 function line!(rl::RenderList, starts::AbstractMatrix{<:Real}, ends::AbstractMatrix{<:Real};
     colors=nothing, sizes=nothing)
     size(starts, 1) == 3 && size(ends) == size(starts) ||
@@ -306,6 +429,7 @@ function line!(rl::RenderList, starts::AbstractMatrix{<:Real}, ends::AbstractMat
         rl, asf32(starts), asf32(ends), _ptr(_optf32(colors)), _ptr(_optf32(sizes)), n))
     return rl
 end
+
 line!(rl::RenderList, s::AbstractVector{<:Real}, e::AbstractVector{<:Real};
     color=nothing, size=nothing) =
     line!(rl, reshape(collect(F32, s), 3, 1), reshape(collect(F32, e), 3, 1);
@@ -346,6 +470,34 @@ for (jl, c, hassize) in ((:polygon!, :glv_render_list_polygons, true),
     end
 end
 
+"""
+    polygon!(rl, v; colors=nothing, sizes=nothing)
+
+Add closed polygon outlines from a single `3 × N` shape or a `3 × N × B` batch.
+Returns `rl`.
+"""
+polygon!
+
+"""
+    polyline!(rl, v; colors=nothing, sizes=nothing)
+
+Add open line strips from a single `3 × N` shape or a `3 × N × B` batch. Returns `rl`.
+"""
+polyline!
+
+"""
+    fill_polygon!(rl, v; colors=nothing)
+
+Add filled polygons from a single `3 × N` shape or a `3 × N × B` batch. Returns `rl`.
+"""
+fill_polygon!
+
+"""
+    triangles!(rl, vertices, indices; colors=nothing)
+
+Add indexed triangles from a `3 × N` vertex matrix and a `3 × T` matrix of
+0-based vertex indices. Returns `rl`.
+"""
 function triangles!(rl::RenderList, vertices::AbstractMatrix{<:Real},
     indices::AbstractMatrix{<:Integer}; colors=nothing)
     size(vertices, 1) == 3 || throw(ArgumentError("vertices must be 3 × N"))
@@ -363,6 +515,14 @@ end
 
 # --- render list: instances -----------------------------------------------
 
+"""
+    add_instance!(rl, transform)
+    add_instance!(rl; pos=(0,0,0), rot=(0,0,0), scale=(1,1,1))
+
+Add an instance of the render list's geometry, either from a `4 × 4` transform
+matrix or from position/rotation/scale. A length-4 `rot` is treated as a
+quaternion, a length-3 `rot` as Euler angles.
+"""
 function add_instance!(rl::RenderList, transform::AbstractMatrix{<:Real})
     size(transform) == (4, 4) || throw(ArgumentError("transform must be 4 × 4"))
     # C expects row-major 16; permutedims turns the column-major matrix row-major
@@ -384,6 +544,12 @@ end
 
 # --- path -----------------------------------------------------------------
 
+"""
+    line_to!(path, pts; colors=nothing, sizes=nothing)
+    line_to!(path, pt; color=nothing, size=nothing)
+
+Extend the path by a `3 × N` run of points or a single `3`-vector. Returns the path.
+"""
 function line_to!(p::Path, pts::AbstractMatrix{<:Real}; colors=nothing, sizes=nothing)
     size(pts, 1) == 3 || throw(ArgumentError("points must be 3 × N"))
     n = size(pts, 2)
@@ -393,15 +559,23 @@ function line_to!(p::Path, pts::AbstractMatrix{<:Real}; colors=nothing, sizes=no
         p, asf32(pts), _ptr(_optf32(colors)), _ptr(_optf32(sizes)), n))
     return p
 end
+
 line_to!(p::Path, pt::AbstractVector{<:Real}; color=nothing, size=nothing) =
     line_to!(p, reshape(collect(F32, pt), 3, 1);
         colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1),
         sizes=size === nothing ? nothing : F32[size])
 
+"Close the current path back to its start."
 close!(p::Path) = check(ccall((:glv_path_close, lib), Cint, (Ptr{Cvoid},), p))
+
+"End the current line strip; subsequent points start a new strip."
 line_end!(p::Path) = check(ccall((:glv_path_line_end, lib), Cint, (Ptr{Cvoid},), p))
+
+"Set the current color `(r, g, b, a)` for subsequent path points."
 color!(p::Path, c) = check(ccall((:glv_path_color, lib), Cint, (Ptr{Cvoid}, F32, F32, F32, F32),
     p, c[1], c[2], c[3], c[4]))
+
+"Set the current line size for subsequent path points."
 size!(p::Path, s) = check(ccall((:glv_path_size, lib), Cint, (Ptr{Cvoid}, F32), p, s))
 
 # --- mesh -----------------------------------------------------------------
@@ -417,11 +591,17 @@ function vertex!(m::Mesh, pts::AbstractMatrix{<:Real}; colors=nothing)
         m, asf32(pts), _ptr(_optf32(colors)), out, n))
     return out
 end
+
 vertex!(m::Mesh, p::AbstractVector{<:Real}; color=nothing) =
     vertex!(m, reshape(collect(F32, p), 3, 1);
         colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1))[1]
 
-"Add triangles from a `3 × T` matrix of 0-based mesh-local indices."
+"""
+    triangle!(mesh, indices)
+    triangle!(mesh, i0, i1, i2)
+
+Add triangles from a `3 × T` matrix of 0-based mesh-local indices, or a single triple.
+"""
 function triangle!(m::Mesh, indices::AbstractMatrix{<:Integer})
     size(indices, 1) == 3 || throw(ArgumentError("indices must be 3 × T"))
     all(>=(0), indices) || throw(ArgumentError("triangle indices must be non-negative"))
@@ -429,15 +609,23 @@ function triangle!(m::Mesh, indices::AbstractMatrix{<:Integer})
         m, asi32(indices), size(indices, 2)))
     return m
 end
+
 triangle!(m::Mesh, i0::Integer, i1::Integer, i2::Integer) =
     check(ccall((:glv_mesh_triangle, lib), Cint, (Ptr{Cvoid}, Csize_t, Csize_t, Csize_t), m, i0, i1, i2))
+
+"Set the current color `(r, g, b, a)` for subsequent mesh vertices."
 color!(m::Mesh, c) = check(ccall((:glv_mesh_color, lib), Cint, (Ptr{Cvoid}, F32, F32, F32, F32),
     m, c[1], c[2], c[3], c[4]))
 
 # --- controllers ----------------------------------------------------------
 
+"A controller that ignores all input."
 NullController() = BaseController(ccall((:glv_create_null_controller, lib), Ptr{Cvoid}, ()))
+
+"A first-person (fly) camera controller."
 FirstPersonController() = BaseController(ccall((:glv_create_first_person_controller, lib), Ptr{Cvoid}, ()))
+
+"A spherical (orbit) camera controller."
 SphericalController() = BaseController(ccall((:glv_create_spherical_controller, lib), Ptr{Cvoid}, ()))
 
 function Base.getproperty(c::BaseController, s::Symbol)
@@ -474,24 +662,46 @@ function Base.setproperty!(c::BaseController, s::Symbol, v)
 end
 
 # --- ui -------------------------------------------------------------------
+#
+# Immediate-mode widgets (Dear ImGui). Issue them each frame between `loop()`
+# and the next iteration. Scalar in/out values are passed as `Ref` and arrays
+# as `Vector{Float32}`, both mutated in place; widgets return a `Bool` that is
+# `true` on the frame the value changed or the button was clicked.
 
+"""
+    ui_new_frame()
+
+Open a fresh UI frame for every window. `loop()` already calls this, so it is
+only needed for custom (non-`loop`) drivers.
+"""
 ui_new_frame() = check(ccall((:glv_ui_new_frame, lib), Cint, ()))
 
+"Begin a UI panel; returns whether it is visible. Pair with [`ui_end`](@ref)."
 ui_begin(w::Window, title::AbstractString) =
     check_ui(ccall((:glv_ui_begin, lib), Cint, (Ptr{Cvoid}, Cstring), w, title))
 
+"End the current UI panel."
 ui_end(w::Window) = check(ccall((:glv_ui_end, lib), Cint, (Ptr{Cvoid},), w))
 
+"Draw a line of text."
 ui_text(w::Window, text::AbstractString) =
     check(ccall((:glv_ui_text, lib), Cint, (Ptr{Cvoid}, Cstring), w, text))
 
+"Draw a horizontal separator."
 ui_separator(w::Window) = check(ccall((:glv_ui_separator, lib), Cint, (Ptr{Cvoid},), w))
 
+"Keep the next widget on the same line as the previous one."
 ui_same_line(w::Window) = check(ccall((:glv_ui_same_line, lib), Cint, (Ptr{Cvoid},), w))
 
+"Draw a button; returns `true` on the frame it is clicked."
 ui_button(w::Window, label::AbstractString) =
     check_ui(ccall((:glv_ui_button, lib), Cint, (Ptr{Cvoid}, Cstring), w, label))
 
+"""
+    ui_checkbox!(window, label, value::Ref) -> Bool
+
+Draw a checkbox bound to `value` (mutated in place); returns whether it changed.
+"""
 function ui_checkbox!(w::Window, label::AbstractString, value::Ref)
     v = Ref{Cint}(value[] ? 1 : 0)
     changed = check_ui(ccall((:glv_ui_checkbox, lib), Cint,
@@ -500,6 +710,11 @@ function ui_checkbox!(w::Window, label::AbstractString, value::Ref)
     return changed
 end
 
+"""
+    ui_slider_float!(window, label, value::Ref, vmin, vmax) -> Bool
+
+Draw a float slider bound to `value` (mutated in place); returns whether it changed.
+"""
 function ui_slider_float!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
     v = Ref{F32}(value[])
     changed = check_ui(ccall((:glv_ui_slider_float, lib), Cint,
@@ -508,12 +723,23 @@ function ui_slider_float!(w::Window, label::AbstractString, value::Ref, vmin, vm
     return changed
 end
 
+"""
+    ui_slider_float3!(window, label, value::Vector{Float32}, vmin, vmax) -> Bool
+
+Draw a 3-component float slider bound to `value` (mutated in place); returns
+whether it changed.
+"""
 function ui_slider_float3!(w::Window, label::AbstractString, value::Vector{F32}, vmin, vmax)
     length(value) >= 3 || error("ui_slider_float3! expects a 3-element Float32 vector")
     return check_ui(ccall((:glv_ui_slider_float3, lib), Cint,
         (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), w, label, value, vmin, vmax))
 end
 
+"""
+    ui_slider_int!(window, label, value::Ref, vmin, vmax) -> Bool
+
+Draw an integer slider bound to `value` (mutated in place); returns whether it changed.
+"""
 function ui_slider_int!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
     v = Ref{Cint}(value[])
     changed = check_ui(ccall((:glv_ui_slider_int, lib), Cint,
@@ -522,6 +748,12 @@ function ui_slider_int!(w::Window, label::AbstractString, value::Ref, vmin, vmax
     return changed
 end
 
+"""
+    ui_combo!(window, label, current::Ref, items) -> Bool
+
+Draw a combo box from `"a|b|c"` style options; `current` holds the selected
+index (mutated in place). Returns whether it changed.
+"""
 function ui_combo!(w::Window, label::AbstractString, current::Ref, items::AbstractString)
     c = Ref{Cint}(current[])
     changed = check_ui(ccall((:glv_ui_combo, lib), Cint,
@@ -530,6 +762,11 @@ function ui_combo!(w::Window, label::AbstractString, current::Ref, items::Abstra
     return changed
 end
 
+"""
+    ui_drag_float!(window, label, value::Ref, speed=1.0, vmin=0.0, vmax=0.0) -> Bool
+
+Draw a draggable float bound to `value` (mutated in place); returns whether it changed.
+"""
 function ui_drag_float!(w::Window, label::AbstractString, value::Ref, speed=1.0, vmin=0.0, vmax=0.0)
     v = Ref{F32}(value[])
     changed = check_ui(ccall((:glv_ui_drag_float, lib), Cint,
@@ -538,27 +775,40 @@ function ui_drag_float!(w::Window, label::AbstractString, value::Ref, speed=1.0,
     return changed
 end
 
+"""
+    ui_color_edit3!(window, label, color::Vector{Float32}) -> Bool
+
+Edit an RGB color in `color` (mutated in place); returns whether it changed.
+"""
 function ui_color_edit3!(w::Window, label::AbstractString, color::Vector{F32})
     length(color) >= 3 || error("ui_color_edit3! expects a 3-element Float32 vector")
     return check_ui(ccall((:glv_ui_color_edit3, lib), Cint,
         (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
 end
 
+"""
+    ui_color_edit4!(window, label, color::Vector{Float32}) -> Bool
+
+Edit an RGBA color in `color` (mutated in place); returns whether it changed.
+"""
 function ui_color_edit4!(w::Window, label::AbstractString, color::Vector{F32})
     length(color) >= 4 || error("ui_color_edit4! expects a 4-element Float32 vector")
     return check_ui(ccall((:glv_ui_color_edit4, lib), Cint,
         (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
 end
 
+"Plot a line graph of `values` (any real vector)."
 function ui_plot_lines(w::Window, label::AbstractString, values::AbstractVector)
     buf = asf32(values)
     check(ccall((:glv_ui_plot_lines, lib), Cint,
         (Ptr{Cvoid}, Cstring, Ptr{F32}, Cint), w, label, buf, length(buf)))
 end
 
+"Whether the UI is currently capturing the mouse (gate your own input on this)."
 ui_want_capture_mouse(w::Window) =
     check_ui(ccall((:glv_ui_want_capture_mouse, lib), Cint, (Ptr{Cvoid},), w))
 
+"Whether the UI is currently capturing the keyboard."
 ui_want_capture_keyboard(w::Window) =
     check_ui(ccall((:glv_ui_want_capture_keyboard, lib), Cint, (Ptr{Cvoid},), w))
 
