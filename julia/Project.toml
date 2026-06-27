@@ -1,7 +1,7 @@
 name = "GLViskit"
 uuid = "1e7b471d-d6c7-423b-9651-50963641f8da"
 authors = ["shadymeowy"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
