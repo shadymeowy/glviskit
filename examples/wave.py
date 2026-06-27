@@ -4,6 +4,7 @@ import glviskit
 import numpy as np
 
 window1 = glviskit.create_window("Wave", 800, 600)
+ui1 = window1.ui
 
 render_list = glviskit.create_render_list()
 window1.add_render_list(render_list)
@@ -49,27 +50,26 @@ while glviskit.loop():
     frame_index += 1
 
     # build the control panel
-    window1.ui_begin("Controls")
-    window1.ui_text("surface plot demo")
-    window1.ui_text(f"frame: {frame_index}")
-    window1.ui_separator()
-    _, animate = window1.ui_checkbox("animate", animate)
-    _, rot_speed = window1.ui_slider_float("rotation speed", rot_speed, 0.0, 0.05)
-    _, amplitude = window1.ui_slider_float("amplitude", amplitude, 0.0, 3.0)
-    _, frequency = window1.ui_slider_float("frequency", frequency, 0.1, 3.0)
-    _, line_size = window1.ui_slider_int("line size", line_size, 1, 8)
-    _, wave_mode = window1.ui_combo("wave mode", wave_mode, "ripple|sine x|sine y")
-    _, line_color = window1.ui_color_edit3("line color", line_color)
-    _, bg_color = window1.ui_color_edit4("background", bg_color)
-    history = history[1:] + [amplitude * math.sin(frequency * t)]
-    window1.ui_plot_lines("signal", history)
-    window1.ui_separator()
-    if window1.ui_button("reset view"):
-        camera.rotation = [-0.5, 0.0, 0.0]
-    window1.ui_same_line()
-    if window1.ui_button("stop"):
-        animate = False
-    window1.ui_end()
+    with ui1.panel("Controls"):
+        ui1.text("surface plot demo")
+        ui1.text(f"frame: {frame_index}")
+        ui1.separator()
+        _, animate = ui1.checkbox("animate", animate)
+        _, rot_speed = ui1.slider_float("rotation speed", rot_speed, 0.0, 0.05)
+        _, amplitude = ui1.slider_float("amplitude", amplitude, 0.0, 3.0)
+        _, frequency = ui1.slider_float("frequency", frequency, 0.1, 3.0)
+        _, line_size = ui1.slider_int("line size", line_size, 1, 8)
+        _, wave_mode = ui1.combo("wave mode", wave_mode, "ripple|sine x|sine y")
+        _, line_color = ui1.color_edit3("line color", line_color)
+        _, bg_color = ui1.color_edit4("background", bg_color)
+        history = history[1:] + [amplitude * math.sin(frequency * t)]
+        ui1.plot_lines("signal", history)
+        ui1.separator()
+        if ui1.button("reset view"):
+            camera.rotation = [-0.5, 0.0, 0.0]
+        ui1.same_line()
+        if ui1.button("stop"):
+            animate = False
 
     # animate by nudging the camera's yaw, composing with the controller
     if animate:

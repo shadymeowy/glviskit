@@ -36,10 +36,11 @@ export path_begin, mesh_begin, color!, size!, add_instance!
 export save!, restore!, clear!, save_instances!, restore_instances!, clear_instances!
 export line_to!, close!, line_end!, vertex!, triangle!
 export NullController, FirstPersonController, SphericalController
-export ui_new_frame, ui_begin, ui_end, ui_text, ui_separator, ui_same_line, ui_button
-export ui_checkbox!, ui_slider_float!, ui_slider_float3!, ui_slider_int!, ui_combo!
-export ui_drag_float!, ui_color_edit3!, ui_color_edit4!, ui_plot_lines
-export ui_want_capture_mouse, ui_want_capture_keyboard
+export WindowUI, ui_new_frame, panel
+export text, separator, same_line, button, checkbox!
+export slider_float!, slider_float3!, slider_int!, combo!, drag_float!
+export color_edit3!, color_edit4!, plot_lines
+export want_capture_mouse, want_capture_keyboard
 
 # --- error handling -------------------------------------------------------
 
@@ -83,7 +84,8 @@ end
     Window
 
 A window owning an OpenGL context. Read/write properties: `background_color`
-(`(r, g, b, a)`), `camera`, `controller`.
+(`(r, g, b, a)`), `camera`, `controller`. Read-only property `ui` returns the
+immediate-mode UI handle ([`WindowUI`](@ref)).
 """
 Window
 
@@ -111,6 +113,16 @@ Mesh
 
 "Camera input handler; see [`NullController`](@ref), [`FirstPersonController`](@ref), [`SphericalController`](@ref)."
 BaseController
+
+"""
+    WindowUI
+
+Immediate-mode UI handle for a window, obtained with `window.ui`. Pass it to
+[`panel`](@ref) and the widget functions ([`button`](@ref), [`slider_float!`](@ref), ...).
+"""
+struct WindowUI
+    window::Window
+end
 
 # --- array coercion -------------------------------------------------------
 
@@ -194,6 +206,8 @@ function Base.getproperty(w::Window, s::Symbol)
         return Camera(ccall((:glv_window_get_camera, lib), Ptr{Cvoid}, (Ptr{Cvoid},), w))
     elseif s === :controller
         return BaseController(ccall((:glv_window_get_controller, lib), Ptr{Cvoid}, (Ptr{Cvoid},), w))
+    elseif s === :ui
+        return WindowUI(w)
     end
     error("Window has no property `$s`")
 end
@@ -663,10 +677,11 @@ end
 
 # --- ui -------------------------------------------------------------------
 #
-# Immediate-mode widgets (Dear ImGui). Issue them each frame between `loop()`
-# and the next iteration. Scalar in/out values are passed as `Ref` and arrays
-# as `Vector{Float32}`, both mutated in place; widgets return a `Bool` that is
-# `true` on the frame the value changed or the button was clicked.
+# Immediate-mode widgets (Dear ImGui). Get a per-window handle with `w.ui`,
+# group widgets in a `panel(ui, title) do ... end` block, and issue them each
+# frame between `loop()` calls. Scalar in/out values are passed as `Ref` and
+# arrays as `Vector{Float32}`, both mutated in place; widgets return a `Bool`
+# that is `true` on the frame the value changed or the button was clicked.
 
 """
     ui_new_frame()
@@ -676,140 +691,161 @@ only needed for custom (non-`loop`) drivers.
 """
 ui_new_frame() = check(ccall((:glv_ui_new_frame, lib), Cint, ()))
 
-"Begin a UI panel; returns whether it is visible. Pair with [`ui_end`](@ref)."
-ui_begin(w::Window, title::AbstractString) =
-    check_ui(ccall((:glv_ui_begin, lib), Cint, (Ptr{Cvoid}, Cstring), w, title))
-
-"End the current UI panel."
-ui_end(w::Window) = check(ccall((:glv_ui_end, lib), Cint, (Ptr{Cvoid},), w))
-
-"Draw a line of text."
-ui_text(w::Window, text::AbstractString) =
-    check(ccall((:glv_ui_text, lib), Cint, (Ptr{Cvoid}, Cstring), w, text))
-
-"Draw a horizontal separator."
-ui_separator(w::Window) = check(ccall((:glv_ui_separator, lib), Cint, (Ptr{Cvoid},), w))
-
-"Keep the next widget on the same line as the previous one."
-ui_same_line(w::Window) = check(ccall((:glv_ui_same_line, lib), Cint, (Ptr{Cvoid},), w))
-
-"Draw a button; returns `true` on the frame it is clicked."
-ui_button(w::Window, label::AbstractString) =
-    check_ui(ccall((:glv_ui_button, lib), Cint, (Ptr{Cvoid}, Cstring), w, label))
+# internal panel begin/end (`begin`/`end` are reserved words, so use `panel`)
+_panel_begin(ui::WindowUI, title::AbstractString) =
+    check_ui(ccall((:glv_ui_begin, lib), Cint, (Ptr{Cvoid}, Cstring), ui.window, title))
+_panel_end(ui::WindowUI) = check(ccall((:glv_ui_end, lib), Cint, (Ptr{Cvoid},), ui.window))
 
 """
-    ui_checkbox!(window, label, value::Ref) -> Bool
+    panel(f, ui, title) -> Bool
+
+Open a UI panel, run `f` (its widgets), and always close it. Returns whether the
+panel is visible (expanded); widgets in a collapsed panel are cheap no-ops. Use
+the `do`-block form:
+
+```julia
+panel(ui, "Controls") do
+    _ = button(ui, "reset")
+end
+```
+"""
+function panel(f, ui::WindowUI, title::AbstractString)
+    visible = _panel_begin(ui, title)
+    try
+        f()
+    finally
+        _panel_end(ui)
+    end
+    return visible
+end
+
+"Draw a line of text."
+text(ui::WindowUI, s::AbstractString) =
+    check(ccall((:glv_ui_text, lib), Cint, (Ptr{Cvoid}, Cstring), ui.window, s))
+
+"Draw a horizontal separator."
+separator(ui::WindowUI) = check(ccall((:glv_ui_separator, lib), Cint, (Ptr{Cvoid},), ui.window))
+
+"Keep the next widget on the same line as the previous one."
+same_line(ui::WindowUI) = check(ccall((:glv_ui_same_line, lib), Cint, (Ptr{Cvoid},), ui.window))
+
+"Draw a button; returns `true` on the frame it is clicked."
+button(ui::WindowUI, label::AbstractString) =
+    check_ui(ccall((:glv_ui_button, lib), Cint, (Ptr{Cvoid}, Cstring), ui.window, label))
+
+"""
+    checkbox!(ui, label, value::Ref) -> Bool
 
 Draw a checkbox bound to `value` (mutated in place); returns whether it changed.
 """
-function ui_checkbox!(w::Window, label::AbstractString, value::Ref)
+function checkbox!(ui::WindowUI, label::AbstractString, value::Ref)
     v = Ref{Cint}(value[] ? 1 : 0)
     changed = check_ui(ccall((:glv_ui_checkbox, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{Cint}), w, label, v))
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}), ui.window, label, v))
     value[] = v[] != 0
     return changed
 end
 
 """
-    ui_slider_float!(window, label, value::Ref, vmin, vmax) -> Bool
+    slider_float!(ui, label, value::Ref, vmin, vmax) -> Bool
 
 Draw a float slider bound to `value` (mutated in place); returns whether it changed.
 """
-function ui_slider_float!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
+function slider_float!(ui::WindowUI, label::AbstractString, value::Ref, vmin, vmax)
     v = Ref{F32}(value[])
     changed = check_ui(ccall((:glv_ui_slider_float, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), w, label, v, vmin, vmax))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), ui.window, label, v, vmin, vmax))
     value[] = v[]
     return changed
 end
 
 """
-    ui_slider_float3!(window, label, value::Vector{Float32}, vmin, vmax) -> Bool
+    slider_float3!(ui, label, value::Vector{Float32}, vmin, vmax) -> Bool
 
 Draw a 3-component float slider bound to `value` (mutated in place); returns
 whether it changed.
 """
-function ui_slider_float3!(w::Window, label::AbstractString, value::Vector{F32}, vmin, vmax)
-    length(value) >= 3 || error("ui_slider_float3! expects a 3-element Float32 vector")
+function slider_float3!(ui::WindowUI, label::AbstractString, value::Vector{F32}, vmin, vmax)
+    length(value) >= 3 || error("slider_float3! expects a 3-element Float32 vector")
     return check_ui(ccall((:glv_ui_slider_float3, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), w, label, value, vmin, vmax))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), ui.window, label, value, vmin, vmax))
 end
 
 """
-    ui_slider_int!(window, label, value::Ref, vmin, vmax) -> Bool
+    slider_int!(ui, label, value::Ref, vmin, vmax) -> Bool
 
 Draw an integer slider bound to `value` (mutated in place); returns whether it changed.
 """
-function ui_slider_int!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
+function slider_int!(ui::WindowUI, label::AbstractString, value::Ref, vmin, vmax)
     v = Ref{Cint}(value[])
     changed = check_ui(ccall((:glv_ui_slider_int, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cint, Cint), w, label, v, vmin, vmax))
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cint, Cint), ui.window, label, v, vmin, vmax))
     value[] = v[]
     return changed
 end
 
 """
-    ui_combo!(window, label, current::Ref, items) -> Bool
+    combo!(ui, label, current::Ref, items) -> Bool
 
 Draw a combo box from `"a|b|c"` style options; `current` holds the selected
 index (mutated in place). Returns whether it changed.
 """
-function ui_combo!(w::Window, label::AbstractString, current::Ref, items::AbstractString)
+function combo!(ui::WindowUI, label::AbstractString, current::Ref, items::AbstractString)
     c = Ref{Cint}(current[])
     changed = check_ui(ccall((:glv_ui_combo, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cstring), w, label, c, items))
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cstring), ui.window, label, c, items))
     current[] = c[]
     return changed
 end
 
 """
-    ui_drag_float!(window, label, value::Ref, speed=1.0, vmin=0.0, vmax=0.0) -> Bool
+    drag_float!(ui, label, value::Ref, speed=1.0, vmin=0.0, vmax=0.0) -> Bool
 
 Draw a draggable float bound to `value` (mutated in place); returns whether it changed.
 """
-function ui_drag_float!(w::Window, label::AbstractString, value::Ref, speed=1.0, vmin=0.0, vmax=0.0)
+function drag_float!(ui::WindowUI, label::AbstractString, value::Ref, speed=1.0, vmin=0.0, vmax=0.0)
     v = Ref{F32}(value[])
     changed = check_ui(ccall((:glv_ui_drag_float, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32, F32), w, label, v, speed, vmin, vmax))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32, F32), ui.window, label, v, speed, vmin, vmax))
     value[] = v[]
     return changed
 end
 
 """
-    ui_color_edit3!(window, label, color::Vector{Float32}) -> Bool
+    color_edit3!(ui, label, color::Vector{Float32}) -> Bool
 
 Edit an RGB color in `color` (mutated in place); returns whether it changed.
 """
-function ui_color_edit3!(w::Window, label::AbstractString, color::Vector{F32})
-    length(color) >= 3 || error("ui_color_edit3! expects a 3-element Float32 vector")
+function color_edit3!(ui::WindowUI, label::AbstractString, color::Vector{F32})
+    length(color) >= 3 || error("color_edit3! expects a 3-element Float32 vector")
     return check_ui(ccall((:glv_ui_color_edit3, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}), ui.window, label, color))
 end
 
 """
-    ui_color_edit4!(window, label, color::Vector{Float32}) -> Bool
+    color_edit4!(ui, label, color::Vector{Float32}) -> Bool
 
 Edit an RGBA color in `color` (mutated in place); returns whether it changed.
 """
-function ui_color_edit4!(w::Window, label::AbstractString, color::Vector{F32})
-    length(color) >= 4 || error("ui_color_edit4! expects a 4-element Float32 vector")
+function color_edit4!(ui::WindowUI, label::AbstractString, color::Vector{F32})
+    length(color) >= 4 || error("color_edit4! expects a 4-element Float32 vector")
     return check_ui(ccall((:glv_ui_color_edit4, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}), ui.window, label, color))
 end
 
 "Plot a line graph of `values` (any real vector)."
-function ui_plot_lines(w::Window, label::AbstractString, values::AbstractVector)
+function plot_lines(ui::WindowUI, label::AbstractString, values::AbstractVector)
     buf = asf32(values)
     check(ccall((:glv_ui_plot_lines, lib), Cint,
-        (Ptr{Cvoid}, Cstring, Ptr{F32}, Cint), w, label, buf, length(buf)))
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, Cint), ui.window, label, buf, length(buf)))
 end
 
 "Whether the UI is currently capturing the mouse (gate your own input on this)."
-ui_want_capture_mouse(w::Window) =
-    check_ui(ccall((:glv_ui_want_capture_mouse, lib), Cint, (Ptr{Cvoid},), w))
+want_capture_mouse(ui::WindowUI) =
+    check_ui(ccall((:glv_ui_want_capture_mouse, lib), Cint, (Ptr{Cvoid},), ui.window))
 
 "Whether the UI is currently capturing the keyboard."
-ui_want_capture_keyboard(w::Window) =
-    check_ui(ccall((:glv_ui_want_capture_keyboard, lib), Cint, (Ptr{Cvoid},), w))
+want_capture_keyboard(ui::WindowUI) =
+    check_ui(ccall((:glv_ui_want_capture_keyboard, lib), Cint, (Ptr{Cvoid},), ui.window))
 
 end # module

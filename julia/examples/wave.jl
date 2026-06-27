@@ -1,6 +1,7 @@
 using GLViskit
 
 window1 = create_window("Wave", 800, 600)
+ui1 = window1.ui
 
 render_list = create_render_list()
 add_render_list!(window1, render_list)
@@ -47,30 +48,30 @@ while loop()
     frame_index += 1
 
     # build the control panel
-    ui_begin(window1, "Controls")
-    ui_text(window1, "surface plot demo")
-    ui_text(window1, "frame: $frame_index")
-    ui_separator(window1)
-    ui_checkbox!(window1, "animate", animate)
-    ui_slider_float!(window1, "rotation speed", rot_speed, 0.0, 0.05)
-    ui_slider_float!(window1, "amplitude", amplitude, 0.0, 3.0)
-    ui_slider_float!(window1, "frequency", frequency, 0.1, 3.0)
-    ui_slider_int!(window1, "line size", line_size, 1, 8)
-    ui_combo!(window1, "wave mode", wave_mode, "ripple|sine x|sine y")
-    ui_color_edit3!(window1, "line color", line_color)
-    ui_color_edit4!(window1, "background", bg_color)
-    history[1:end-1] .= history[2:end]
-    history[end] = amplitude[] * sin(frequency[] * t)
-    ui_plot_lines(window1, "signal", history)
-    ui_separator(window1)
-    if ui_button(window1, "reset view")
-        camera.rotation = (-0.5, 0.0, 0.0)
+    panel(ui1, "Controls") do
+        text(ui1, "surface plot demo")
+        text(ui1, "frame: $frame_index")
+        separator(ui1)
+        checkbox!(ui1, "animate", animate)
+        slider_float!(ui1, "rotation speed", rot_speed, 0.0, 0.05)
+        slider_float!(ui1, "amplitude", amplitude, 0.0, 3.0)
+        slider_float!(ui1, "frequency", frequency, 0.1, 3.0)
+        slider_int!(ui1, "line size", line_size, 1, 8)
+        combo!(ui1, "wave mode", wave_mode, "ripple|sine x|sine y")
+        color_edit3!(ui1, "line color", line_color)
+        color_edit4!(ui1, "background", bg_color)
+        history[1:end-1] .= history[2:end]
+        history[end] = amplitude[] * sin(frequency[] * t)
+        plot_lines(ui1, "signal", history)
+        separator(ui1)
+        if button(ui1, "reset view")
+            camera.rotation = (-0.5, 0.0, 0.0)
+        end
+        same_line(ui1)
+        if button(ui1, "stop")
+            animate[] = false
+        end
     end
-    ui_same_line(window1)
-    if ui_button(window1, "stop")
-        animate[] = false
-    end
-    ui_end(window1)
 
     # animate by nudging the camera's yaw, composing with the controller
     if animate[]
