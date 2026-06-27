@@ -60,6 +60,9 @@ include(${CMAKE_CURRENT_LIST_DIR}/cmake/SDL3.cmake)
 # handle GL source files and autodetect GL type
 include(${CMAKE_CURRENT_LIST_DIR}/cmake/GL.cmake)
 
+# handle Dear ImGui and the UI sources
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/ImGui.cmake)
+
 # create the C ABI shared library target
 add_library(glviskit_c SHARED
     src/c_api.cpp
