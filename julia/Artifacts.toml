@@ -1,60 +1,60 @@
 [[glviskit_c]]
 arch = "x86_64"
-git-tree-sha1 = "ffa21d6283b1c5653d506f25b90bc309e81c9c12"
+git-tree-sha1 = "bafa3e364e64c6dda047da0fd0bd47d21ab1d3a1"
 libc = "glibc"
 os = "linux"
 
     [[glviskit_c.download]]
-    sha256 = "799888f1266e80a88ae426f9da759dd73e768ceeae7bd6453aa8db9784a77c98"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-x86_64-linux-gnu.tar.gz"
+    sha256 = "541cd1d90dcb5ff37eeb5d86a8fb3743224bac95702171bcc1895b59ef9ba3e4"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-x86_64-linux-gnu.tar.gz"
 [[glviskit_c]]
 arch = "aarch64"
-git-tree-sha1 = "99d8622bf45b4ca7ec31574fc1adc16facbe234a"
+git-tree-sha1 = "ed08a3bfab1eb5bee9c922822336a085684cfaf3"
 libc = "glibc"
 os = "linux"
 
     [[glviskit_c.download]]
-    sha256 = "f3168e16e34392092e66a26d334ed5cd977de550b5ac13e04f4d286d75ceceab"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-aarch64-linux-gnu.tar.gz"
+    sha256 = "eeaf82fade6a6c1074c1b3f3471e3dae7ca6168409b2a3ef3e8b4b400d85452f"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-aarch64-linux-gnu.tar.gz"
 [[glviskit_c]]
 arch = "x86_64"
-git-tree-sha1 = "220276c1de8abfee914c748833fdd01f42917bfb"
+git-tree-sha1 = "d8afd604c46655d4524d632c3595f58ad7c684b3"
 libc = "musl"
 os = "linux"
 
     [[glviskit_c.download]]
-    sha256 = "210c85f5987fd23db15d8b32c632f3db9d6be0b6fd32c4eea3d26a109e56a691"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-x86_64-linux-musl.tar.gz"
+    sha256 = "2556b0384f962be986ce6e5a6cd24da7c606b107551efe64e7e51a879fd60e84"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-x86_64-linux-musl.tar.gz"
 [[glviskit_c]]
 arch = "aarch64"
-git-tree-sha1 = "8ef3a99c5f6d4f07b2816223f287f67435d0a15c"
+git-tree-sha1 = "21c405f494acd92db73be93ebd2a60bc3a46b5a7"
 libc = "musl"
 os = "linux"
 
     [[glviskit_c.download]]
-    sha256 = "a788c4830ef25ea88e070c9660faa70e87184a75bd677ad44207eae6aae1f35a"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-aarch64-linux-musl.tar.gz"
+    sha256 = "a8455c8dfbb27c9c6a890e9b6f7adbebca1910ea9e2d42a3f436e343b2e1b2a9"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-aarch64-linux-musl.tar.gz"
 [[glviskit_c]]
 arch = "x86_64"
-git-tree-sha1 = "39d86ca7b9e575e41d21912ae9039cfee9f6434a"
+git-tree-sha1 = "694053f3d8071fb1731f939a987f661c132a22d4"
 os = "macos"
 
     [[glviskit_c.download]]
-    sha256 = "d82b9ad267870c601d350248023d91fa13797cc9fdf54643ddf10a5a11523bca"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-x86_64-apple-darwin.tar.gz"
+    sha256 = "4f8c45440cbf803697b937ea2ecb12c00e823847a349e7c9fa7248a9ba2f18b0"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-x86_64-apple-darwin.tar.gz"
 [[glviskit_c]]
 arch = "aarch64"
-git-tree-sha1 = "de00244a770a927cd8dfeb5071c489c83a323f87"
+git-tree-sha1 = "bf75b6e746ad58a872a7e378dff7d409fdfe71d0"
 os = "macos"
 
     [[glviskit_c.download]]
-    sha256 = "ff9445a47ef6ebc610d6ec0ca0cae7e3c1e83b2a40956231949357f974b299fb"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-aarch64-apple-darwin.tar.gz"
+    sha256 = "23e48b5413d15cce742639dc3dbbce18c6fe9eb346b8b7bafd29a17325500c2a"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-aarch64-apple-darwin.tar.gz"
 [[glviskit_c]]
 arch = "x86_64"
-git-tree-sha1 = "44b0bdd1089ff8b67797d129b0491eb0854a4eab"
+git-tree-sha1 = "5fd7205e6efb9477194cc3db02bc86ea776499cf"
 os = "windows"
 
     [[glviskit_c.download]]
-    sha256 = "f3716935a865c1b019b3e62db79b24b201fb73ec94c059c9575b3df5d3e61a46"
-    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.1/glviskit_c-x86_64-w64-mingw32.tar.gz"
+    sha256 = "41cf9a9c31cc701334d67d1818c1b711e4abc740de16ab33cdf946f810ba3e3b"
+    url = "https://github.com/shadymeowy/glviskit/releases/download/v0.1.2/glviskit_c-x86_64-w64-mingw32.tar.gz"
