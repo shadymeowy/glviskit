@@ -22,6 +22,12 @@ cdef void _check(int status) except *:
         raise RuntimeError(_error())
 
 
+cdef bint _check_ui(int status) except *:
+    if status == GLV_ERROR:
+        raise RuntimeError(_error())
+    return status != 0
+
+
 cdef int _rank(object value):
     try:
         return memoryview(value).ndim
@@ -110,6 +116,89 @@ cdef class Window:
 
     def render(self):
         _check(glv_window_render(self.ptr))
+
+    def ui_begin(self, str title):
+        return _check_ui(glv_ui_begin(self.ptr, title.encode("utf-8")))
+
+    def ui_end(self):
+        _check(glv_ui_end(self.ptr))
+
+    def ui_text(self, str text):
+        _check(glv_ui_text(self.ptr, text.encode("utf-8")))
+
+    def ui_separator(self):
+        _check(glv_ui_separator(self.ptr))
+
+    def ui_same_line(self):
+        _check(glv_ui_same_line(self.ptr))
+
+    def ui_button(self, str label):
+        return _check_ui(glv_ui_button(self.ptr, label.encode("utf-8")))
+
+    def ui_checkbox(self, str label, value):
+        cdef int v = 1 if value else 0
+        cdef bint changed = _check_ui(
+            glv_ui_checkbox(self.ptr, label.encode("utf-8"), &v))
+        return changed, v != 0
+
+    def ui_slider_float(self, str label, value, float vmin, float vmax):
+        cdef float v = value
+        cdef bint changed = _check_ui(
+            glv_ui_slider_float(self.ptr, label.encode("utf-8"), &v, vmin, vmax))
+        return changed, v
+
+    def ui_slider_float3(self, str label, value, float vmin, float vmax):
+        cdef float[3] v = [value[0], value[1], value[2]]
+        cdef bint changed = _check_ui(
+            glv_ui_slider_float3(self.ptr, label.encode("utf-8"), v, vmin, vmax))
+        return changed, (v[0], v[1], v[2])
+
+    def ui_slider_int(self, str label, value, int vmin, int vmax):
+        cdef int v = value
+        cdef bint changed = _check_ui(
+            glv_ui_slider_int(self.ptr, label.encode("utf-8"), &v, vmin, vmax))
+        return changed, v
+
+    def ui_combo(self, str label, current, str items):
+        cdef int c = current
+        cdef bint changed = _check_ui(
+            glv_ui_combo(self.ptr, label.encode("utf-8"), &c,
+                         items.encode("utf-8")))
+        return changed, c
+
+    def ui_drag_float(self, str label, value, float speed=1.0,
+                      float vmin=0.0, float vmax=0.0):
+        cdef float v = value
+        cdef bint changed = _check_ui(
+            glv_ui_drag_float(self.ptr, label.encode("utf-8"), &v, speed,
+                              vmin, vmax))
+        return changed, v
+
+    def ui_color_edit3(self, str label, color):
+        cdef float[3] c = [color[0], color[1], color[2]]
+        cdef bint changed = _check_ui(
+            glv_ui_color_edit3(self.ptr, label.encode("utf-8"), c))
+        return changed, (c[0], c[1], c[2])
+
+    def ui_color_edit4(self, str label, color):
+        cdef float[4] c = [color[0], color[1], color[2], color[3]]
+        cdef bint changed = _check_ui(
+            glv_ui_color_edit4(self.ptr, label.encode("utf-8"), c))
+        return changed, (c[0], c[1], c[2], c[3])
+
+    def ui_plot_lines(self, str label, values):
+        cdef float[::1] buf = np.ascontiguousarray(values, dtype=np.float32)
+        cdef float *data = NULL
+        if buf.shape[0] > 0:
+            data = &buf[0]
+        _check(glv_ui_plot_lines(self.ptr, label.encode("utf-8"), data,
+                                 <int>buf.shape[0]))
+
+    def ui_want_capture_mouse(self):
+        return _check_ui(glv_ui_want_capture_mouse(self.ptr))
+
+    def ui_want_capture_keyboard(self):
+        return _check_ui(glv_ui_want_capture_keyboard(self.ptr))
 
 
 cdef class Camera:
@@ -814,3 +903,7 @@ def loop():
 
 def render():
     _check(glv_render())
+
+
+def ui_new_frame():
+    _check(glv_ui_new_frame())

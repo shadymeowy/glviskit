@@ -30,6 +30,9 @@ def loop() -> bool:
 def render() -> None:
     """Render all windows without processing events"""
 
+def ui_new_frame() -> None:
+    """Open a fresh UI frame for every window (gl_loop calls this for you)"""
+
 class Window:
     def add_render_list(self, rb: RenderList) -> None:
         """Add a RenderList to the window for rendering"""
@@ -63,6 +66,76 @@ class Window:
 
     def render(self) -> None:
         """Render the window's contents"""
+
+    def ui_begin(self, title: str) -> bool:
+        """Begin a UI panel; returns whether it is visible"""
+
+    def ui_end(self) -> None:
+        """End the current UI panel"""
+
+    def ui_text(self, text: str) -> None:
+        """Draw a line of text"""
+
+    def ui_separator(self) -> None:
+        """Draw a horizontal separator"""
+
+    def ui_same_line(self) -> None:
+        """Keep the next widget on the same line as the previous one"""
+
+    def ui_button(self, label: str) -> bool:
+        """Draw a button; returns True if clicked this frame"""
+
+    def ui_checkbox(self, label: str, value: bool) -> tuple[bool, bool]:
+        """Draw a checkbox; returns (changed, new_value)"""
+
+    def ui_slider_float(
+        self, label: str, value: float, vmin: float, vmax: float
+    ) -> tuple[bool, float]:
+        """Draw a float slider; returns (changed, new_value)"""
+
+    def ui_slider_float3(
+        self, label: str, value: Sequence[float], vmin: float, vmax: float
+    ) -> tuple[bool, tuple[float, float, float]]:
+        """Draw a 3-component float slider; returns (changed, new_value)"""
+
+    def ui_slider_int(
+        self, label: str, value: int, vmin: int, vmax: int
+    ) -> tuple[bool, int]:
+        """Draw an int slider; returns (changed, new_value)"""
+
+    def ui_combo(
+        self, label: str, current: int, items: str
+    ) -> tuple[bool, int]:
+        """Draw a combo from "a|b|c" options; returns (changed, new_index)"""
+
+    def ui_drag_float(
+        self,
+        label: str,
+        value: float,
+        speed: float = 1.0,
+        vmin: float = 0.0,
+        vmax: float = 0.0,
+    ) -> tuple[bool, float]:
+        """Draw a draggable float; returns (changed, new_value)"""
+
+    def ui_color_edit3(
+        self, label: str, color: Sequence[float]
+    ) -> tuple[bool, tuple[float, float, float]]:
+        """Edit an RGB color; returns (changed, new_color)"""
+
+    def ui_color_edit4(
+        self, label: str, color: Sequence[float]
+    ) -> tuple[bool, tuple[float, float, float, float]]:
+        """Edit an RGBA color; returns (changed, new_color)"""
+
+    def ui_plot_lines(self, label: str, values: Sequence[float]) -> None:
+        """Plot a line graph of the given values"""
+
+    def ui_want_capture_mouse(self) -> bool:
+        """Whether the UI is currently capturing the mouse"""
+
+    def ui_want_capture_keyboard(self) -> bool:
+        """Whether the UI is currently capturing the keyboard"""
 
 class Camera:
     def calculate_transform(

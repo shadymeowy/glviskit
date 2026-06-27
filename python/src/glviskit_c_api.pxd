@@ -210,3 +210,28 @@ cdef extern from "glviskit/c_api.h":
                                              float sensitivity)
     int glv_controller_get_wheel_sensitivity(glv_controller *controller,
                                              float *out_sensitivity)
+
+    int glv_ui_new_frame()
+    int glv_ui_begin(glv_window *window, const char *title)
+    int glv_ui_end(glv_window *window)
+    int glv_ui_text(glv_window *window, const char *text)
+    int glv_ui_separator(glv_window *window)
+    int glv_ui_same_line(glv_window *window)
+    int glv_ui_button(glv_window *window, const char *label)
+    int glv_ui_checkbox(glv_window *window, const char *label, int *value)
+    int glv_ui_slider_float(glv_window *window, const char *label,
+                            float *value, float min, float max)
+    int glv_ui_slider_float3(glv_window *window, const char *label,
+                             float *value, float min, float max)
+    int glv_ui_slider_int(glv_window *window, const char *label, int *value,
+                          int min, int max)
+    int glv_ui_combo(glv_window *window, const char *label, int *current,
+                     const char *items)
+    int glv_ui_drag_float(glv_window *window, const char *label, float *value,
+                          float speed, float min, float max)
+    int glv_ui_color_edit3(glv_window *window, const char *label, float *rgb)
+    int glv_ui_color_edit4(glv_window *window, const char *label, float *rgba)
+    int glv_ui_plot_lines(glv_window *window, const char *label,
+                          const float *values, int count)
+    int glv_ui_want_capture_mouse(glv_window *window)
+    int glv_ui_want_capture_keyboard(glv_window *window)
