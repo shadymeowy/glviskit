@@ -4,6 +4,9 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
 
+#include <string>
+#include <vector>
+
 #include "../gl/gl.hpp"
 #include "sdl.hpp"
 
@@ -100,6 +103,11 @@ class WindowUiRenderer {
         ImGui::Separator();
     }
 
+    void SameLine() {
+        ImGui::SetCurrentContext(ctx_);
+        ImGui::SameLine();
+    }
+
     auto Button(const char *label) -> bool {
         ImGui::SetCurrentContext(ctx_);
         return ImGui::Button(label);
@@ -116,9 +124,34 @@ class WindowUiRenderer {
         return ImGui::SliderFloat(label, &value, min, max);
     }
 
+    auto SliderFloat3(const char *label, float *value, float min, float max)
+        -> bool {
+        ImGui::SetCurrentContext(ctx_);
+        return ImGui::SliderFloat3(label, value, min, max);
+    }
+
     auto SliderInt(const char *label, int &value, int min, int max) -> bool {
         ImGui::SetCurrentContext(ctx_);
         return ImGui::SliderInt(label, &value, min, max);
+    }
+
+    // selection from "a|b|c" style options, current holds the chosen index
+    auto Combo(const char *label, int &current, const char *items) -> bool {
+        ImGui::SetCurrentContext(ctx_);
+
+        // split the |-separated items into null-terminated segments
+        std::string buf(items);
+        std::vector<const char *> ptrs;
+        ptrs.push_back(buf.c_str());
+        for (size_t i = 0; i < buf.size(); ++i) {
+            if (buf[i] == '|') {
+                buf[i] = '\0';
+                ptrs.push_back(buf.c_str() + i + 1);
+            }
+        }
+
+        return ImGui::Combo(label, &current, ptrs.data(),
+                            static_cast<int>(ptrs.size()));
     }
 
     auto DragFloat(const char *label, float &value, float speed, float min,
@@ -135,6 +168,11 @@ class WindowUiRenderer {
     auto ColorEdit4(const char *label, float *rgba) -> bool {
         ImGui::SetCurrentContext(ctx_);
         return ImGui::ColorEdit4(label, rgba);
+    }
+
+    void PlotLines(const char *label, const float *values, int count) {
+        ImGui::SetCurrentContext(ctx_);
+        ImGui::PlotLines(label, values, count);
     }
 
    private:
