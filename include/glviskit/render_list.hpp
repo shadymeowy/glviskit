@@ -1,17 +1,25 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
 #include <span>
+#include <string>
+#include <vector>
 
 #include "mesh.hpp"
 #include "path.hpp"
 #include "render_state.hpp"
+#include "symbol_atlas.hpp"
 
 namespace glviskit {
+
+enum class MarkerType { Square, Triangle, Diamond, Ring, Circle };
+
+enum class TextAlign { Left, Center, Right };
 
 class RenderList {
    public:
@@ -106,28 +114,45 @@ class RenderList {
 
     void Circle(glm::vec3 circle) { Circle(circle, state.color, state.size); }
 
-    void Symbol(glm::vec3 anchor, glm::vec2 offset_min, glm::vec2 offset_max,
-                glm::vec2 uv_min, glm::vec2 uv_max, glm::vec4 color) {
+    void Symbol(int idx, glm::vec3 anchor, glm::vec2 offset, glm::vec4 color,
+                float size, int overlay = 0) {
         auto &vbo = render_state_->symbol_buffer_.VBO();
         auto &ebo = render_state_->symbol_buffer_.EBO();
         size_t index = vbo.Size();
+        auto fidx = static_cast<float>(idx);
+
+        auto ov = static_cast<float>(overlay);
+
+        float h = size;
+        float l = offset.x - h;
+        float r = offset.x + h;
+        float t = -offset.y + h;
+        float b = -offset.y - h;
         // four corners (BL, BR, TR, TL)
         vbo.Append({.anchor = anchor,
-                    .offset = {offset_min.x, offset_min.y},
-                    .uv = {uv_min.x, uv_min.y},
-                    .color = color});
+                    .offset = {l, b},
+                    .corner = {0.0F, 0.0F},
+                    .idx = fidx,
+                    .color = color,
+                    .overlay = ov});
         vbo.Append({.anchor = anchor,
-                    .offset = {offset_max.x, offset_min.y},
-                    .uv = {uv_max.x, uv_min.y},
-                    .color = color});
+                    .offset = {r, b},
+                    .corner = {1.0F, 0.0F},
+                    .idx = fidx,
+                    .color = color,
+                    .overlay = ov});
         vbo.Append({.anchor = anchor,
-                    .offset = {offset_max.x, offset_max.y},
-                    .uv = {uv_max.x, uv_max.y},
-                    .color = color});
+                    .offset = {r, t},
+                    .corner = {1.0F, 1.0F},
+                    .idx = fidx,
+                    .color = color,
+                    .overlay = ov});
         vbo.Append({.anchor = anchor,
-                    .offset = {offset_min.x, offset_max.y},
-                    .uv = {uv_min.x, uv_max.y},
-                    .color = color});
+                    .offset = {l, t},
+                    .corner = {0.0F, 1.0F},
+                    .idx = fidx,
+                    .color = color,
+                    .overlay = ov});
         // two triangles
         ebo.Append(index + 0);
         ebo.Append(index + 1);
@@ -135,6 +160,116 @@ class RenderList {
         ebo.Append(index + 2);
         ebo.Append(index + 3);
         ebo.Append(index + 0);
+    }
+
+    void Symbol(int idx, glm::vec3 anchor, glm::vec2 offset, glm::vec4 color) {
+        Symbol(idx, anchor, offset, color, state.size);
+    }
+
+    void Symbol(int idx, glm::vec3 anchor, glm::vec2 offset) {
+        Symbol(idx, anchor, offset, state.color, state.size);
+    }
+
+    void Character(char c, glm::vec3 anchor, glm::vec2 offset, glm::vec4 color,
+                   float size, int overlay = 0) {
+        const auto &atlas = DefaultSymbolAtlas();
+        int idx = static_cast<unsigned char>(c) - atlas.first_codepoint;
+        if (idx < 0 || idx >= atlas.char_count) {
+            return;
+        }
+        Symbol(idx, anchor, offset, color, size, overlay);
+    }
+
+    void Character(char c, glm::vec3 anchor, glm::vec2 offset,
+                   glm::vec4 color) {
+        Character(c, anchor, offset, color, state.size);
+    }
+
+    void Character(char c, glm::vec3 anchor, glm::vec2 offset) {
+        Character(c, anchor, offset, state.color, state.size);
+    }
+
+    void Marker(MarkerType type, glm::vec3 anchor, glm::vec2 offset,
+                glm::vec4 color, float size, int overlay = 0) {
+        const auto &atlas = DefaultSymbolAtlas();
+        Symbol(atlas.char_count + static_cast<int>(type), anchor, offset, color,
+               size, overlay);
+    }
+
+    void Marker(MarkerType type, glm::vec3 anchor, glm::vec2 offset,
+                glm::vec4 color) {
+        Marker(type, anchor, offset, color, state.size);
+    }
+
+    void Marker(MarkerType type, glm::vec3 anchor, glm::vec2 offset) {
+        Marker(type, anchor, offset, state.color, state.size);
+    }
+
+    void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset,
+              glm::vec4 color, float size, TextAlign align = TextAlign::Left,
+              int overlay = 0) {
+        const auto &atlas = DefaultSymbolAtlas();
+        const float cell = 2.0F * size;
+        const float char_w = atlas.advance * cell;
+        const float line_h = atlas.line_height * cell;
+        const size_t n = text.size();
+
+        size_t max_chars = 0;
+        size_t line_count = 1;
+        for (size_t i = 0, cur = 0; i < n; ++i) {
+            if (text[i] == '\n') {
+                max_chars = std::max(max_chars, cur);
+                cur = 0;
+                ++line_count;
+            } else {
+                ++cur;
+                if (i + 1 == n) {
+                    max_chars = std::max(max_chars, cur);
+                }
+            }
+        }
+
+        const float block_w = static_cast<float>(max_chars) * char_w;
+        const float block_h = static_cast<float>(line_count) * line_h;
+        const float top = offset.y - (block_h * 0.5F);
+
+        size_t start = 0;
+        for (size_t li = 0; li < line_count; ++li) {
+            size_t end = start;
+            while (end < n && text[end] != '\n') {
+                ++end;
+            }
+            const auto len = static_cast<float>(end - start);
+            const float line_w = len * char_w;
+            float left = offset.x - (block_w * 0.5F);
+            if (align == TextAlign::Center) {
+                left = offset.x - (line_w * 0.5F);
+            } else if (align == TextAlign::Right) {
+                left = offset.x + (block_w * 0.5F) - line_w;
+            }
+
+            const float cy = top + ((static_cast<float>(li) + 0.5F) * line_h);
+            for (size_t k = start; k < end; ++k) {
+                const float cx =
+                    left + ((static_cast<float>(k - start) + 0.5F) * char_w);
+                Character(text[k], anchor, {cx, cy}, color, size, overlay);
+            }
+            start = end + 1;
+        }
+    }
+
+    void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset,
+              glm::vec4 color) {
+        Text(text, anchor, offset, color, state.size);
+    }
+
+    void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset,
+              TextAlign align) {
+        Text(text, anchor, offset, state.color, state.size, align);
+    }
+
+    void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset) {
+        Text(text, anchor, offset, state.color, state.size);
     }
 
     void Triangles(std::span<const glm::vec3> vertices,

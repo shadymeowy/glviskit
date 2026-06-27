@@ -17,6 +17,7 @@
 #include "primitive/point.hpp"
 #include "primitive/symbol.hpp"
 #include "render_list.hpp"
+#include "symbol_atlas.hpp"
 
 namespace glviskit {
 
@@ -73,15 +74,6 @@ class WindowRenderer {
         return background_color;
     }
 
-    void SetSymbolAtlas(const unsigned char *pixels, int width, int height,
-                        int channels, float px_range) {
-        if (!symbol_atlas_) {
-            symbol_atlas_ = std::make_unique<Texture>();
-        }
-        symbol_atlas_->Upload(pixels, width, height, channels);
-        symbol_px_range_ = px_range;
-    }
-
     static void CaptureRGBA(int width, int height,
                             std::span<unsigned char> pixels) {
         const size_t expected = static_cast<size_t>(width) * height * 4;
@@ -105,12 +97,30 @@ class WindowRenderer {
     }
 
    private:
+    void SetSymbolAtlas(const unsigned char *pixels, int width, int height,
+                        int channels, float px_range, int cols, int rows) {
+        if (!symbol_atlas_) {
+            symbol_atlas_ = std::make_unique<Texture>();
+        }
+        symbol_atlas_->Upload(pixels, width, height, channels);
+        symbol_px_range_ = px_range;
+        symbol_cols_ = static_cast<float>(cols);
+        symbol_rows_ = static_cast<float>(rows);
+    }
+
     void InitializeContext() {
         program_line = std::make_unique<line::Program>();
         program_point = std::make_unique<point::Program>();
         program_circle = std::make_unique<circle::Program>();
         program_mesh = std::make_unique<mesh::Program>();
         program_symbol_ = std::make_unique<symbol::Program>();
+
+        const auto &atlas = DefaultSymbolAtlas();
+        if (!atlas.Empty()) {
+            SetSymbolAtlas(atlas.pixels, atlas.width, atlas.height,
+                           atlas.channels, atlas.px_range, atlas.cols,
+                           atlas.rows);
+        }
 
         glDisable(GL_CULL_FACE);
 #ifdef GLVISKIT_GL33
@@ -179,6 +189,7 @@ class WindowRenderer {
             program_symbol_->SetMVP(mvp);
             program_symbol_->SetAlphaTest(alpha_test);
             program_symbol_->SetPxRange(symbol_px_range_);
+            program_symbol_->SetGrid(symbol_cols_, symbol_rows_);
             symbol_atlas_->Bind(0);
             program_symbol_->SetAtlas(0);
             for (auto &buf : buffers) {
@@ -200,6 +211,8 @@ class WindowRenderer {
     // msdf symbol atlas (created lazily once the context exists)
     std::unique_ptr<Texture> symbol_atlas_{nullptr};
     float symbol_px_range_{0.0F};
+    float symbol_cols_{1.0F};
+    float symbol_rows_{1.0F};
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;

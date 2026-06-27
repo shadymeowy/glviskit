@@ -17,14 +17,17 @@ namespace glviskit::symbol {
 inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
     layout(location = 0) in vec3 a_anchor;
     layout(location = 1) in vec2 a_offset;
-    layout(location = 2) in vec2 a_uv;
-    layout(location = 3) in vec4 a_color;
-    layout(location = 4) in mat4 a_transform;
+    layout(location = 2) in vec2 a_corner;
+    layout(location = 3) in float a_idx;
+    layout(location = 4) in vec4 a_color;
+    layout(location = 5) in float a_overlay;
+    layout(location = 6) in mat4 a_transform;
     out vec2 v_uv;
     out vec4 v_color;
 
     uniform mat4 mvp;
     uniform vec2 screen_size;
+    uniform vec2 u_grid;
 
     void main()
     {
@@ -36,7 +39,15 @@ inline constexpr char shader_vertex[] = GLVISKIT_VERT_HEADER R"glsl(
         gl_Position = p;
         gl_Position.xy += offset * p.w;
 
-        v_uv = a_uv;
+        if (a_overlay > 0.0) {
+            gl_Position.z = (-1.0 + a_overlay * 1e-3) * gl_Position.w;
+        }
+
+        float ix = mod(a_idx, u_grid.x);
+        float iy = floor(a_idx / u_grid.x);
+
+        v_uv = vec2((ix + a_corner.x) / u_grid.x,
+                    (iy + 1.0 - a_corner.y) / u_grid.y);
         v_color = a_color;
     }
 )glsl";
@@ -86,8 +97,10 @@ class Buffer {
     struct Element {
         glm::vec3 anchor;
         glm::vec2 offset;
-        glm::vec2 uv;
+        glm::vec2 corner;
+        float idx;
         glm::vec4 color;
+        float overlay;
     };
 
     explicit Buffer(InstanceBuffer &vbo_inst) : vbo_inst{vbo_inst} {}
@@ -156,21 +169,27 @@ class Buffer {
                               (void *)offsetof(Element, offset));
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Element),
-                              (void *)offsetof(Element, uv));
+                              (void *)offsetof(Element, corner));
         glEnableVertexAttribArray(2);
-        glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Element),
-                              (void *)offsetof(Element, color));
+        glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, idx));
         glEnableVertexAttribArray(3);
+        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, color));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(5, 1, GL_FLOAT, GL_FALSE, sizeof(Element),
+                              (void *)offsetof(Element, overlay));
+        glEnableVertexAttribArray(5);
         vbo.Unbind();
 
         vbo_inst.Bind();
         std::size_t vec4_size = sizeof(glm::vec4);
         for (int i = 0; i < 4; i++) {
             glVertexAttribPointer(
-                4 + i, 4, GL_FLOAT, GL_FALSE, sizeof(Instance),
+                6 + i, 4, GL_FLOAT, GL_FALSE, sizeof(Instance),
                 (void *)(offsetof(Instance, transform) + (vec4_size * i)));
-            glEnableVertexAttribArray(4 + i);
-            glVertexAttribDivisor(4 + i, 1);
+            glEnableVertexAttribArray(6 + i);
+            glVertexAttribDivisor(6 + i, 1);
         }
         // NOLINTEND(performance-no-int-to-ptr)
         vbo_inst.Unbind();
