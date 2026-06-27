@@ -259,6 +259,39 @@ GLVISKIT_C_API int glv_controller_set_wheel_sensitivity(
 GLVISKIT_C_API int glv_controller_get_wheel_sensitivity(
     glv_controller *controller, float *out_sensitivity);
 
+/* UI (Dear ImGui). Widget functions return 1 if changed/clicked, 0 if not,
+ * or GLV_ERROR on failure. In/out values are read and written through their
+ * pointers. glv_ui_new_frame opens a fresh frame for every window; glv_loop
+ * already calls it, so it is only needed for custom loops. */
+GLVISKIT_C_API int glv_ui_new_frame(void);
+GLVISKIT_C_API int glv_ui_begin(glv_window *window, const char *title);
+GLVISKIT_C_API int glv_ui_end(glv_window *window);
+GLVISKIT_C_API int glv_ui_text(glv_window *window, const char *text);
+GLVISKIT_C_API int glv_ui_separator(glv_window *window);
+GLVISKIT_C_API int glv_ui_same_line(glv_window *window);
+GLVISKIT_C_API int glv_ui_button(glv_window *window, const char *label);
+GLVISKIT_C_API int glv_ui_checkbox(glv_window *window, const char *label,
+                                   int *value);
+GLVISKIT_C_API int glv_ui_slider_float(glv_window *window, const char *label,
+                                       float *value, float min, float max);
+GLVISKIT_C_API int glv_ui_slider_float3(glv_window *window, const char *label,
+                                        float *value, float min, float max);
+GLVISKIT_C_API int glv_ui_slider_int(glv_window *window, const char *label,
+                                     int *value, int min, int max);
+GLVISKIT_C_API int glv_ui_combo(glv_window *window, const char *label,
+                                int *current, const char *items);
+GLVISKIT_C_API int glv_ui_drag_float(glv_window *window, const char *label,
+                                     float *value, float speed, float min,
+                                     float max);
+GLVISKIT_C_API int glv_ui_color_edit3(glv_window *window, const char *label,
+                                      float *rgb);
+GLVISKIT_C_API int glv_ui_color_edit4(glv_window *window, const char *label,
+                                      float *rgba);
+GLVISKIT_C_API int glv_ui_plot_lines(glv_window *window, const char *label,
+                                     const float *values, int count);
+GLVISKIT_C_API int glv_ui_want_capture_mouse(glv_window *window);
+GLVISKIT_C_API int glv_ui_want_capture_keyboard(glv_window *window);
+
 #ifdef __cplusplus
 }
 #endif

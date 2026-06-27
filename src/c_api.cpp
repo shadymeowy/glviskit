@@ -847,4 +847,102 @@ int glv_controller_get_wheel_sensitivity(glv_controller *controller,
                }););
 }
 
+int glv_ui_new_frame(void) { GLV_OK_TRY(glviskit::UiBegin();); }
+
+int glv_ui_begin(glv_window *window, const char *title) {
+    GLV_TRY(GLV_ERROR, Require(title, "title");
+            return Window(window).Ui().Begin(title) ? 1 : 0;);
+}
+
+int glv_ui_end(glv_window *window) { GLV_OK_TRY(Window(window).Ui().End();); }
+
+int glv_ui_text(glv_window *window, const char *text) {
+    GLV_OK_TRY(Require(text, "text"); Window(window).Ui().Text(text););
+}
+
+int glv_ui_separator(glv_window *window) {
+    GLV_OK_TRY(Window(window).Ui().Separator(););
+}
+
+int glv_ui_same_line(glv_window *window) {
+    GLV_OK_TRY(Window(window).Ui().SameLine(););
+}
+
+int glv_ui_button(glv_window *window, const char *label) {
+    GLV_TRY(GLV_ERROR, Require(label, "label");
+            return Window(window).Ui().Button(label) ? 1 : 0;);
+}
+
+int glv_ui_checkbox(glv_window *window, const char *label, int *value) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(value, "value");
+            bool v = *value != 0;
+            bool changed = Window(window).Ui().Checkbox(label, v);
+            *value = v ? 1 : 0; return changed ? 1 : 0;);
+}
+
+int glv_ui_slider_float(glv_window *window, const char *label, float *value,
+                        float min, float max) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(value, "value");
+            return Window(window).Ui().SliderFloat(label, *value, min, max)
+                       ? 1
+                       : 0;);
+}
+
+int glv_ui_slider_float3(glv_window *window, const char *label, float *value,
+                         float min, float max) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(value, "value");
+            return Window(window).Ui().SliderFloat3(label, value, min, max)
+                       ? 1
+                       : 0;);
+}
+
+int glv_ui_slider_int(glv_window *window, const char *label, int *value,
+                      int min, int max) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(value, "value");
+            return Window(window).Ui().SliderInt(label, *value, min, max) ? 1
+                                                                          : 0;);
+}
+
+int glv_ui_combo(glv_window *window, const char *label, int *current,
+                 const char *items) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(current, "current");
+            Require(items, "items");
+            return Window(window).Ui().Combo(label, *current, items) ? 1 : 0;);
+}
+
+int glv_ui_drag_float(glv_window *window, const char *label, float *value,
+                      float speed, float min, float max) {
+    GLV_TRY(
+        GLV_ERROR, Require(label, "label"); Require(value, "value");
+        return Window(window).Ui().DragFloat(label, *value, speed, min, max)
+                   ? 1
+                   : 0;);
+}
+
+int glv_ui_color_edit3(glv_window *window, const char *label, float *rgb) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(rgb, "rgb");
+            return Window(window).Ui().ColorEdit3(label, rgb) ? 1 : 0;);
+}
+
+int glv_ui_color_edit4(glv_window *window, const char *label, float *rgba) {
+    GLV_TRY(GLV_ERROR, Require(label, "label"); Require(rgba, "rgba");
+            return Window(window).Ui().ColorEdit4(label, rgba) ? 1 : 0;);
+}
+
+int glv_ui_plot_lines(glv_window *window, const char *label,
+                      const float *values, int count) {
+    GLV_OK_TRY(Require(label, "label");
+               if (count > 0) { Require(values, "values"); }
+               Window(window).Ui().PlotLines(label, values, count););
+}
+
+int glv_ui_want_capture_mouse(glv_window *window) {
+    GLV_TRY(GLV_ERROR, return Window(window).Ui().WantCaptureMouse() ? 1 : 0;);
+}
+
+int glv_ui_want_capture_keyboard(glv_window *window) {
+    GLV_TRY(GLV_ERROR,
+            return Window(window).Ui().WantCaptureKeyboard() ? 1 : 0;);
+}
+
 }  // extern "C"
