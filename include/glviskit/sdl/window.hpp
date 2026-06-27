@@ -12,6 +12,7 @@
 #include "../gl/gl.hpp"
 #include "../window_renderer.hpp"
 #include "sdl.hpp"
+#include "window_ui_renderer.hpp"
 
 namespace glviskit::sdl {
 
@@ -116,6 +117,9 @@ class Window {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         window_renderer_.Render(window_id_, width, height);
 
+        // draw the ui on top
+        window_ui_renderer_.Render();
+
         // swap buffers
         SDL_GL_SwapWindow(window_.Get());
 
@@ -144,12 +148,21 @@ class Window {
 
     [[nodiscard]] auto GetWindowID() const -> Uint32 { return window_id_; }
 
+    // open a new ui frame for this window
+    void BeginUiFrame() {
+        MakeCurrent();
+        window_ui_renderer_.NewFrame(window_.Get(), context_.Get());
+    }
+
+    auto Ui() -> WindowUiRenderer & { return window_ui_renderer_; }
+
    private:
     SDLWindowPtr window_;
     SDLGLContextPtr context_;
 
     std::shared_ptr<BaseController> camera_controller_;
     WindowRenderer window_renderer_;
+    WindowUiRenderer window_ui_renderer_;
     GLuint window_id_;
 
     float time_prev_;

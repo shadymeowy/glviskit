@@ -57,6 +57,11 @@ class Manager {
                 return false;
             }
         }
+
+        // open a fresh ui frame for each window
+        for (auto &[id, window] : windows_) {
+            window->BeginUiFrame();
+        }
         return true;
     }
 
@@ -76,26 +81,41 @@ class Manager {
                     return false;
                 }
                 if (windows_.contains(event.key.windowID)) {
-                    windows_[event.key.windowID]->CallbackKey(event.key);
+                    auto &window = windows_[event.key.windowID];
+                    window->Ui().ProcessEvent(event);
+                    if (!window->Ui().WantCaptureKeyboard()) {
+                        window->CallbackKey(event.key);
+                    }
                 }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 if (windows_.contains(event.button.windowID)) {
-                    windows_[event.button.windowID]->CallbackButton(
-                        event.button);
+                    auto &window = windows_[event.button.windowID];
+                    window->Ui().ProcessEvent(event);
+                    if (!window->Ui().WantCaptureMouse()) {
+                        window->CallbackButton(event.button);
+                    }
                 }
                 break;
             case SDL_EVENT_MOUSE_MOTION:
                 if (windows_.contains(event.motion.windowID)) {
-                    windows_[event.motion.windowID]->CallbackMotion(
-                        event.motion);
+                    auto &window = windows_[event.motion.windowID];
+                    window->Ui().ProcessEvent(event);
+                    if (!window->Ui().WantCaptureMouse()) {
+                        window->CallbackMotion(event.motion);
+                    }
                 }
                 break;
             case SDL_EVENT_MOUSE_WHEEL:
                 if (windows_.contains(event.wheel.windowID)) {
-                    windows_[event.wheel.windowID]->CallbackWheel(event.wheel);
+                    auto &window = windows_[event.wheel.windowID];
+                    window->Ui().ProcessEvent(event);
+                    if (!window->Ui().WantCaptureMouse()) {
+                        window->CallbackWheel(event.wheel);
+                    }
                 }
+                break;
             default:
                 break;
         }
