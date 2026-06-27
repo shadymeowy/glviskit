@@ -69,6 +69,13 @@ auto main() -> int {
                       (static_cast<float>(i) / static_cast<float>(n - 1))));
     }
 
+    render_list->Text("glviskit\nwave demo", {0.0F, 20.0F, 0.0F}, {0.0F, 60.0F},
+                      {1.0F, 1.0F, 1.0F, 1.0F}, 20.0F,
+                      glviskit::TextAlign::Center, /*overlay=*/1);
+    render_list->Marker(glviskit::MarkerType::Diamond, {0.0F, 20.0F, 0.0F},
+                        {0.0F, 0.0F}, {1.0F, 0.8F, 0.2F, 1.0F}, 32.0F);
+    render_list->Save();
+
     std::vector<float> zs;
     zs.reserve(n * n);
 
@@ -113,7 +120,7 @@ auto main() -> int {
         window1->SetBackgroundColor(
             {bg_color[0], bg_color[1], bg_color[2], bg_color[3]});
 
-        render_list->Clear();
+        render_list->Restore();
 
         render_list->Color({line_color[0], line_color[1], line_color[2], 1.0F});
         render_list->Size(static_cast<float>(line_size));
