@@ -69,6 +69,13 @@ class Window {
         return window_renderer_.GetBackgroundColor();
     }
 
+    void SetSymbolAtlas(const unsigned char *pixels, int width, int height,
+                        int channels, float px_range) {
+        MakeCurrent();
+        window_renderer_.SetSymbolAtlas(pixels, width, height, channels,
+                                        px_range);
+    }
+
     [[nodiscard]] auto GetSizeInPixels() const -> std::array<int, 2> {
         int width;
         int height;

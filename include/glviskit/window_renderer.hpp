@@ -10,10 +10,12 @@
 
 #include "camera.hpp"
 #include "gl/gl.hpp"
+#include "gl/texture.hpp"
 #include "primitive/circle.hpp"
 #include "primitive/line.hpp"
 #include "primitive/mesh.hpp"
 #include "primitive/point.hpp"
+#include "primitive/symbol.hpp"
 #include "render_list.hpp"
 
 namespace glviskit {
@@ -70,6 +72,16 @@ class WindowRenderer {
     [[nodiscard]] auto GetBackgroundColor() const -> glm::vec4 {
         return background_color;
     }
+
+    void SetSymbolAtlas(const unsigned char *pixels, int width, int height,
+                        int channels, float px_range) {
+        if (!symbol_atlas_) {
+            symbol_atlas_ = std::make_unique<Texture>();
+        }
+        symbol_atlas_->Upload(pixels, width, height, channels);
+        symbol_px_range_ = px_range;
+    }
+
     static void CaptureRGBA(int width, int height,
                             std::span<unsigned char> pixels) {
         const size_t expected = static_cast<size_t>(width) * height * 4;
@@ -98,6 +110,7 @@ class WindowRenderer {
         program_point = std::make_unique<point::Program>();
         program_circle = std::make_unique<circle::Program>();
         program_mesh = std::make_unique<mesh::Program>();
+        program_symbol_ = std::make_unique<symbol::Program>();
 
         glDisable(GL_CULL_FACE);
 #ifdef GLVISKIT_GL33
@@ -158,6 +171,23 @@ class WindowRenderer {
             }
             buf->mesh_buffer_.Render(ctx_id);
         }
+
+        // Render all symbol buffers, sampled from the atlas
+        if (symbol_atlas_ && symbol_atlas_->Loaded()) {
+            program_symbol_->Use();
+            program_symbol_->SetScreenSize({width, height});
+            program_symbol_->SetMVP(mvp);
+            program_symbol_->SetAlphaTest(alpha_test);
+            program_symbol_->SetPxRange(symbol_px_range_);
+            symbol_atlas_->Bind(0);
+            program_symbol_->SetAtlas(0);
+            for (auto &buf : buffers) {
+                if (!buf->enabled_) {
+                    continue;
+                }
+                buf->symbol_buffer_.Render(ctx_id);
+            }
+        }
     }
 
     // TODO: share programs across multiple renderers?
@@ -165,6 +195,11 @@ class WindowRenderer {
     std::unique_ptr<point::Program> program_point{nullptr};
     std::unique_ptr<circle::Program> program_circle{nullptr};
     std::unique_ptr<mesh::Program> program_mesh{nullptr};
+    std::unique_ptr<symbol::Program> program_symbol_{nullptr};
+
+    // msdf symbol atlas (created lazily once the context exists)
+    std::unique_ptr<Texture> symbol_atlas_{nullptr};
+    float symbol_px_range_{0.0F};
 
     // make camera shareable across windows
     std::shared_ptr<Camera> camera;

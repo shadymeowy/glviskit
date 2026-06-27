@@ -106,6 +106,37 @@ class RenderList {
 
     void Circle(glm::vec3 circle) { Circle(circle, state.color, state.size); }
 
+    void Symbol(glm::vec3 anchor, glm::vec2 offset_min, glm::vec2 offset_max,
+                glm::vec2 uv_min, glm::vec2 uv_max, glm::vec4 color) {
+        auto &vbo = render_state_->symbol_buffer_.VBO();
+        auto &ebo = render_state_->symbol_buffer_.EBO();
+        size_t index = vbo.Size();
+        // four corners (BL, BR, TR, TL)
+        vbo.Append({.anchor = anchor,
+                    .offset = {offset_min.x, offset_min.y},
+                    .uv = {uv_min.x, uv_min.y},
+                    .color = color});
+        vbo.Append({.anchor = anchor,
+                    .offset = {offset_max.x, offset_min.y},
+                    .uv = {uv_max.x, uv_min.y},
+                    .color = color});
+        vbo.Append({.anchor = anchor,
+                    .offset = {offset_max.x, offset_max.y},
+                    .uv = {uv_max.x, uv_max.y},
+                    .color = color});
+        vbo.Append({.anchor = anchor,
+                    .offset = {offset_min.x, offset_max.y},
+                    .uv = {uv_min.x, uv_max.y},
+                    .color = color});
+        // two triangles
+        ebo.Append(index + 0);
+        ebo.Append(index + 1);
+        ebo.Append(index + 2);
+        ebo.Append(index + 2);
+        ebo.Append(index + 3);
+        ebo.Append(index + 0);
+    }
+
     void Triangles(std::span<const glm::vec3> vertices,
                    std::span<const glm::uvec3> indices) {
         auto &vbo = render_state_->mesh_buffer_.VBO();

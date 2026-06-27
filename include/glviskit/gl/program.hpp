@@ -75,6 +75,9 @@ class Program {
         loc_alpha_test = glGetUniformLocation(program, "alpha_test");
         if (loc_alpha_test == -1) {
         }
+        // symbol-only uniforms; -1 (and no-op) for shaders without them
+        loc_atlas = glGetUniformLocation(program, "u_atlas");
+        loc_px_range = glGetUniformLocation(program, "u_px_range");
     }
 
     // destructor
@@ -85,6 +88,8 @@ class Program {
             loc_mvp = 0;
             loc_screen_size = 0;
             loc_alpha_test = 0;
+            loc_atlas = 0;
+            loc_px_range = 0;
         }
     }
 
@@ -97,11 +102,15 @@ class Program {
         : program(other.program),
           loc_mvp(other.loc_mvp),
           loc_screen_size(other.loc_screen_size),
-          loc_alpha_test(other.loc_alpha_test) {
+          loc_alpha_test(other.loc_alpha_test),
+          loc_atlas(other.loc_atlas),
+          loc_px_range(other.loc_px_range) {
         other.program = 0;
         other.loc_mvp = 0;
         other.loc_screen_size = 0;
         other.loc_alpha_test = 0;
+        other.loc_atlas = 0;
+        other.loc_px_range = 0;
     }
 
     auto operator=(Program &&other) noexcept -> Program & {
@@ -113,10 +122,14 @@ class Program {
             loc_mvp = other.loc_mvp;
             loc_screen_size = other.loc_screen_size;
             loc_alpha_test = other.loc_alpha_test;
+            loc_atlas = other.loc_atlas;
+            loc_px_range = other.loc_px_range;
             other.program = 0;
             other.loc_mvp = 0;
             other.loc_screen_size = 0;
             other.loc_alpha_test = 0;
+            other.loc_atlas = 0;
+            other.loc_px_range = 0;
         }
         return *this;
     }
@@ -144,9 +157,25 @@ class Program {
         glUniform1i(loc_alpha_test, alpha_test);
     }
 
+    // symbol-only; no-op on shaders that lack these uniforms
+    void SetAtlas(int unit) {
+        if (loc_atlas == -1) {
+            return;
+        }
+        glUniform1i(loc_atlas, unit);
+    }
+
+    void SetPxRange(float px_range) {
+        if (loc_px_range == -1) {
+            return;
+        }
+        glUniform1f(loc_px_range, px_range);
+    }
+
    private:
     GLuint program{};
     GLuint loc_mvp{}, loc_screen_size{}, loc_alpha_test{};
+    GLint loc_atlas{}, loc_px_range{};
 };
 
 }  // namespace glviskit
