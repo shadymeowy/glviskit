@@ -125,41 +125,27 @@ GLVISKIT_C_API int glv_camera_set_preserve_aspect_ratio(glv_camera *camera,
 GLVISKIT_C_API int glv_camera_get_preserve_aspect_ratio(glv_camera *camera,
                                                         int *out_preserve);
 
+/* scalar draws take explicit color/size; bindings fall back to the render
+ * list's current state (glv_render_list_get_color/get_size) when omitted. */
 GLVISKIT_C_API int glv_render_list_color(glv_render_list *render_list, float r,
                                          float g, float b, float a);
 GLVISKIT_C_API int glv_render_list_size(glv_render_list *render_list,
                                         float size);
+GLVISKIT_C_API int glv_render_list_get_color(glv_render_list *render_list,
+                                             float *out_r, float *out_g,
+                                             float *out_b, float *out_a);
+GLVISKIT_C_API int glv_render_list_get_size(glv_render_list *render_list,
+                                            float *out_size);
 GLVISKIT_C_API int glv_render_list_point(glv_render_list *render_list, float x,
-                                         float y, float z);
-GLVISKIT_C_API int glv_render_list_point_color(glv_render_list *render_list,
-                                               float x, float y, float z,
-                                               float r, float g, float b,
-                                               float a);
-GLVISKIT_C_API int glv_render_list_point_color_size(
-    glv_render_list *render_list, float x, float y, float z, float r, float g,
-    float b, float a, float size);
+                                         float y, float z, float r, float g,
+                                         float b, float a, float size);
 GLVISKIT_C_API int glv_render_list_line(glv_render_list *render_list, float x0,
                                         float y0, float z0, float x1, float y1,
-                                        float z1);
-GLVISKIT_C_API int glv_render_list_line_color(glv_render_list *render_list,
-                                              float x0, float y0, float z0,
-                                              float x1, float y1, float z1,
-                                              float r, float g, float b,
-                                              float a);
-GLVISKIT_C_API int glv_render_list_line_color_size(glv_render_list *render_list,
-                                                   float x0, float y0, float z0,
-                                                   float x1, float y1, float z1,
-                                                   float r, float g, float b,
-                                                   float a, float size);
+                                        float z1, float r, float g, float b,
+                                        float a, float size);
 GLVISKIT_C_API int glv_render_list_circle(glv_render_list *render_list, float x,
-                                          float y, float z);
-GLVISKIT_C_API int glv_render_list_circle_color(glv_render_list *render_list,
-                                                float x, float y, float z,
-                                                float r, float g, float b,
-                                                float a);
-GLVISKIT_C_API int glv_render_list_circle_color_size(
-    glv_render_list *render_list, float x, float y, float z, float r, float g,
-    float b, float a, float size);
+                                          float y, float z, float r, float g,
+                                          float b, float a, float size);
 
 GLVISKIT_C_API int glv_render_list_points(glv_render_list *render_list,
                                           const float *xyz, const float *rgba,
@@ -191,11 +177,9 @@ GLVISKIT_C_API int glv_render_list_triangles(glv_render_list *render_list,
                                              const int32_t *indices,
                                              size_t triangle_count);
 
-GLVISKIT_C_API int glv_render_list_get_color(glv_render_list *render_list,
-                                             float *out_r, float *out_g,
-                                             float *out_b, float *out_a);
-GLVISKIT_C_API int glv_render_list_get_size(glv_render_list *render_list,
-                                            float *out_size);
+/* billboarded msdf symbols. anchor is a 3D point; offset is the cell center in
+ * pixels relative to the projected anchor (+x right, +y down); size is the
+ * half-extent in pixels (like a circle). overlay > 0 draws on top of all 3D. */
 GLVISKIT_C_API int glv_render_list_symbol(glv_render_list *render_list, int idx,
                                           float ax, float ay, float az,
                                           float ox, float oy, float r, float g,
@@ -243,31 +227,30 @@ GLVISKIT_C_API int glv_render_list_set_enabled(glv_render_list *render_list,
 GLVISKIT_C_API int glv_render_list_get_enabled(glv_render_list *render_list,
                                                int *out_enabled);
 
-GLVISKIT_C_API int glv_path_line_to(glv_path *path, float x, float y, float z);
-GLVISKIT_C_API int glv_path_line_to_color(glv_path *path, float x, float y,
-                                          float z, float r, float g, float b,
-                                          float a);
-GLVISKIT_C_API int glv_path_line_to_color_size(glv_path *path, float x, float y,
-                                               float z, float r, float g,
-                                               float b, float a, float size);
-GLVISKIT_C_API int glv_path_close(glv_path *path);
-GLVISKIT_C_API int glv_path_line_end(glv_path *path);
 GLVISKIT_C_API int glv_path_color(glv_path *path, float r, float g, float b,
                                   float a);
 GLVISKIT_C_API int glv_path_size(glv_path *path, float size);
+GLVISKIT_C_API int glv_path_get_color(glv_path *path, float *out_r,
+                                      float *out_g, float *out_b, float *out_a);
+GLVISKIT_C_API int glv_path_get_size(glv_path *path, float *out_size);
+GLVISKIT_C_API int glv_path_line_to(glv_path *path, float x, float y, float z,
+                                    float r, float g, float b, float a,
+                                    float size);
+GLVISKIT_C_API int glv_path_close(glv_path *path);
+GLVISKIT_C_API int glv_path_line_end(glv_path *path);
 GLVISKIT_C_API int glv_path_line_to_many(glv_path *path, const float *xyz,
                                          const float *rgba, const float *sizes,
                                          size_t count);
 
-GLVISKIT_C_API int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
-                                   size_t *out_index);
-GLVISKIT_C_API int glv_mesh_vertex_color(glv_mesh *mesh, float x, float y,
-                                         float z, float r, float g, float b,
-                                         float a, size_t *out_index);
-GLVISKIT_C_API int glv_mesh_triangle(glv_mesh *mesh, size_t i0, size_t i1,
-                                     size_t i2);
 GLVISKIT_C_API int glv_mesh_color(glv_mesh *mesh, float r, float g, float b,
                                   float a);
+GLVISKIT_C_API int glv_mesh_get_color(glv_mesh *mesh, float *out_r,
+                                      float *out_g, float *out_b, float *out_a);
+GLVISKIT_C_API int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
+                                   float r, float g, float b, float a,
+                                   size_t *out_index);
+GLVISKIT_C_API int glv_mesh_triangle(glv_mesh *mesh, size_t i0, size_t i1,
+                                     size_t i2);
 GLVISKIT_C_API int glv_mesh_vertex_count(glv_mesh *mesh,
                                          size_t *out_vertex_count);
 /* Batched mesh building. xyz is (count, 3), rgba is (count, 4) or NULL.

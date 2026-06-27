@@ -67,6 +67,8 @@ class Path {
 
     void Color(const glm::vec4 &c) { state.color = c; }
     void Size(float s) { state.size = s; }
+    auto GetColor() const -> glm::vec4 { return state.color; }
+    auto GetSize() const -> float { return state.size; }
 
    private:
     auto AppendSegment(glm::vec3 position, const glm::vec4 &color, float size)

@@ -33,6 +33,7 @@ class Mesh {
     }
 
     void Color(const glm::vec4 &c) { state.color = c; }
+    [[nodiscard]] auto GetColor() const -> glm::vec4 { return state.color; }
     [[nodiscard]] auto VertexCount() const -> size_t {
         return state.vertex_mapping.size();
     }

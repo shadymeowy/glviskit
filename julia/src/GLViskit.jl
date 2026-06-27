@@ -140,6 +140,36 @@ _optf32(A) = asf32(A)
 _ptr(::Nothing) = C_NULL
 _ptr(A::Array) = A
 
+# color/size fall back to the builder's current state when not given
+for (T, cget, sget) in ((:RenderList, :glv_render_list_get_color, :glv_render_list_get_size),
+    (:Path, :glv_path_get_color, :glv_path_get_size))
+    @eval begin
+        function _get_color(h::$T)
+            r = Ref{F32}(); g = Ref{F32}(); b = Ref{F32}(); a = Ref{F32}()
+            check(ccall(($(QuoteNode(cget)), lib), Cint,
+                (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), h, r, g, b, a))
+            return (r[], g[], b[], a[])
+        end
+        function _get_size(h::$T)
+            s = Ref{F32}()
+            check(ccall(($(QuoteNode(sget)), lib), Cint, (Ptr{Cvoid}, Ptr{F32}), h, s))
+            return s[]
+        end
+    end
+end
+
+# mesh carries only a color
+function _get_color(m::Mesh)
+    r = Ref{F32}(); g = Ref{F32}(); b = Ref{F32}(); a = Ref{F32}()
+    check(ccall((:glv_mesh_get_color, lib), Cint,
+        (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), m, r, g, b, a))
+    return (r[], g[], b[], a[])
+end
+
+_resolve_cs(h, color, size) =
+    (color === nothing ? _get_color(h) : color,
+     size === nothing ? _get_size(h) : size)
+
 # --- top level ------------------------------------------------------------
 
 """
@@ -397,21 +427,26 @@ function _check_flat(name, n, colors, sizes)
         throw(ArgumentError("$name sizes must be a length-N vector"))
 end
 
-for (jl, c) in ((:point!, :glv_render_list_points), (:circle!, :glv_render_list_circles))
+for (jl, cbatch, cscalar) in
+    ((:point!, :glv_render_list_points, :glv_render_list_point),
+     (:circle!, :glv_render_list_circles, :glv_render_list_circle))
     @eval begin
         function $jl(rl::RenderList, pts::AbstractMatrix{<:Real}; colors=nothing, sizes=nothing)
             size(pts, 1) == 3 || throw(ArgumentError("points must be 3 × N"))
             n = size(pts, 2)
             _check_flat($(string(jl)), n, colors, sizes)
-            check(ccall(($(QuoteNode(c)), lib), Cint,
+            check(ccall(($(QuoteNode(cbatch)), lib), Cint,
                 (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Csize_t),
                 rl, asf32(pts), _ptr(_optf32(colors)), _ptr(_optf32(sizes)), n))
             return rl
         end
-        $jl(rl::RenderList, p::AbstractVector{<:Real}; color=nothing, size=nothing) =
-            $jl(rl, reshape(collect(F32, p), 3, 1);
-                colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1),
-                sizes=size === nothing ? nothing : F32[size])
+        function $jl(rl::RenderList, p::AbstractVector{<:Real}; color=nothing, size=nothing)
+            color, size = _resolve_cs(rl, color, size)
+            check(ccall(($(QuoteNode(cscalar)), lib), Cint,
+                (Ptr{Cvoid}, F32, F32, F32, F32, F32, F32, F32, F32),
+                rl, p[1], p[2], p[3], color[1], color[2], color[3], color[4], size))
+            return rl
+        end
     end
 end
 
@@ -451,11 +486,15 @@ function line!(rl::RenderList, starts::AbstractMatrix{<:Real}, ends::AbstractMat
     return rl
 end
 
-line!(rl::RenderList, s::AbstractVector{<:Real}, e::AbstractVector{<:Real};
-    color=nothing, size=nothing) =
-    line!(rl, reshape(collect(F32, s), 3, 1), reshape(collect(F32, e), 3, 1);
-        colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1),
-        sizes=size === nothing ? nothing : F32[size])
+function line!(rl::RenderList, s::AbstractVector{<:Real}, e::AbstractVector{<:Real};
+    color=nothing, size=nothing)
+    color, size = _resolve_cs(rl, color, size)
+    check(ccall((:glv_render_list_line, lib), Cint,
+        (Ptr{Cvoid}, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32),
+        rl, s[1], s[2], s[3], e[1], e[2], e[3],
+        color[1], color[2], color[3], color[4], size))
+    return rl
+end
 
 # polygon family: a single shape (3 × N) or a batch (3 × N × B)
 for (jl, c, hassize) in ((:polygon!, :glv_render_list_polygons, true),
@@ -535,23 +574,6 @@ function triangles!(rl::RenderList, vertices::AbstractMatrix{<:Real},
 end
 
 # --- render list: symbols --------------------------------------------------
-#
-function _rl_color(rl::RenderList)
-    r = Ref{F32}(); g = Ref{F32}(); b = Ref{F32}(); a = Ref{F32}()
-    check(ccall((:glv_render_list_get_color, lib), Cint,
-        (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), rl, r, g, b, a))
-    return (r[], g[], b[], a[])
-end
-
-function _rl_size(rl::RenderList)
-    s = Ref{F32}()
-    check(ccall((:glv_render_list_get_size, lib), Cint, (Ptr{Cvoid}, Ptr{F32}), rl, s))
-    return s[]
-end
-
-_resolve_cs(rl, color, size) =
-    (color === nothing ? _rl_color(rl) : color,
-     size === nothing ? _rl_size(rl) : size)
 
 "Draw a billboarded atlas cell `idx` at `anchor`."
 function symbol!(rl::RenderList, idx::Integer, anchor, offset; color=nothing, size=nothing, overlay::Integer=0)
@@ -647,10 +669,13 @@ function line_to!(p::Path, pts::AbstractMatrix{<:Real}; colors=nothing, sizes=no
     return p
 end
 
-line_to!(p::Path, pt::AbstractVector{<:Real}; color=nothing, size=nothing) =
-    line_to!(p, reshape(collect(F32, pt), 3, 1);
-        colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1),
-        sizes=size === nothing ? nothing : F32[size])
+function line_to!(p::Path, pt::AbstractVector{<:Real}; color=nothing, size=nothing)
+    color, size = _resolve_cs(p, color, size)
+    check(ccall((:glv_path_line_to, lib), Cint,
+        (Ptr{Cvoid}, F32, F32, F32, F32, F32, F32, F32, F32),
+        p, pt[1], pt[2], pt[3], color[1], color[2], color[3], color[4], size))
+    return p
+end
 
 "Close the current path back to its start."
 close!(p::Path) = check(ccall((:glv_path_close, lib), Cint, (Ptr{Cvoid},), p))
@@ -679,9 +704,14 @@ function vertex!(m::Mesh, pts::AbstractMatrix{<:Real}; colors=nothing)
     return out
 end
 
-vertex!(m::Mesh, p::AbstractVector{<:Real}; color=nothing) =
-    vertex!(m, reshape(collect(F32, p), 3, 1);
-        colors=color === nothing ? nothing : reshape(collect(F32, color), 4, 1))[1]
+function vertex!(m::Mesh, p::AbstractVector{<:Real}; color=nothing)
+    color = color === nothing ? _get_color(m) : color
+    idx = Ref{Csize_t}()
+    check(ccall((:glv_mesh_vertex, lib), Cint,
+        (Ptr{Cvoid}, F32, F32, F32, F32, F32, F32, F32, Ptr{Csize_t}),
+        m, p[1], p[2], p[3], color[1], color[2], color[3], color[4], idx))
+    return Int(idx[])
+end
 
 """
     triangle!(mesh, indices)

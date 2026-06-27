@@ -91,35 +91,18 @@ cdef extern from "glviskit/c_api.h":
     int glv_render_list_color(glv_render_list *render_list, float r, float g,
                               float b, float a)
     int glv_render_list_size(glv_render_list *render_list, float size)
+    int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
+                                  float *out_g, float *out_b, float *out_a)
+    int glv_render_list_get_size(glv_render_list *render_list, float *out_size)
     int glv_render_list_point(glv_render_list *render_list, float x, float y,
-                              float z)
-    int glv_render_list_point_color(glv_render_list *render_list, float x,
-                                    float y, float z, float r, float g,
-                                    float b, float a)
-    int glv_render_list_point_color_size(glv_render_list *render_list,
-                                         float x, float y, float z, float r,
-                                         float g, float b, float a,
-                                         float size)
+                              float z, float r, float g, float b, float a,
+                              float size)
     int glv_render_list_line(glv_render_list *render_list, float x0, float y0,
-                             float z0, float x1, float y1, float z1)
-    int glv_render_list_line_color(glv_render_list *render_list, float x0,
-                                   float y0, float z0, float x1, float y1,
-                                   float z1, float r, float g, float b,
-                                   float a)
-    int glv_render_list_line_color_size(glv_render_list *render_list,
-                                        float x0, float y0, float z0,
-                                        float x1, float y1, float z1,
-                                        float r, float g, float b, float a,
-                                        float size)
+                             float z0, float x1, float y1, float z1, float r,
+                             float g, float b, float a, float size)
     int glv_render_list_circle(glv_render_list *render_list, float x, float y,
-                               float z)
-    int glv_render_list_circle_color(glv_render_list *render_list, float x,
-                                     float y, float z, float r, float g,
-                                     float b, float a)
-    int glv_render_list_circle_color_size(glv_render_list *render_list,
-                                          float x, float y, float z, float r,
-                                          float g, float b, float a,
-                                          float size)
+                               float z, float r, float g, float b, float a,
+                               float size)
     int glv_render_list_points(glv_render_list *render_list, const float *xyz,
                                const float *rgba, const float *sizes,
                                size_t count)
@@ -143,9 +126,6 @@ cdef extern from "glviskit/c_api.h":
                                   const float *xyz, const float *rgba,
                                   size_t vertex_count, const int32_t *indices,
                                   size_t triangle_count)
-    int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
-                                  float *out_g, float *out_b, float *out_a)
-    int glv_render_list_get_size(glv_render_list *render_list, float *out_size)
     int glv_render_list_symbol(glv_render_list *render_list, int idx,
                                float ax, float ay, float az, float ox, float oy,
                                float r, float g, float b, float a, float size,
@@ -183,27 +163,25 @@ cdef extern from "glviskit/c_api.h":
     int glv_render_list_get_enabled(glv_render_list *render_list,
                                     int *out_enabled)
 
-    int glv_path_line_to(glv_path *path, float x, float y, float z)
-    int glv_path_line_to_color(glv_path *path, float x, float y, float z,
-                               float r, float g, float b, float a)
-    int glv_path_line_to_color_size(glv_path *path, float x, float y, float z,
-                                    float r, float g, float b, float a,
-                                    float size)
-    int glv_path_close(glv_path *path)
-    int glv_path_line_end(glv_path *path)
     int glv_path_color(glv_path *path, float r, float g, float b, float a)
     int glv_path_size(glv_path *path, float size)
+    int glv_path_get_color(glv_path *path, float *out_r, float *out_g,
+                           float *out_b, float *out_a)
+    int glv_path_get_size(glv_path *path, float *out_size)
+    int glv_path_line_to(glv_path *path, float x, float y, float z, float r,
+                         float g, float b, float a, float size)
+    int glv_path_close(glv_path *path)
+    int glv_path_line_end(glv_path *path)
     int glv_path_line_to_many(glv_path *path, const float *xyz,
                               const float *rgba, const float *sizes,
                               size_t count)
 
-    int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
-                        size_t *out_index)
-    int glv_mesh_vertex_color(glv_mesh *mesh, float x, float y, float z,
-                              float r, float g, float b, float a,
-                              size_t *out_index)
-    int glv_mesh_triangle(glv_mesh *mesh, size_t i0, size_t i1, size_t i2)
     int glv_mesh_color(glv_mesh *mesh, float r, float g, float b, float a)
+    int glv_mesh_get_color(glv_mesh *mesh, float *out_r, float *out_g,
+                           float *out_b, float *out_a)
+    int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z, float r,
+                        float g, float b, float a, size_t *out_index)
+    int glv_mesh_triangle(glv_mesh *mesh, size_t i0, size_t i1, size_t i2)
     int glv_mesh_vertex_count(glv_mesh *mesh, size_t *out_vertex_count)
     int glv_mesh_vertices(glv_mesh *mesh, const float *xyz, const float *rgba,
                           size_t *out_indices, size_t count)

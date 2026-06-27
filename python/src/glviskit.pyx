@@ -51,6 +51,37 @@ cdef int _rank(object value):
         return 0
 
 
+# color/size fall back to the builder's current state when not given
+cdef tuple _rl_color_size(glv_render_list *ptr, color, size):
+    cdef float cr, cg, cb, ca, sz
+    if color is None:
+        _check(glv_render_list_get_color(ptr, &cr, &cg, &cb, &ca))
+        color = (cr, cg, cb, ca)
+    if size is None:
+        _check(glv_render_list_get_size(ptr, &sz))
+        size = sz
+    return color, size
+
+
+cdef tuple _path_color_size(glv_path *ptr, color, size):
+    cdef float cr, cg, cb, ca, sz
+    if color is None:
+        _check(glv_path_get_color(ptr, &cr, &cg, &cb, &ca))
+        color = (cr, cg, cb, ca)
+    if size is None:
+        _check(glv_path_get_size(ptr, &sz))
+        size = sz
+    return color, size
+
+
+cdef _mesh_color(glv_mesh *ptr, color):
+    cdef float cr, cg, cb, ca
+    if color is None:
+        _check(glv_mesh_get_color(ptr, &cr, &cg, &cb, &ca))
+        color = (cr, cg, cb, ca)
+    return color
+
+
 cdef class Window:
     cdef glv_window *ptr
 
@@ -383,21 +414,12 @@ cdef class RenderList:
             _check(glv_render_list_lines(self.ptr, &s[0], &e[0], c_ptr, z_ptr, sa.shape[0]))
             return None
 
-        if color is None:
-            _check(glv_render_list_line(
-                self.ptr, <float>start[0], <float>start[1], <float>start[2],
-                <float>end[0], <float>end[1], <float>end[2]))
-        elif size is None:
-            _check(glv_render_list_line_color(
-                self.ptr, <float>start[0], <float>start[1], <float>start[2],
-                <float>end[0], <float>end[1], <float>end[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3]))
-        else:
-            _check(glv_render_list_line_color_size(
-                self.ptr, <float>start[0], <float>start[1], <float>start[2],
-                <float>end[0], <float>end[1], <float>end[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3],
-                <float>size))
+        color, size = _rl_color_size(self.ptr, color, size)
+        _check(glv_render_list_line(
+            self.ptr, <float>start[0], <float>start[1], <float>start[2],
+            <float>end[0], <float>end[1], <float>end[2],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size))
 
     def point(self, point, color=None, size=None):
         cdef const float[::1] p, c, z
@@ -424,18 +446,11 @@ cdef class RenderList:
             _check(glv_render_list_points(self.ptr, &p[0], c_ptr, z_ptr, pa.shape[0]))
             return None
 
-        if color is None:
-            _check(glv_render_list_point(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2]))
-        elif size is None:
-            _check(glv_render_list_point_color(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3]))
-        else:
-            _check(glv_render_list_point_color_size(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3],
-                <float>size))
+        color, size = _rl_color_size(self.ptr, color, size)
+        _check(glv_render_list_point(
+            self.ptr, <float>point[0], <float>point[1], <float>point[2],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size))
 
     def circle(self, point, color=None, size=None):
         cdef const float[::1] p, c, z
@@ -462,18 +477,11 @@ cdef class RenderList:
             _check(glv_render_list_circles(self.ptr, &p[0], c_ptr, z_ptr, pa.shape[0]))
             return None
 
-        if color is None:
-            _check(glv_render_list_circle(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2]))
-        elif size is None:
-            _check(glv_render_list_circle_color(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3]))
-        else:
-            _check(glv_render_list_circle_color_size(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3],
-                <float>size))
+        color, size = _rl_color_size(self.ptr, color, size)
+        _check(glv_render_list_circle(
+            self.ptr, <float>point[0], <float>point[1], <float>point[2],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size))
 
     def polygon(self, vertices, colors=None, sizes=None):
         cdef const float[::1] v, c, z
@@ -553,19 +561,8 @@ cdef class RenderList:
         v = va.reshape(-1)
         _check(glv_render_list_fill_polygons(self.ptr, &v[0], c_ptr, va.shape[0], va.shape[1]))
 
-    cdef _resolve_color_size(self, color, size):
-        # fall back to the render list's current color/size state
-        cdef float cr, cg, cb, ca, sz
-        if color is None:
-            _check(glv_render_list_get_color(self.ptr, &cr, &cg, &cb, &ca))
-            color = (cr, cg, cb, ca)
-        if size is None:
-            _check(glv_render_list_get_size(self.ptr, &sz))
-            size = sz
-        return color, size
-
     def symbol(self, int idx, anchor, offset, color=None, size=None, int overlay=0):
-        color, size = self._resolve_color_size(color, size)
+        color, size = _rl_color_size(self.ptr, color, size)
         _check(glv_render_list_symbol(
             self.ptr, idx,
             <float>anchor[0], <float>anchor[1], <float>anchor[2],
@@ -575,7 +572,7 @@ cdef class RenderList:
 
     def character(self, ch, anchor, offset, color=None, size=None, int overlay=0):
         cdef int cp = ord(ch) if isinstance(ch, str) else int(ch)
-        color, size = self._resolve_color_size(color, size)
+        color, size = _rl_color_size(self.ptr, color, size)
         _check(glv_render_list_character(
             self.ptr, cp,
             <float>anchor[0], <float>anchor[1], <float>anchor[2],
@@ -584,7 +581,7 @@ cdef class RenderList:
             <float>size, overlay))
 
     def marker(self, mtype, anchor, offset, color=None, size=None, int overlay=0):
-        color, size = self._resolve_color_size(color, size)
+        color, size = _rl_color_size(self.ptr, color, size)
         _check(glv_render_list_marker(
             self.ptr, int(mtype),
             <float>anchor[0], <float>anchor[1], <float>anchor[2],
@@ -594,7 +591,7 @@ cdef class RenderList:
 
     def text(self, str text, anchor, offset, color=None, size=None,
              align=TextAlign.Left, int overlay=0):
-        color, size = self._resolve_color_size(color, size)
+        color, size = _rl_color_size(self.ptr, color, size)
         _check(glv_render_list_text(
             self.ptr, text.encode("utf-8"),
             <float>anchor[0], <float>anchor[1], <float>anchor[2],
@@ -751,18 +748,11 @@ cdef class Path:
             _check(glv_path_line_to_many(self.ptr, &p[0], c_ptr, z_ptr, pa.shape[0]))
             return None
 
-        if color is None:
-            _check(glv_path_line_to(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2]))
-        elif size is None:
-            _check(glv_path_line_to_color(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3]))
-        else:
-            _check(glv_path_line_to_color_size(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3],
-                <float>size))
+        color, size = _path_color_size(self.ptr, color, size)
+        _check(glv_path_line_to(
+            self.ptr, <float>point[0], <float>point[1], <float>point[2],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size))
 
     def close(self):
         _check(glv_path_close(self.ptr))
@@ -814,14 +804,11 @@ cdef class Mesh:
                                      <size_t *><size_t>indices.ctypes.data, pa.shape[0]))
             return indices.tolist()
 
-        if color is None:
-            _check(glv_mesh_vertex(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2], &index))
-        else:
-            _check(glv_mesh_vertex_color(
-                self.ptr, <float>point[0], <float>point[1], <float>point[2],
-                <float>color[0], <float>color[1], <float>color[2], <float>color[3],
-                &index))
+        color = _mesh_color(self.ptr, color)
+        _check(glv_mesh_vertex(
+            self.ptr, <float>point[0], <float>point[1], <float>point[2],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            &index))
         return int(index)
 
     def triangle(self, *args):

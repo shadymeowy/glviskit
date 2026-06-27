@@ -185,7 +185,7 @@ void glv_c_api_version(int *major, int *minor, int *patch) {
         *minor = 1;
     }
     if (patch != nullptr) {
-        *patch = 0;
+        *patch = 3;
     }
 }
 
@@ -380,60 +380,38 @@ int glv_render_list_size(glv_render_list *render_list, float size) {
     GLV_OK_TRY(RenderList(render_list).Size(size););
 }
 
+int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
+                              float *out_g, float *out_b, float *out_a) {
+    GLV_OK_TRY(Require(out_r, "out_r"); Require(out_g, "out_g");
+               Require(out_b, "out_b"); Require(out_a, "out_a");
+               const auto color = RenderList(render_list).GetColor();
+               *out_r = color.r; *out_g = color.g; *out_b = color.b;
+               *out_a = color.a;);
+}
+
+int glv_render_list_get_size(glv_render_list *render_list, float *out_size) {
+    GLV_OK_TRY(Require(out_size, "out_size");
+               *out_size = RenderList(render_list).GetSize(););
+}
+
 int glv_render_list_point(glv_render_list *render_list, float x, float y,
-                          float z) {
-    GLV_OK_TRY(RenderList(render_list).Point(Vec3(x, y, z)););
-}
-
-int glv_render_list_point_color(glv_render_list *render_list, float x, float y,
-                                float z, float r, float g, float b, float a) {
-    GLV_OK_TRY(RenderList(render_list).Point(Vec3(x, y, z), Vec4(r, g, b, a)););
-}
-
-int glv_render_list_point_color_size(glv_render_list *render_list, float x,
-                                     float y, float z, float r, float g,
-                                     float b, float a, float size) {
+                          float z, float r, float g, float b, float a,
+                          float size) {
     GLV_OK_TRY(
         RenderList(render_list).Point(Vec3(x, y, z), Vec4(r, g, b, a), size););
 }
 
 int glv_render_list_line(glv_render_list *render_list, float x0, float y0,
-                         float z0, float x1, float y1, float z1) {
-    GLV_OK_TRY(
-        RenderList(render_list).Line(Vec3(x0, y0, z0), Vec3(x1, y1, z1)););
-}
-
-int glv_render_list_line_color(glv_render_list *render_list, float x0, float y0,
-                               float z0, float x1, float y1, float z1, float r,
-                               float g, float b, float a) {
-    GLV_OK_TRY(
-        RenderList(render_list)
-            .Line(Vec3(x0, y0, z0), Vec3(x1, y1, z1), Vec4(r, g, b, a)););
-}
-
-int glv_render_list_line_color_size(glv_render_list *render_list, float x0,
-                                    float y0, float z0, float x1, float y1,
-                                    float z1, float r, float g, float b,
-                                    float a, float size) {
+                         float z0, float x1, float y1, float z1, float r,
+                         float g, float b, float a, float size) {
     GLV_OK_TRY(
         RenderList(render_list)
             .Line(Vec3(x0, y0, z0), Vec3(x1, y1, z1), Vec4(r, g, b, a), size););
 }
 
 int glv_render_list_circle(glv_render_list *render_list, float x, float y,
-                           float z) {
-    GLV_OK_TRY(RenderList(render_list).Circle(Vec3(x, y, z)););
-}
-
-int glv_render_list_circle_color(glv_render_list *render_list, float x, float y,
-                                 float z, float r, float g, float b, float a) {
-    GLV_OK_TRY(
-        RenderList(render_list).Circle(Vec3(x, y, z), Vec4(r, g, b, a)););
-}
-
-int glv_render_list_circle_color_size(glv_render_list *render_list, float x,
-                                      float y, float z, float r, float g,
-                                      float b, float a, float size) {
+                           float z, float r, float g, float b, float a,
+                           float size) {
     GLV_OK_TRY(
         RenderList(render_list).Circle(Vec3(x, y, z), Vec4(r, g, b, a), size););
 }
@@ -590,20 +568,6 @@ int glv_render_list_triangles(glv_render_list *render_list, const float *xyz,
         });
 }
 
-int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
-                              float *out_g, float *out_b, float *out_a) {
-    GLV_OK_TRY(Require(out_r, "out_r"); Require(out_g, "out_g");
-               Require(out_b, "out_b"); Require(out_a, "out_a");
-               const auto color = RenderList(render_list).GetColor();
-               *out_r = color.r; *out_g = color.g; *out_b = color.b;
-               *out_a = color.a;);
-}
-
-int glv_render_list_get_size(glv_render_list *render_list, float *out_size) {
-    GLV_OK_TRY(Require(out_size, "out_size");
-               *out_size = RenderList(render_list).GetSize(););
-}
-
 int glv_render_list_symbol(glv_render_list *render_list, int idx, float ax,
                            float ay, float az, float ox, float oy, float r,
                            float g, float b, float a, float size, int overlay) {
@@ -712,25 +676,6 @@ int glv_render_list_get_enabled(glv_render_list *render_list,
                *out_enabled = RenderList(render_list).IsEnabled() ? 1 : 0;);
 }
 
-int glv_path_line_to(glv_path *path, float x, float y, float z) {
-    GLV_OK_TRY(Path(path).LineTo(Vec3(x, y, z)););
-}
-
-int glv_path_line_to_color(glv_path *path, float x, float y, float z, float r,
-                           float g, float b, float a) {
-    GLV_OK_TRY(Path(path).LineTo(Vec3(x, y, z), Vec4(r, g, b, a)););
-}
-
-int glv_path_line_to_color_size(glv_path *path, float x, float y, float z,
-                                float r, float g, float b, float a,
-                                float size) {
-    GLV_OK_TRY(Path(path).LineTo(Vec3(x, y, z), Vec4(r, g, b, a), size););
-}
-
-int glv_path_close(glv_path *path) { GLV_OK_TRY(Path(path).Close();); }
-
-int glv_path_line_end(glv_path *path) { GLV_OK_TRY(Path(path).LineEnd();); }
-
 int glv_path_color(glv_path *path, float r, float g, float b, float a) {
     GLV_OK_TRY(Path(path).Color(Vec4(r, g, b, a)););
 }
@@ -738,6 +683,28 @@ int glv_path_color(glv_path *path, float r, float g, float b, float a) {
 int glv_path_size(glv_path *path, float size) {
     GLV_OK_TRY(Path(path).Size(size););
 }
+
+int glv_path_get_color(glv_path *path, float *out_r, float *out_g, float *out_b,
+                       float *out_a) {
+    GLV_OK_TRY(Require(out_r, "out_r"); Require(out_g, "out_g");
+               Require(out_b, "out_b"); Require(out_a, "out_a");
+               const auto color = Path(path).GetColor(); *out_r = color.r;
+               *out_g = color.g; *out_b = color.b; *out_a = color.a;);
+}
+
+int glv_path_get_size(glv_path *path, float *out_size) {
+    GLV_OK_TRY(Require(out_size, "out_size");
+               *out_size = Path(path).GetSize(););
+}
+
+int glv_path_line_to(glv_path *path, float x, float y, float z, float r,
+                     float g, float b, float a, float size) {
+    GLV_OK_TRY(Path(path).LineTo(Vec3(x, y, z), Vec4(r, g, b, a), size););
+}
+
+int glv_path_close(glv_path *path) { GLV_OK_TRY(Path(path).Close();); }
+
+int glv_path_line_end(glv_path *path) { GLV_OK_TRY(Path(path).LineEnd();); }
 
 int glv_path_line_to_many(glv_path *path, const float *xyz, const float *rgba,
                           const float *sizes, size_t count) {
@@ -754,14 +721,20 @@ int glv_path_line_to_many(glv_path *path, const float *xyz, const float *rgba,
         });
 }
 
-int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z,
-                    size_t *out_index) {
-    GLV_OK_TRY(Require(out_index, "out_index");
-               *out_index = Mesh(mesh).Vertex(Vec3(x, y, z)););
+int glv_mesh_color(glv_mesh *mesh, float r, float g, float b, float a) {
+    GLV_OK_TRY(Mesh(mesh).Color(Vec4(r, g, b, a)););
 }
 
-int glv_mesh_vertex_color(glv_mesh *mesh, float x, float y, float z, float r,
-                          float g, float b, float a, size_t *out_index) {
+int glv_mesh_get_color(glv_mesh *mesh, float *out_r, float *out_g, float *out_b,
+                       float *out_a) {
+    GLV_OK_TRY(Require(out_r, "out_r"); Require(out_g, "out_g");
+               Require(out_b, "out_b"); Require(out_a, "out_a");
+               const auto color = Mesh(mesh).GetColor(); *out_r = color.r;
+               *out_g = color.g; *out_b = color.b; *out_a = color.a;);
+}
+
+int glv_mesh_vertex(glv_mesh *mesh, float x, float y, float z, float r,
+                    float g, float b, float a, size_t *out_index) {
     GLV_OK_TRY(Require(out_index, "out_index");
                *out_index =
                    Mesh(mesh).Vertex(Vec3(x, y, z), Vec4(r, g, b, a)););
@@ -769,10 +742,6 @@ int glv_mesh_vertex_color(glv_mesh *mesh, float x, float y, float z, float r,
 
 int glv_mesh_triangle(glv_mesh *mesh, size_t i0, size_t i1, size_t i2) {
     GLV_OK_TRY(Mesh(mesh).Triangle(i0, i1, i2););
-}
-
-int glv_mesh_color(glv_mesh *mesh, float r, float g, float b, float a) {
-    GLV_OK_TRY(Mesh(mesh).Color(Vec4(r, g, b, a)););
 }
 
 int glv_mesh_vertex_count(glv_mesh *mesh, size_t *out_vertex_count) {
