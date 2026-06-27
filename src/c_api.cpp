@@ -590,6 +590,58 @@ int glv_render_list_triangles(glv_render_list *render_list, const float *xyz,
         });
 }
 
+int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
+                              float *out_g, float *out_b, float *out_a) {
+    GLV_OK_TRY(Require(out_r, "out_r"); Require(out_g, "out_g");
+               Require(out_b, "out_b"); Require(out_a, "out_a");
+               const auto color = RenderList(render_list).GetColor();
+               *out_r = color.r; *out_g = color.g; *out_b = color.b;
+               *out_a = color.a;);
+}
+
+int glv_render_list_get_size(glv_render_list *render_list, float *out_size) {
+    GLV_OK_TRY(Require(out_size, "out_size");
+               *out_size = RenderList(render_list).GetSize(););
+}
+
+int glv_render_list_symbol(glv_render_list *render_list, int idx, float ax,
+                           float ay, float az, float ox, float oy, float r,
+                           float g, float b, float a, float size, int overlay) {
+    GLV_OK_TRY(RenderList(render_list)
+                   .Symbol(idx, Vec3(ax, ay, az), glm::vec2{ox, oy},
+                           Vec4(r, g, b, a), size, overlay););
+}
+
+int glv_render_list_character(glv_render_list *render_list, int codepoint,
+                              float ax, float ay, float az, float ox, float oy,
+                              float r, float g, float b, float a, float size,
+                              int overlay) {
+    GLV_OK_TRY(RenderList(render_list)
+                   .Character(static_cast<char>(codepoint), Vec3(ax, ay, az),
+                              glm::vec2{ox, oy}, Vec4(r, g, b, a), size,
+                              overlay););
+}
+
+int glv_render_list_marker(glv_render_list *render_list, int type, float ax,
+                           float ay, float az, float ox, float oy, float r,
+                           float g, float b, float a, float size, int overlay) {
+    GLV_OK_TRY(RenderList(render_list)
+                   .Marker(static_cast<glviskit::MarkerType>(type),
+                           Vec3(ax, ay, az), glm::vec2{ox, oy},
+                           Vec4(r, g, b, a), size, overlay););
+}
+
+int glv_render_list_text(glv_render_list *render_list, const char *text,
+                         float ax, float ay, float az, float ox, float oy,
+                         float r, float g, float b, float a, float size,
+                         int align, int overlay) {
+    GLV_OK_TRY(Require(text, "text");
+               RenderList(render_list)
+                   .Text(std::string{text}, Vec3(ax, ay, az), glm::vec2{ox, oy},
+                         Vec4(r, g, b, a), size,
+                         static_cast<glviskit::TextAlign>(align), overlay););
+}
+
 glv_path *glv_render_list_path_begin(glv_render_list *render_list) {
     GLV_TRY(nullptr, return new glv_path(RenderList(render_list).PathBegin()););
 }

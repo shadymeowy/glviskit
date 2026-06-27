@@ -1,9 +1,22 @@
 from collections.abc import Sequence
 from contextlib import AbstractContextManager
+from enum import IntEnum
 from typing import Annotated, Any, overload
 
 import numpy
 from numpy.typing import NDArray
+
+class MarkerType(IntEnum):
+    Square = 0
+    Triangle = 1
+    Diamond = 2
+    Ring = 3
+    Circle = 4
+
+class TextAlign(IntEnum):
+    Left = 0
+    Center = 1
+    Right = 2
 
 # batch drawing arrays accept float32 or float64
 _Floats = numpy.floating[Any]
@@ -287,6 +300,54 @@ class RenderList:
         self, vertices: Points1, indices: Indices, colors: Colors1 = ...
     ) -> None:
         """Draw an indexed triangle mesh, optionally with per-vertex colors"""
+
+    def symbol(
+        self,
+        idx: int,
+        anchor: Sequence[float],
+        offset: Sequence[float],
+        color: Sequence[float] | None = None,
+        size: float | None = None,
+        overlay: int = 0,
+    ) -> None:
+        """Draw a billboarded atlas cell at a 3D anchor (offset = cell center
+        in pixels; size = half-extent; overlay > 0 draws on top of all 3D).
+        color/size default to the render list's current state"""
+
+    def character(
+        self,
+        ch: str | int,
+        anchor: Sequence[float],
+        offset: Sequence[float],
+        color: Sequence[float] | None = None,
+        size: float | None = None,
+        overlay: int = 0,
+    ) -> None:
+        """Draw a single printable-ASCII character billboarded at a 3D anchor"""
+
+    def marker(
+        self,
+        mtype: MarkerType,
+        anchor: Sequence[float],
+        offset: Sequence[float],
+        color: Sequence[float] | None = None,
+        size: float | None = None,
+        overlay: int = 0,
+    ) -> None:
+        """Draw a marker shape billboarded at a 3D anchor"""
+
+    def text(
+        self,
+        text: str,
+        anchor: Sequence[float],
+        offset: Sequence[float],
+        color: Sequence[float] | None = None,
+        size: float | None = None,
+        align: TextAlign = ...,
+        overlay: int = 0,
+    ) -> None:
+        """Draw billboarded multi-line text (\\n-split) centered at anchor +
+        offset; align controls line alignment within the block"""
 
     def path_begin(self) -> Path:
         """Begin a new path"""

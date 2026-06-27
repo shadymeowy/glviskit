@@ -101,4 +101,9 @@ while loop()
     size!(render_list, line_size[])
     polyline!(render_list, rows)
     polyline!(render_list, cols)
+
+    # text test
+    text!(render_list, "glviskit\nwave demo", (0, 20, 0), (0, 60);
+        color=(1, 1, 1, 1), size=20.0, align=Center, overlay=1)
+    marker!(render_list, Diamond, (0, 20, 0), (0, 0); color=(1, 0.8, 0.2, 1), size=32.0)
 end

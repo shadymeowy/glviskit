@@ -95,3 +95,13 @@ while glviskit.loop():
     render_list.size(float(line_size))
     render_list.polyline(rows)
     render_list.polyline(cols)
+
+    # text test
+    render_list.text(
+        "glviskit\nwave demo", (0.0, 20.0, 0.0), (0.0, 60.0),
+        (1.0, 1.0, 1.0, 1.0), 20.0, glviskit.TextAlign.Center, 1,
+    )
+    render_list.marker(
+        glviskit.MarkerType.Diamond, (0.0, 20.0, 0.0), (0.0, 0.0),
+        (1.0, 0.8, 0.2, 1.0), 32.0,
+    )

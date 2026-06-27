@@ -264,6 +264,11 @@ class RenderList {
     }
 
     void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset,
+              glm::vec4 color, TextAlign align) {
+        Text(text, anchor, offset, color, state.size, align);
+    }
+
+    void Text(const std::string &text, glm::vec3 anchor, glm::vec2 offset,
               TextAlign align) {
         Text(text, anchor, offset, state.color, state.size, align);
     }
@@ -310,6 +315,8 @@ class RenderList {
     // attributes for subsequent drawing
     void Color(const glm::vec4 &c) { state.color = c; }
     void Size(float s) { state.size = s; }
+    [[nodiscard]] auto GetColor() const -> glm::vec4 { return state.color; }
+    [[nodiscard]] auto GetSize() const -> float { return state.size; }
 
     // instancing
     void AddInstance(const glm::mat4 &transform) {

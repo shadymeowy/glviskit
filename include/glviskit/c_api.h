@@ -38,6 +38,20 @@ enum {
     GLV_CONTROLLER_SPHERICAL = 2,
 };
 
+enum {
+    GLV_MARKER_SQUARE = 0,
+    GLV_MARKER_TRIANGLE = 1,
+    GLV_MARKER_DIAMOND = 2,
+    GLV_MARKER_RING = 3,
+    GLV_MARKER_CIRCLE = 4,
+};
+
+enum {
+    GLV_TEXT_ALIGN_LEFT = 0,
+    GLV_TEXT_ALIGN_CENTER = 1,
+    GLV_TEXT_ALIGN_RIGHT = 2,
+};
+
 GLVISKIT_C_API const char *glv_error(void);
 GLVISKIT_C_API void glv_c_api_version(int *major, int *minor, int *patch);
 
@@ -176,6 +190,33 @@ GLVISKIT_C_API int glv_render_list_triangles(glv_render_list *render_list,
                                              size_t vertex_count,
                                              const int32_t *indices,
                                              size_t triangle_count);
+
+GLVISKIT_C_API int glv_render_list_get_color(glv_render_list *render_list,
+                                             float *out_r, float *out_g,
+                                             float *out_b, float *out_a);
+GLVISKIT_C_API int glv_render_list_get_size(glv_render_list *render_list,
+                                            float *out_size);
+GLVISKIT_C_API int glv_render_list_symbol(glv_render_list *render_list, int idx,
+                                          float ax, float ay, float az,
+                                          float ox, float oy, float r, float g,
+                                          float b, float a, float size,
+                                          int overlay);
+GLVISKIT_C_API int glv_render_list_character(glv_render_list *render_list,
+                                             int codepoint, float ax, float ay,
+                                             float az, float ox, float oy,
+                                             float r, float g, float b, float a,
+                                             float size, int overlay);
+GLVISKIT_C_API int glv_render_list_marker(glv_render_list *render_list,
+                                          int type, float ax, float ay,
+                                          float az, float ox, float oy, float r,
+                                          float g, float b, float a, float size,
+                                          int overlay);
+GLVISKIT_C_API int glv_render_list_text(glv_render_list *render_list,
+                                        const char *text, float ax, float ay,
+                                        float az, float ox, float oy, float r,
+                                        float g, float b, float a, float size,
+                                        int align, int overlay);
+
 GLVISKIT_C_API glv_path *glv_render_list_path_begin(
     glv_render_list *render_list);
 GLVISKIT_C_API glv_mesh *glv_render_list_mesh_begin(

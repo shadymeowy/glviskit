@@ -7,7 +7,23 @@ from libc.stdint cimport uint8_t, int32_t
 
 from glviskit_c_api cimport *
 
+import enum
+
 import numpy as np
+
+
+class MarkerType(enum.IntEnum):
+    Square = 0
+    Triangle = 1
+    Diamond = 2
+    Ring = 3
+    Circle = 4
+
+
+class TextAlign(enum.IntEnum):
+    Left = 0
+    Center = 1
+    Right = 2
 
 
 cdef str _error():
@@ -536,6 +552,55 @@ cdef class RenderList:
             c_ptr = &c[0]
         v = va.reshape(-1)
         _check(glv_render_list_fill_polygons(self.ptr, &v[0], c_ptr, va.shape[0], va.shape[1]))
+
+    cdef _resolve_color_size(self, color, size):
+        # fall back to the render list's current color/size state
+        cdef float cr, cg, cb, ca, sz
+        if color is None:
+            _check(glv_render_list_get_color(self.ptr, &cr, &cg, &cb, &ca))
+            color = (cr, cg, cb, ca)
+        if size is None:
+            _check(glv_render_list_get_size(self.ptr, &sz))
+            size = sz
+        return color, size
+
+    def symbol(self, int idx, anchor, offset, color=None, size=None, int overlay=0):
+        color, size = self._resolve_color_size(color, size)
+        _check(glv_render_list_symbol(
+            self.ptr, idx,
+            <float>anchor[0], <float>anchor[1], <float>anchor[2],
+            <float>offset[0], <float>offset[1],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size, overlay))
+
+    def character(self, ch, anchor, offset, color=None, size=None, int overlay=0):
+        cdef int cp = ord(ch) if isinstance(ch, str) else int(ch)
+        color, size = self._resolve_color_size(color, size)
+        _check(glv_render_list_character(
+            self.ptr, cp,
+            <float>anchor[0], <float>anchor[1], <float>anchor[2],
+            <float>offset[0], <float>offset[1],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size, overlay))
+
+    def marker(self, mtype, anchor, offset, color=None, size=None, int overlay=0):
+        color, size = self._resolve_color_size(color, size)
+        _check(glv_render_list_marker(
+            self.ptr, int(mtype),
+            <float>anchor[0], <float>anchor[1], <float>anchor[2],
+            <float>offset[0], <float>offset[1],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size, overlay))
+
+    def text(self, str text, anchor, offset, color=None, size=None,
+             align=TextAlign.Left, int overlay=0):
+        color, size = self._resolve_color_size(color, size)
+        _check(glv_render_list_text(
+            self.ptr, text.encode("utf-8"),
+            <float>anchor[0], <float>anchor[1], <float>anchor[2],
+            <float>offset[0], <float>offset[1],
+            <float>color[0], <float>color[1], <float>color[2], <float>color[3],
+            <float>size, int(align), overlay))
 
     def triangles(self, vertices, indices, colors=None):
         cdef const float[::1] v, c

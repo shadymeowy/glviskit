@@ -28,10 +28,17 @@ end
 const lib = _resolve_library()
 const F32 = Float32
 
+# marker shapes and text alignment (match the C enum values)
+@enum MarkerType Square = 0 Triangle Diamond Ring Circle
+@enum TextAlign Left = 0 Center Right
+
 export create_window, create_render_list, get_time_seconds, loop, render
 export add_render_list!, make_current!, capture_rgba
 export perspective_fov!, perspective!, calculate_transform, set_axis_rotation!
 export point!, circle!, line!, polygon!, polyline!, fill_polygon!, triangles!
+export symbol!, character!, marker!, text!
+export MarkerType, Square, Triangle, Diamond, Ring, Circle
+export TextAlign, Left, Center, Right
 export path_begin, mesh_begin, color!, size!, add_instance!
 export save!, restore!, clear!, save_instances!, restore_instances!, clear_instances!
 export line_to!, close!, line_end!, vertex!, triangle!
@@ -524,6 +531,72 @@ function triangles!(rl::RenderList, vertices::AbstractMatrix{<:Real},
     check(ccall((:glv_render_list_triangles, lib), Cint,
         (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Csize_t, Ptr{Int32}, Csize_t),
         rl, asf32(vertices), _ptr(_optf32(colors)), nverts, asi32(indices), size(indices, 2)))
+    return rl
+end
+
+# --- render list: symbols --------------------------------------------------
+#
+function _rl_color(rl::RenderList)
+    r = Ref{F32}(); g = Ref{F32}(); b = Ref{F32}(); a = Ref{F32}()
+    check(ccall((:glv_render_list_get_color, lib), Cint,
+        (Ptr{Cvoid}, Ptr{F32}, Ptr{F32}, Ptr{F32}, Ptr{F32}), rl, r, g, b, a))
+    return (r[], g[], b[], a[])
+end
+
+function _rl_size(rl::RenderList)
+    s = Ref{F32}()
+    check(ccall((:glv_render_list_get_size, lib), Cint, (Ptr{Cvoid}, Ptr{F32}), rl, s))
+    return s[]
+end
+
+_resolve_cs(rl, color, size) =
+    (color === nothing ? _rl_color(rl) : color,
+     size === nothing ? _rl_size(rl) : size)
+
+"Draw a billboarded atlas cell `idx` at `anchor`."
+function symbol!(rl::RenderList, idx::Integer, anchor, offset; color=nothing, size=nothing, overlay::Integer=0)
+    color, size = _resolve_cs(rl, color, size)
+    check(ccall((:glv_render_list_symbol, lib), Cint,
+        (Ptr{Cvoid}, Cint, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32, Cint),
+        rl, idx, anchor[1], anchor[2], anchor[3], offset[1], offset[2],
+        color[1], color[2], color[3], color[4], size, overlay))
+    return rl
+end
+
+"Draw a single printable-ascii character (`Char` or codepoint) at `anchor`."
+function character!(rl::RenderList, ch, anchor, offset; color=nothing, size=nothing, overlay::Integer=0)
+    color, size = _resolve_cs(rl, color, size)
+    check(ccall((:glv_render_list_character, lib), Cint,
+        (Ptr{Cvoid}, Cint, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32, Cint),
+        rl, Int(ch), anchor[1], anchor[2], anchor[3], offset[1], offset[2],
+        color[1], color[2], color[3], color[4], size, overlay))
+    return rl
+end
+
+"Draw a [`MarkerType`](@ref) marker shape at `anchor`."
+function marker!(rl::RenderList, type::MarkerType, anchor, offset; color=nothing, size=nothing, overlay::Integer=0)
+    color, size = _resolve_cs(rl, color, size)
+    check(ccall((:glv_render_list_marker, lib), Cint,
+        (Ptr{Cvoid}, Cint, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32, Cint),
+        rl, Int(type), anchor[1], anchor[2], anchor[3], offset[1], offset[2],
+        color[1], color[2], color[3], color[4], size, overlay))
+    return rl
+end
+
+"""
+    text!(rl, text, anchor, offset; color=nothing, size=nothing, align=Left, overlay=0)
+
+Draw billboarded multi-line text (split on `\\n`) centered at `anchor + offset`;
+`align` is a [`TextAlign`](@ref). `color`/`size` default to the render list's
+current state.
+"""
+function text!(rl::RenderList, text::AbstractString, anchor, offset;
+    color=nothing, size=nothing, align::TextAlign=Left, overlay::Integer=0)
+    color, size = _resolve_cs(rl, color, size)
+    check(ccall((:glv_render_list_text, lib), Cint,
+        (Ptr{Cvoid}, Cstring, F32, F32, F32, F32, F32, F32, F32, F32, F32, F32, Cint, Cint),
+        rl, text, anchor[1], anchor[2], anchor[3], offset[1], offset[2],
+        color[1], color[2], color[3], color[4], size, Int(align), overlay))
     return rl
 end
 

@@ -143,6 +143,25 @@ cdef extern from "glviskit/c_api.h":
                                   const float *xyz, const float *rgba,
                                   size_t vertex_count, const int32_t *indices,
                                   size_t triangle_count)
+    int glv_render_list_get_color(glv_render_list *render_list, float *out_r,
+                                  float *out_g, float *out_b, float *out_a)
+    int glv_render_list_get_size(glv_render_list *render_list, float *out_size)
+    int glv_render_list_symbol(glv_render_list *render_list, int idx,
+                               float ax, float ay, float az, float ox, float oy,
+                               float r, float g, float b, float a, float size,
+                               int overlay)
+    int glv_render_list_character(glv_render_list *render_list, int codepoint,
+                                  float ax, float ay, float az, float ox,
+                                  float oy, float r, float g, float b, float a,
+                                  float size, int overlay)
+    int glv_render_list_marker(glv_render_list *render_list, int type,
+                               float ax, float ay, float az, float ox, float oy,
+                               float r, float g, float b, float a, float size,
+                               int overlay)
+    int glv_render_list_text(glv_render_list *render_list, const char *text,
+                             float ax, float ay, float az, float ox, float oy,
+                             float r, float g, float b, float a, float size,
+                             int align, int overlay)
     glv_path *glv_render_list_path_begin(glv_render_list *render_list)
     glv_mesh *glv_render_list_mesh_begin(glv_render_list *render_list)
     int glv_render_list_add_instance(glv_render_list *render_list, float x,
