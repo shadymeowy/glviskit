@@ -1,11 +1,12 @@
 # glviskit
 
-`glviskit` is a retained-mode 3D drawing toolkit for C++ and Python, built for practical real-time geometry visualization with OpenGL and SDL3.
+`glviskit` is a retained-mode 3D drawing toolkit for C++, Python, and Julia, built for practical real-time geometry visualization with OpenGL and SDL3.
 
 It provides:
 
 - a compact C++ API for windows, cameras, and drawing primitives
 - Python bindings built with Cython on top of the C API
+- Julia bindings built with `ccall` on top of the C API
 - examples for native and WebAssembly targets
 
 The API is organized around a few core concepts:
@@ -48,6 +49,7 @@ Because geometry remains on the GPU until you change it, the library stays pract
 
 - `include/glviskit`: public C++ headers
 - `python`: Python extension module and stub file
+- `julia`: Julia package (`GLViskit.jl`)
 - `examples`: C++ and Python examples
 - `cmake`: dependency and backend setup
 
@@ -69,6 +71,12 @@ If you only want to try the Python package:
 
 ```bash
 pip install glviskit
+```
+
+Or the Julia package:
+
+```julia
+import Pkg; Pkg.add("GLViskit")
 ```
 
 ## Build the C++ examples
@@ -166,6 +174,31 @@ while glviskit.loop():
 ```
 
 The Python API follows the same retained drawing model, while adding NumPy-friendly batched overloads and a few convenience helpers where they make Python usage noticeably better.
+
+## Minimal Julia example
+
+```julia
+using GLViskit
+
+window = create_window("glviskit", 800, 600)
+render_list = create_render_list()
+add_render_list!(window, render_list)
+
+color!(render_list, [1.0, 0.0, 0.0, 1.0])
+size!(render_list, 4.0)
+line!(render_list, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0])
+
+camera = window.camera
+perspective_fov!(camera, 60.0, 60.0)
+camera.distance = 5.0
+
+while loop()
+end
+```
+
+The Julia API mirrors the same retained model, with column-major `Float32`
+arrays mapping directly onto the C batch calls and `!`-suffixed mutating
+functions in the Julian style. See `julia/README.md` for building from source.
 
 ## Drawing model
 
