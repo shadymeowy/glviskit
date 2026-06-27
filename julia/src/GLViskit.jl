@@ -34,11 +34,16 @@ export path_begin, mesh_begin, color!, size!, add_instance!
 export save!, restore!, clear!, save_instances!, restore_instances!, clear_instances!
 export line_to!, close!, line_end!, vertex!, triangle!
 export NullController, FirstPersonController, SphericalController
+export ui_new_frame, ui_begin, ui_end, ui_text, ui_separator, ui_same_line, ui_button
+export ui_checkbox!, ui_slider_float!, ui_slider_float3!, ui_slider_int!, ui_combo!
+export ui_drag_float!, ui_color_edit3!, ui_color_edit4!, ui_plot_lines
+export ui_want_capture_mouse, ui_want_capture_keyboard
 
 # --- error handling -------------------------------------------------------
 
 glverror() = unsafe_string(ccall((:glv_error, lib), Cstring, ()))
 @inline check(rc::Cint) = rc == 0 ? nothing : error(glverror())
+@inline check_ui(rc::Cint) = rc == -1 ? error(glverror()) : rc != 0
 
 # --- handle types ---------------------------------------------------------
 
@@ -467,5 +472,94 @@ function Base.setproperty!(c::BaseController, s::Symbol, v)
     end
     return v
 end
+
+# --- ui -------------------------------------------------------------------
+
+ui_new_frame() = check(ccall((:glv_ui_new_frame, lib), Cint, ()))
+
+ui_begin(w::Window, title::AbstractString) =
+    check_ui(ccall((:glv_ui_begin, lib), Cint, (Ptr{Cvoid}, Cstring), w, title))
+
+ui_end(w::Window) = check(ccall((:glv_ui_end, lib), Cint, (Ptr{Cvoid},), w))
+
+ui_text(w::Window, text::AbstractString) =
+    check(ccall((:glv_ui_text, lib), Cint, (Ptr{Cvoid}, Cstring), w, text))
+
+ui_separator(w::Window) = check(ccall((:glv_ui_separator, lib), Cint, (Ptr{Cvoid},), w))
+
+ui_same_line(w::Window) = check(ccall((:glv_ui_same_line, lib), Cint, (Ptr{Cvoid},), w))
+
+ui_button(w::Window, label::AbstractString) =
+    check_ui(ccall((:glv_ui_button, lib), Cint, (Ptr{Cvoid}, Cstring), w, label))
+
+function ui_checkbox!(w::Window, label::AbstractString, value::Ref)
+    v = Ref{Cint}(value[] ? 1 : 0)
+    changed = check_ui(ccall((:glv_ui_checkbox, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}), w, label, v))
+    value[] = v[] != 0
+    return changed
+end
+
+function ui_slider_float!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
+    v = Ref{F32}(value[])
+    changed = check_ui(ccall((:glv_ui_slider_float, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), w, label, v, vmin, vmax))
+    value[] = v[]
+    return changed
+end
+
+function ui_slider_float3!(w::Window, label::AbstractString, value::Vector{F32}, vmin, vmax)
+    length(value) >= 3 || error("ui_slider_float3! expects a 3-element Float32 vector")
+    return check_ui(ccall((:glv_ui_slider_float3, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32), w, label, value, vmin, vmax))
+end
+
+function ui_slider_int!(w::Window, label::AbstractString, value::Ref, vmin, vmax)
+    v = Ref{Cint}(value[])
+    changed = check_ui(ccall((:glv_ui_slider_int, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cint, Cint), w, label, v, vmin, vmax))
+    value[] = v[]
+    return changed
+end
+
+function ui_combo!(w::Window, label::AbstractString, current::Ref, items::AbstractString)
+    c = Ref{Cint}(current[])
+    changed = check_ui(ccall((:glv_ui_combo, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{Cint}, Cstring), w, label, c, items))
+    current[] = c[]
+    return changed
+end
+
+function ui_drag_float!(w::Window, label::AbstractString, value::Ref, speed=1.0, vmin=0.0, vmax=0.0)
+    v = Ref{F32}(value[])
+    changed = check_ui(ccall((:glv_ui_drag_float, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, F32, F32, F32), w, label, v, speed, vmin, vmax))
+    value[] = v[]
+    return changed
+end
+
+function ui_color_edit3!(w::Window, label::AbstractString, color::Vector{F32})
+    length(color) >= 3 || error("ui_color_edit3! expects a 3-element Float32 vector")
+    return check_ui(ccall((:glv_ui_color_edit3, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
+end
+
+function ui_color_edit4!(w::Window, label::AbstractString, color::Vector{F32})
+    length(color) >= 4 || error("ui_color_edit4! expects a 4-element Float32 vector")
+    return check_ui(ccall((:glv_ui_color_edit4, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}), w, label, color))
+end
+
+function ui_plot_lines(w::Window, label::AbstractString, values::AbstractVector)
+    buf = asf32(values)
+    check(ccall((:glv_ui_plot_lines, lib), Cint,
+        (Ptr{Cvoid}, Cstring, Ptr{F32}, Cint), w, label, buf, length(buf)))
+end
+
+ui_want_capture_mouse(w::Window) =
+    check_ui(ccall((:glv_ui_want_capture_mouse, lib), Cint, (Ptr{Cvoid},), w))
+
+ui_want_capture_keyboard(w::Window) =
+    check_ui(ccall((:glv_ui_want_capture_keyboard, lib), Cint, (Ptr{Cvoid},), w))
 
 end # module
